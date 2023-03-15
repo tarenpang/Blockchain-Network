@@ -3,8 +3,9 @@
 	"version": "1.0.0",
 	"description": "",
 	"main": "index.js",
+	"type": "module",
 	"scripts": {
-		"test": "jest --watchAll"
+		"test": "jest --watchAll --verbose false"
 	},
 	"keywords": [],
 	"author": "",
