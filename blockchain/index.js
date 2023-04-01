@@ -15,7 +15,7 @@ class Blockchain {
 		});
 		this.chain.push(newBlock);
 	}
-	replaceChain(chain, onSuccess) {
+	replaceChain(chain, validateTransactions, onSuccess) {
 		if (chain.length <= this.chain.length) {
 			console.error('The incoming chain must be longer');
 			return;
@@ -24,6 +24,12 @@ class Blockchain {
 			console.error('The incoming chain must be valid');
 			return;
 		}
+
+		if (validateTransactions && !this.validTransactionData({ chain })) {
+			console.error('The incoming chain has invalid data');
+			return;
+		}
+
 		if (onSuccess) onSuccess();
 		console.log('replacing chain with', chain);
 		this.chain = chain;
@@ -33,9 +39,11 @@ class Blockchain {
 			const block = chain[i];
 			const transactionSet = new Set();
 			let rewardTransactionCount = 0;
+
 			for (let transaction of block.data) {
 				if (transaction.input.address === REWARD_INPUT.address) {
 					rewardTransactionCount += 1;
+
 					if (rewardTransactionCount > 1) {
 						console.error('Miner rewards exceeds limit');
 						return false;
