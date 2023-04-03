@@ -120,6 +120,64 @@ const syncWithRootState = () => {
 	);
 };
 
+// seed the backend with data
+const walletFoo = new Wallet();
+const walletBar = new Wallet();
+
+// helper method to create transactions from each wallet
+const generateWalletTransaction = ({ wallet, recipient, amount }) => {
+	const transaction = wallet.createTransaction({
+		recipient,
+		amount,
+
+		// pass the blockchain to the wallet to calculate the balance
+		chain: blockchain.chain,
+	});
+
+	// add the transaction to the transaction pool
+	transactionPool.setTransaction(transaction);
+};
+
+// create a transaction every 1 second
+const walletAction = () =>
+	generateWalletTransaction({
+		wallet,
+		recipient: walletFoo.publicKey,
+		amount: 5,
+	});
+
+const walletFooAction = () =>
+	generateWalletTransaction({
+		wallet: walletFoo,
+		recipient: walletBar.publicKey,
+		amount: 10,
+	});
+
+const walletBarAction = () =>
+	generateWalletTransaction({
+		wallet: walletBar,
+		recipient: wallet.publicKey,
+		amount: 15,
+	});
+
+for (let i = 0; i < 10; i++) {
+	if (i % 3 === 0) {
+		walletAction();
+		walletFooAction();
+	} else if (i % 3 === 1) {
+		walletAction();
+		walletBarAction();
+	} else {
+		walletFooAction();
+		walletBarAction();
+	}
+
+	transactionMiner.mineTransactions();
+}
+
+// // Path: app/transaction-miner.js
+// const Transaction = require('../wallet/transaction');
+
 let PEER_PORT;
 
 if (process.env.GENERATE_PEER_PORT === 'true') {
