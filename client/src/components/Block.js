@@ -11,6 +11,7 @@ class Block extends Component {
 
 	get displayTransaction() {
 		const { data } = this.props.block;
+
 		const stringifiedData = JSON.stringify(data);
 
 		const dataDisplay =
@@ -28,13 +29,13 @@ class Block extends Component {
 						</div>
 					))}
 					<br />
-					<button
-						type="button"
-						className="btn btn-danger btn-sm"
+					<Button
+						bsStyle="danger"
+						bsSize="small"
 						onClick={this.toggleTransaction}
 					>
 						Show Less
-					</button>
+					</Button>
 				</div>
 			);
 		}
@@ -42,13 +43,13 @@ class Block extends Component {
 		return (
 			<div>
 				<div>Data: {dataDisplay}</div>
-				<button
-					type="button"
-					className="btn btn-danger btn-sm"
+				<Button
+					bsStyle="danger"
+					bsSize="small"
 					onClick={this.toggleTransaction}
 				>
 					Show More
-				</button>
+				</Button>
 			</div>
 		);
 	}
@@ -67,4 +68,5 @@ class Block extends Component {
 		);
 	}
 }
+
 export default Block;
