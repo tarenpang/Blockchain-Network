@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
-import logo from '../assets/logo-01.png';
+import logo from '../assets/logo-04.png';
 
 class App extends Component {
 	state = { walletInfo: {} };
@@ -22,6 +22,9 @@ class App extends Component {
 				</div>
 				<div>
 					<Link to="/conduct-transaction">Conduct a Transaction</Link>
+				</div>
+				<div>
+					<Link to="/transaction-pool">Transaction Pool</Link>
 				</div>
 				<br />
 				<div className="WalletInfo">
