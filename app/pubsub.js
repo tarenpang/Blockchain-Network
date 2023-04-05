@@ -1,4 +1,10 @@
-const redis = require('redis');
+const PubNub = require('pubnub');
+
+const credentials = {
+	publishKey: 'pub-c-cab5d17b-e033-406e-b23a-7de879d3e495',
+	subscribeKey: 'sub-c-602f59f8-d07f-4aef-bdf5-887ea24b5669',
+	secretKey: 'sec-c-MTFmMzZhZjMtYTc0Ny00MWRiLThkMTctMTkxZDE4MjRkNWJm',
+};
 
 const CHANNELS = {
 	TEST: 'TEST',
@@ -11,21 +17,14 @@ class PubSub {
 		this.blockchain = blockchain;
 		this.transactionPool = transactionPool;
 
-		this.publisher = redis.createClient();
-		this.subscriber = redis.createClient();
-
-		this.subscribeToChannels();
-
-		this.subscriber.on('message', (channel, message) =>
-			this.handleMessage(channel, message)
-		);
+		this.pubnub = new PubNub(credentials);
+		this.pubnub.subscribe({ channels: Object.values(CHANNELS) });
+		this.pubnub.addListener(this.listener());
 	}
 
 	handleMessage(channel, message) {
-		console.log(`Message received. Channel: ${channel}. Message: ${message}.`);
-
+		console.log(`Message received. Channel: ${channel}. Message: ${message}`);
 		const parsedMessage = JSON.parse(message);
-
 		switch (channel) {
 			case CHANNELS.BLOCKCHAIN:
 				this.blockchain.replaceChain(parsedMessage, true, () => {
@@ -42,18 +41,18 @@ class PubSub {
 		}
 	}
 
-	subscribeToChannels() {
-		Object.values(CHANNELS).forEach((channel) => {
-			this.subscriber.subscribe(channel);
-		});
+	listener() {
+		return {
+			message: (messageObject) => {
+				const { channel, message } = messageObject;
+
+				this.handleMessage(channel, message);
+			},
+		};
 	}
 
 	publish({ channel, message }) {
-		this.subscriber.unsubscribe(channel, () => {
-			this.publisher.publish(channel, message, () => {
-				this.subscriber.subscribe(channel);
-			});
-		});
+		this.pubnub.publish({ channel, message });
 	}
 
 	broadcastChain() {
@@ -62,7 +61,6 @@ class PubSub {
 			message: JSON.stringify(this.blockchain.chain),
 		});
 	}
-
 	broadcastTransaction(transaction) {
 		this.publish({
 			channel: CHANNELS.TRANSACTION,
@@ -70,5 +68,4 @@ class PubSub {
 		});
 	}
 }
-
 module.exports = PubSub;

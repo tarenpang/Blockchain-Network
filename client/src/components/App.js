@@ -15,7 +15,7 @@ class App extends Component {
 			<div className="App">
 				<img className="logo" src={logo}></img>
 				<br />
-				<div>Welcome to the blockchain...</div>
+				<h3>Welcome to the Z-Wave Blockchain...</h3>
 				<br />
 				<div>
 					<Link to="/blocks">Blocks</Link>
@@ -28,8 +28,9 @@ class App extends Component {
 				</div>
 				<br />
 				<div className="WalletInfo">
-					<div>Address: {address}</div>
-					<div>Balance: {balance}</div>
+					<div className="UserData">User Address: {address}</div>
+					<hr className="UserElement" />
+					<div className="UserData">User Balance: {balance}</div>
 				</div>
 			</div>
 		);
