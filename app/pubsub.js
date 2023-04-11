@@ -1,72 +1,74 @@
-require('dotenv').config();
-const PubNub = require('pubnub');
-
-const credentials = {
-	publishKey: process.env.PUBLISH_KEY,
-	subscribeKey: process.env.SUBSCRIBE_KEY,
-	secretKey: process.env.SECRET_KEY,
-};
+const redis = require("redis")
 
 const CHANNELS = {
-	TEST: 'TEST',
-	BLOCKCHAIN: 'BLOCKCHAIN',
-	TRANSACTION: 'TRANSACTION',
-};
+	TEST: "TEST",
+	BLOCKCHAIN: "BLOCKCHAIN",
+	TRANSACTION: "TRANSACTION",
+}
 
 class PubSub {
-	constructor({ blockchain, transactionPool }) {
-		this.blockchain = blockchain;
-		this.transactionPool = transactionPool;
+	constructor({ blockchain, transactionPool, redisUrl }) {
+		this.blockchain = blockchain
+		this.transactionPool = transactionPool
 
-		this.pubnub = new PubNub(credentials);
-		this.pubnub.subscribe({ channels: Object.values(CHANNELS) });
-		this.pubnub.addListener(this.listener());
+		this.publisher = redis.createClient(redisUrl)
+		this.subscriber = redis.createClient(redisUrl)
+
+		this.subscribeToChannels()
+
+		this.subscriber.on("message", (channel, message) =>
+			this.handleMessage(channel, message)
+		)
 	}
 
 	handleMessage(channel, message) {
-		// console.log(`Message received. Channel: ${channel}. Message: ${message}`);
-		const parsedMessage = JSON.parse(message);
+		console.log(`Message received. Channel: ${channel}. Message: ${message}.`)
+
+		const parsedMessage = JSON.parse(message)
+
 		switch (channel) {
 			case CHANNELS.BLOCKCHAIN:
 				this.blockchain.replaceChain(parsedMessage, true, () => {
 					this.transactionPool.clearBlockchainTransactions({
 						chain: parsedMessage,
-					});
-				});
-				break;
+					})
+				})
+				break
 			case CHANNELS.TRANSACTION:
-				this.transactionPool.setTransaction(parsedMessage);
-				break;
+				this.transactionPool.setTransaction(parsedMessage)
+				break
 			default:
-				return;
+				return
 		}
 	}
 
-	listener() {
-		return {
-			message: (messageObject) => {
-				const { channel, message } = messageObject;
-
-				this.handleMessage(channel, message);
-			},
-		};
+	subscribeToChannels() {
+		Object.values(CHANNELS).forEach((channel) => {
+			this.subscriber.subscribe(channel)
+		})
 	}
 
 	publish({ channel, message }) {
-		this.pubnub.publish({ channel, message });
+		this.subscriber.unsubscribe(channel, () => {
+			this.publisher.publish(channel, message, () => {
+				this.subscriber.subscribe(channel)
+			})
+		})
 	}
 
 	broadcastChain() {
 		this.publish({
 			channel: CHANNELS.BLOCKCHAIN,
 			message: JSON.stringify(this.blockchain.chain),
-		});
+		})
 	}
+
 	broadcastTransaction(transaction) {
 		this.publish({
 			channel: CHANNELS.TRANSACTION,
 			message: JSON.stringify(transaction),
-		});
+		})
 	}
 }
-module.exports = PubSub;
+
+module.exports = PubSub
