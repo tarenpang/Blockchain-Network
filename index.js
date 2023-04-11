@@ -5,16 +5,15 @@ const path = require("path")
 const Blockchain = require("./blockchain")
 const PubSub = require("./app/pubsub")
 const TransactionPool = require("./wallet/transaction-pool")
-const Transaction = require("./wallet/transaction")
 const Wallet = require("./wallet")
 const TransactionMiner = require("./app/transaction-miner")
 
 const app = express()
 const blockchain = new Blockchain()
-// const transaction = new Transaction()
 const transactionPool = new TransactionPool()
 const wallet = new Wallet()
 const pubsub = new PubSub({ blockchain, transactionPool })
+// const pubsub = new PubSub({ blockchain, transactionPool, wallet }); // for PubNub
 const transactionMiner = new TransactionMiner({
 	blockchain,
 	transactionPool,
@@ -30,6 +29,25 @@ app.use(express.static(path.join(__dirname, "client/dist")))
 
 app.get("/api/blocks", (req, res) => {
 	res.json(blockchain.chain)
+})
+
+app.get("/api/blocks/length", (req, res) => {
+	res.json(blockchain.chain.length)
+})
+
+app.get("/api/blocks/:id", (req, res) => {
+	const { id } = req.params
+	const { length } = blockchain.chain
+
+	const blocksReversed = blockchain.chain.slice().reverse()
+
+	let startIndex = (id - 1) * 5
+	let endIndex = id * 5
+
+	startIndex = startIndex < length ? startIndex : length
+	endIndex = endIndex < length ? endIndex : length
+
+	res.json(blocksReversed.slice(startIndex, endIndex))
 })
 
 app.post("/api/mine", (req, res) => {
@@ -64,7 +82,6 @@ app.post("/api/transact", (req, res) => {
 	}
 
 	transactionPool.setTransaction(transaction)
-	console.log("TxnPool: ", transactionPool)
 
 	pubsub.broadcastTransaction(transaction)
 
@@ -90,8 +107,22 @@ app.get("/api/wallet-info", (req, res) => {
 	})
 })
 
+app.get("/api/known-addresses", (req, res) => {
+	const addressMap = {}
+
+	for (let block of blockchain.chain) {
+		for (let transaction of block.data) {
+			const recipient = Object.keys(transaction.outputMap)
+
+			recipient.forEach((recipient) => (addressMap[recipient] = recipient))
+		}
+	}
+
+	res.json(Object.keys(addressMap))
+})
+
 app.get("*", (req, res) => {
-	res.sendFile(path.join(__dirname, "./client/dist/index.html"))
+	res.sendFile(path.join(__dirname, "client/dist/index.html"))
 })
 
 const syncWithRootState = () => {
@@ -108,13 +139,13 @@ const syncWithRootState = () => {
 	)
 
 	request(
-		{ uri: `${ROOT_NODE_ADDRESS}/api/transaction-pool-map` },
+		{ url: `${ROOT_NODE_ADDRESS}/api/transaction-pool-map` },
 		(error, response, body) => {
 			if (!error && response.statusCode === 200) {
 				const rootTransactionPoolMap = JSON.parse(body)
 
 				console.log(
-					"Replace transaction pool map on a sync with",
+					"replace transaction pool map on a sync with",
 					rootTransactionPoolMap
 				)
 				transactionPool.setMap(rootTransactionPoolMap)
@@ -123,63 +154,54 @@ const syncWithRootState = () => {
 	)
 }
 
-// seed the backend with data
 const walletFoo = new Wallet()
 const walletBar = new Wallet()
 
-// helper method to create transactions from each wallet
 const generateWalletTransaction = ({ wallet, recipient, amount }) => {
 	const transaction = wallet.createTransaction({
 		recipient,
 		amount,
-
-		// pass the blockchain to the wallet to calculate the balance
 		chain: blockchain.chain,
 	})
 
-	// add the transaction to the transaction pool
 	transactionPool.setTransaction(transaction)
 }
 
-// create a transaction every 1 second
-// const walletAction = () =>
-// 	generateWalletTransaction({
-// 		wallet,
-// 		recipient: walletFoo.publicKey,
-// 		amount: 5,
-// 	});
+const walletAction = () =>
+	generateWalletTransaction({
+		wallet,
+		recipient: walletFoo.publicKey,
+		amount: 5,
+	})
 
-// const walletFooAction = () =>
-// 	generateWalletTransaction({
-// 		wallet: walletFoo,
-// 		recipient: walletBar.publicKey,
-// 		amount: 10,
-// 	});
+const walletFooAction = () =>
+	generateWalletTransaction({
+		wallet: walletFoo,
+		recipient: walletBar.publicKey,
+		amount: 10,
+	})
 
-// const walletBarAction = () =>
-// 	generateWalletTransaction({
-// 		wallet: walletBar,
-// 		recipient: wallet.publicKey,
-// 		amount: 15,
-// 	});
+const walletBarAction = () =>
+	generateWalletTransaction({
+		wallet: walletBar,
+		recipient: wallet.publicKey,
+		amount: 15,
+	})
 
-// for (let i = 0; i < 10; i++) {
-// 	if (i % 3 === 0) {
-// 		walletAction();
-// 		walletFooAction();
-// 	} else if (i % 3 === 1) {
-// 		walletAction();
-// 		walletBarAction();
-// 	} else {
-// 		walletFooAction();
-// 		walletBarAction();
-// 	}
+for (let i = 0; i < 20; i++) {
+	if (i % 3 === 0) {
+		walletAction()
+		walletFooAction()
+	} else if (i % 3 === 1) {
+		walletAction()
+		walletBarAction()
+	} else {
+		walletFooAction()
+		walletBarAction()
+	}
 
-// 	transactionMiner.mineTransactions();
-// }
-
-// // Path: app/transaction-miner.js
-// const Transaction = require('../wallet/transaction');
+	transactionMiner.mineTransactions()
+}
 
 let PEER_PORT
 
@@ -187,7 +209,7 @@ if (process.env.GENERATE_PEER_PORT === "true") {
 	PEER_PORT = DEFAULT_PORT + Math.ceil(Math.random() * 1000)
 }
 
-const PORT = PEER_PORT || DEFAULT_PORT
+const PORT = process.env.PORT || PEER_PORT || DEFAULT_PORT
 app.listen(PORT, () => {
 	console.log(`listening at localhost:${PORT}`)
 

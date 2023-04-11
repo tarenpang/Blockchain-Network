@@ -1,21 +1,21 @@
-import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
-import logo from '../assets/logo-04.png';
+import React, { Component } from "react"
+import { Link } from "react-router-dom"
+import logo from "../assets/logo-04.png"
 
 class App extends Component {
-	state = { walletInfo: {} };
+	state = { walletInfo: {} }
 	componentDidMount() {
 		fetch(`${document.location.origin}/api/wallet-info`)
 			.then((response) => response.json())
-			.then((json) => this.setState({ walletInfo: json }));
+			.then((json) => this.setState({ walletInfo: json }))
 	}
 	render() {
-		const { address, balance } = this.state.walletInfo;
+		const { address, balance } = this.state.walletInfo
 		return (
 			<div className="App">
 				<img className="logo" src={logo}></img>
 				<br />
-				<h3>Welcome to the Z-Wave Blockchain...</h3>
+				<h3>Welcome to the IndiGold Blockchain...</h3>
 				<br />
 				<div>
 					<Link to="/blocks">Blocks</Link>
@@ -33,7 +33,7 @@ class App extends Component {
 					<div className="UserData">User Balance: {balance}</div>
 				</div>
 			</div>
-		);
+		)
 	}
 }
-export default App;
+export default App
