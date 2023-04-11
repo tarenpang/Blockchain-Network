@@ -39,7 +39,11 @@ class Blocks extends Component {
 									key={key}
 									onClick={this.fetchPaginatedBlocks(paginatedId)}
 								>
-									<Button bsSize="small" bsStyle="danger">
+									<Button
+										bsSize="small"
+										// bsStyle="danger"
+										className="custom-btn"
+									>
 										{paginatedId}
 									</Button>{" "}
 								</span>
