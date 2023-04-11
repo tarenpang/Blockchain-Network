@@ -24,7 +24,7 @@ class PubSub {
 	}
 
 	handleMessage(channel, message) {
-		console.log(`Message received. Channel: ${channel}. Message: ${message}`);
+		// console.log(`Message received. Channel: ${channel}. Message: ${message}`);
 		const parsedMessage = JSON.parse(message);
 		switch (channel) {
 			case CHANNELS.BLOCKCHAIN:
