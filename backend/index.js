@@ -2,11 +2,14 @@ const bodyParser = require("body-parser")
 const express = require("express")
 const request = require("request")
 const path = require("path")
+const cors = require("cors")
+const { StatusCodes } = require("http-status-codes")
 const Blockchain = require("./blockchain")
 const PubSub = require("./app/pubsub")
 const TransactionPool = require("./wallet/transaction-pool")
 const Wallet = require("./wallet")
 const TransactionMiner = require("./app/transaction-miner")
+const port = process.argv[2]
 
 const app = express()
 const blockchain = new Blockchain()
@@ -21,11 +24,13 @@ const transactionMiner = new TransactionMiner({
 	pubsub,
 })
 
-const DEFAULT_PORT = 3000
-const ROOT_NODE_ADDRESS = `http://localhost:${DEFAULT_PORT}`
+// const DEFAULT_PORT = 3000
+// const ROOT_NODE_ADDRESS = `http://localhost:${DEFAULT_PORT}`
 
 app.use(bodyParser.json())
-app.use(express.static(path.join(__dirname, "client/dist")))
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(cors())
+// app.use(express.static(path.join(__dirname, "client/dist")))
 
 app.get("/api/blocks", (req, res) => {
 	res.json(blockchain.chain)
@@ -121,9 +126,9 @@ app.get("/api/known-addresses", (req, res) => {
 	res.json(Object.keys(addressMap))
 })
 
-app.get("*", (req, res) => {
-	res.sendFile(path.join(__dirname, "client/dist/index.html"))
-})
+// app.get("*", (req, res) => {
+// 	res.sendFile(path.join(__dirname, "client/dist/index.html"))
+// })
 
 const syncWithRootState = () => {
 	request(
@@ -209,11 +214,15 @@ if (process.env.GENERATE_PEER_PORT === "true") {
 	PEER_PORT = DEFAULT_PORT + Math.ceil(Math.random() * 1000)
 }
 
-const PORT = process.env.PORT || PEER_PORT || DEFAULT_PORT
-app.listen(PORT, () => {
-	console.log(`listening at localhost:${PORT}`)
+// const PORT = process.env.PORT || PEER_PORT || DEFAULT_PORT
+// app.listen(PORT, () => {
+// 	console.log(`listening at localhost:${PORT}`)
 
-	if (PORT !== DEFAULT_PORT) {
-		syncWithRootState()
-	}
+// 	if (PORT !== DEFAULT_PORT) {
+// 		syncWithRootState()
+// 	}
+// })
+
+app.listen(port, function () {
+	console.log(`Listening on port ${port}...`) // string interpolation: ${port}
 })
