@@ -11,6 +11,7 @@ function App() {
 			<Navbar />
 			<br />
 			<img className="logo" src={logo}></img>
+			<br />
 			<h1>Hello Blockchain App</h1>
 		</div>
 	)

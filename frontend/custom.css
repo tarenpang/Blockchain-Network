@@ -23,13 +23,13 @@
 .logo {
 	margin: auto;
 	display: block;
-	max-width: 50%;
+	max-width: 45%;
 }
 
 .logo-icon {
 	display: block;
 	padding-bottom: 3px;
-	max-width: 30px;
+	max-width: 35px;
 }
 
 .navbar-nav > li {

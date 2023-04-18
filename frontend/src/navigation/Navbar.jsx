@@ -1,5 +1,5 @@
 import React from "react"
-import logo from "../assets/logo-04.png"
+import topo from "../assets/topo-icon.png"
 
 const Navbar = () => {
 	return (
@@ -21,7 +21,7 @@ const Navbar = () => {
 						>
 							<span class="navbar-toggler-icon"></span>
 						</button> */}
-						<img className="logo-icon" src={logo}></img>
+						<img className="logo-icon" src={topo}></img>
 						<div class="collapse navbar-collapse" id="navbarSupportedContent">
 							<ul class="navbar-nav me-auto mb-2 mb-lg-0 list-unstyled">
 								<li class="nav-item">
