@@ -7,7 +7,7 @@
 		"test": "jest --watchAll --verbose false",
 		"start": "npm run build-client && node index.js",
 		"dev": "npm run dev-client & npm run start-redis && nodemon index.js",
-		"start-redis": "redis-server --daemonize yes",
+		"start-redis": "/redis/redis-server /redis/redis.windows-service.conf",
 		"node_1": "npm run dev-client & npm run start-redis && nodemon --watch src -e js src/NetworkNode.js 5001 http://localhost:5001",
 		"node_2": "npm run dev-client & npm run start-redis && nodemon --watch src -e js src/NetworkNode.js 5002 http://localhost:5002",
 		"node_3": "npm run dev-client & npm run start-redis && nodemon --watch src -e js src/NetworkNode.js 5003 http://localhost:5003",
