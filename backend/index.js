@@ -32,15 +32,15 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cors())
 // app.use(express.static(path.join(__dirname, "client/dist")))
 
-app.get("/api/blocks", (req, res) => {
+app.get("/blocks", (req, res) => {
 	res.json(blockchain.chain)
 })
 
-app.get("/api/blocks/length", (req, res) => {
+app.get("/blocks/length", (req, res) => {
 	res.json(blockchain.chain.length)
 })
 
-app.get("/api/blocks/:id", (req, res) => {
+app.get("/blocks/:id", (req, res) => {
 	const { id } = req.params
 	const { length } = blockchain.chain
 
@@ -55,17 +55,17 @@ app.get("/api/blocks/:id", (req, res) => {
 	res.json(blocksReversed.slice(startIndex, endIndex))
 })
 
-app.post("/api/mine", (req, res) => {
+app.post("/mine", (req, res) => {
 	const { data } = req.body
 
 	blockchain.addBlock({ data })
 
 	pubsub.broadcastChain()
 
-	res.redirect("/api/blocks")
+	res.redirect("/blocks")
 })
 
-app.post("/api/transact", (req, res) => {
+app.post("/transact", (req, res) => {
 	const { amount, recipient } = req.body
 
 	let transaction = transactionPool.existingTransaction({
@@ -93,17 +93,17 @@ app.post("/api/transact", (req, res) => {
 	res.json({ type: "success", transaction })
 })
 
-app.get("/api/transaction-pool-map", (req, res) => {
+app.get("/transaction-pool-map", (req, res) => {
 	res.json(transactionPool.transactionMap)
 })
 
-app.get("/api/mine-transactions", (req, res) => {
+app.get("/mine-transactions", (req, res) => {
 	transactionMiner.mineTransactions()
 
-	res.redirect("/api/blocks")
+	res.redirect("/blocks")
 })
 
-app.get("/api/wallet-info", (req, res) => {
+app.get("/wallet-info", (req, res) => {
 	const address = wallet.publicKey
 
 	res.json({
@@ -112,7 +112,7 @@ app.get("/api/wallet-info", (req, res) => {
 	})
 })
 
-app.get("/api/known-addresses", (req, res) => {
+app.get("/known-addresses", (req, res) => {
 	const addressMap = {}
 
 	for (let block of blockchain.chain) {
