@@ -1,6 +1,6 @@
-import React from "react"
-import topo from "../assets/topo-icon.png"
-import { Link } from "react-router-dom"
+import React from "react";
+import topo from "../assets/topo-icon.png";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
 	return (
@@ -26,10 +26,12 @@ const Navbar = () => {
 						<div class="collapse navbar-collapse" id="navbarSupportedContent">
 							<ul class="navbar-nav me-auto mb-2 mb-lg-0 list-unstyled">
 								<li class="nav-item">
-									{/* <a class="nav-link active" aria-current="page" href="#">
+									{
+										/* <a class="nav-link active" aria-current="page" href="#">
 										Explorer
 									</a> */
-									<Link to="/explorer">Explorer</Link>}
+										<Link to="/explorer">Explorer</Link>
+									}
 								</li>
 								<li class="nav-item">
 									{/* <a class="nav-link" href="#">
@@ -91,6 +93,6 @@ const Navbar = () => {
 				</nav>
 			</div>
 		</div>
-	)
-}
-export default Navbar
+	);
+};
+export default Navbar;

@@ -1,10 +1,10 @@
-const Blockchain = require('../blockchain');
+const Blockchain = require("../blockchain");
 
 const blockchain = new Blockchain();
 
-blockchain.addBlock({ data: 'initial' });
+blockchain.addBlock({ data: "initial" });
 
-console.log('first block', blockchain.chain[blockchain.chain.length - 1]);
+console.log("first block", blockchain.chain[blockchain.chain.length - 1]);
 
 let preTimestamp, nextTimestamp, nextBlock, timeDiff, average;
 
