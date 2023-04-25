@@ -1,5 +1,6 @@
 import React from "react"
 import topo from "../assets/topo-icon.png"
+import { Link } from "react-router-dom"
 
 const Navbar = () => {
 	return (
@@ -25,14 +26,16 @@ const Navbar = () => {
 						<div class="collapse navbar-collapse" id="navbarSupportedContent">
 							<ul class="navbar-nav me-auto mb-2 mb-lg-0 list-unstyled">
 								<li class="nav-item">
-									<a class="nav-link active" aria-current="page" href="#">
+									{/* <a class="nav-link active" aria-current="page" href="#">
 										Explorer
-									</a>
+									</a> */
+									<Link to="/explorer">Explorer</Link>}
 								</li>
 								<li class="nav-item">
-									<a class="nav-link" href="#">
+									{/* <a class="nav-link" href="#">
 										Wallet
-									</a>
+									</a> */}
+									<Link to="/wallet">Wallet</Link>
 								</li>
 								<li class="nav-item dropdown">
 									<a
@@ -66,9 +69,10 @@ const Navbar = () => {
 									</ul>
 								</li>
 								<li class="nav-item">
-									<a class="nav-link" href="#">
+									{/* <a class="nav-link" href="#">
 										Faucet
-									</a>
+									</a> */}
+									<Link to="/faucet">Faucet</Link>
 								</li>
 							</ul>
 							{/* <form class="d-flex" role="search">

@@ -6,7 +6,7 @@ import "../custom.css";
 import logo from "./assets/logo-04.png";
 
 import React from "react";
-import Faucet from "./Faucet";
+import Faucet from "./pages/Faucet";
 
 function App() {
   return (
@@ -15,7 +15,7 @@ function App() {
       <br />
       <img className="logo" src={logo}></img>
       <h1>Hello Blockchain App</h1>
-
+ 
       <div className="container">
         <Faucet />
       </div>
