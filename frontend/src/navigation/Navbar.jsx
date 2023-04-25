@@ -1,5 +1,5 @@
-import React from "react"
-import topo from "../assets/topo-icon.png"
+import React from "react";
+import topo from "../assets/topo-icon.png";
 
 const Navbar = () => {
 	return (
@@ -87,6 +87,6 @@ const Navbar = () => {
 				</nav>
 			</div>
 		</div>
-	)
-}
-export default Navbar
+	);
+};
+export default Navbar;
