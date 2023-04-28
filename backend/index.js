@@ -1,15 +1,17 @@
 const bodyParser = require("body-parser");
 const express = require("express");
-const request = require("request");
-const path = require("path");
 const cors = require("cors");
 const { StatusCodes } = require("http-status-codes");
+// const Config = require("./config");
 const Blockchain = require("./blockchain");
 const PubSub = require("./app/pubsub");
 const TransactionPool = require("./wallet/transaction-pool");
 const Wallet = require("./wallet");
 const TransactionMiner = require("./app/transaction-miner");
 const port = process.argv[2];
+
+const DEFAULT_PORT = 5555;
+const ROOT_NODE_ADDRESS = `http://localhost:${DEFAULT_PORT}`;
 
 const app = express();
 const blockchain = new Blockchain();
@@ -24,13 +26,52 @@ const transactionMiner = new TransactionMiner({
 	pubsub,
 });
 
-// const DEFAULT_PORT = 3000
-// const ROOT_NODE_ADDRESS = `http://localhost:${DEFAULT_PORT}`
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
-// app.use(express.static(path.join(__dirname, "client/dist")))
+
+app.get("/", (req, res) => {
+	if (!res) {
+		res.status(StatusCodes.NOT_FOUND).json({ errorMsg: "Page not found." });
+	} else {
+		const ExpressListEndpoints = require("express-list-endpoints");
+		let endpoints = ExpressListEndpoints(app);
+		let listEndpoints = endpoints
+			.map(
+				(endpoint) =>
+					`<li>${endpoint.methods} <a href="${endpoint.path}">${endpoint.path}</a></li>`
+			)
+			.join("");
+
+		res
+			.status(StatusCodes.OK)
+			.send(
+				"<h1>IndiGOLD Blockchain Network</h1>" + `<ul>${listEndpoints}</ul>`
+			);
+	}
+});
+
+app.get("/info", (req, res) => {
+	const nodeId =
+		new Date().getTime().toString(16) + Math.random().toString(16).substring(2);
+
+	const chainId =
+		!blockchain.blocks.length >= 1
+			? "Not connected to the IndiGOLD blockchain."
+			: blockchain.blocks[0].blockHash;
+
+	res.status(StatusCodes.OK).json({
+		about: "KU Blockchain Engineer Course / Blockchain Network Project",
+		nodeId: nodeId,
+		chainId: chainId,
+		nodeUrl: process.argv[3],
+		peers: blockchain.networkNodes.size,
+		blocksCount: blockchain.blocks.length,
+		cumulativeDifficulty: blockchain.calculateCumulativeDifficulty(),
+		confirmedTransactions: blockchain.getConfirmedTransactions().length,
+		pendingTransactions: blockchain.pendingTransactions.length,
+	});
+});
 
 app.get("/blocks", (req, res) => {
 	res.json(blockchain.chain);
@@ -126,39 +167,6 @@ app.get("/known-addresses", (req, res) => {
 	res.json(Object.keys(addressMap));
 });
 
-// app.get("*", (req, res) => {
-// 	res.sendFile(path.join(__dirname, "client/dist/index.html"))
-// })
-
-const syncWithRootState = () => {
-	request(
-		{ url: `${ROOT_NODE_ADDRESS}/api/blocks` },
-		(error, response, body) => {
-			if (!error && response.statusCode === 200) {
-				const rootChain = JSON.parse(body);
-
-				console.log("replace chain on a sync with", rootChain);
-				blockchain.replaceChain(rootChain);
-			}
-		}
-	);
-
-	request(
-		{ url: `${ROOT_NODE_ADDRESS}/api/transaction-pool-map` },
-		(error, response, body) => {
-			if (!error && response.statusCode === 200) {
-				const rootTransactionPoolMap = JSON.parse(body);
-
-				console.log(
-					"replace transaction pool map on a sync with",
-					rootTransactionPoolMap
-				);
-				transactionPool.setMap(rootTransactionPoolMap);
-			}
-		}
-	);
-};
-
 const walletFoo = new Wallet();
 const walletBar = new Wallet();
 
@@ -207,21 +215,6 @@ for (let i = 0; i < 20; i++) {
 
 	transactionMiner.mineTransactions();
 }
-
-// let PEER_PORT
-
-// if (process.env.GENERATE_PEER_PORT === "true") {
-// 	PEER_PORT = DEFAULT_PORT + Math.ceil(Math.random() * 1000)
-// }
-
-// const PORT = process.env.PORT || PEER_PORT || DEFAULT_PORT
-// app.listen(PORT, () => {
-// 	console.log(`listening at localhost:${PORT}`)
-
-// 	if (PORT !== DEFAULT_PORT) {
-// 		syncWithRootState()
-// 	}
-// })
 
 app.listen(port, function () {
 	console.log(`Listening on port ${port}...`); // string interpolation: ${port}
