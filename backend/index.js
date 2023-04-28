@@ -207,6 +207,112 @@ app.post("/register-and-broadcast-node", async function (req, res) {
 	}
 });
 
+app.post("/register-node", function (req, res) {
+	const newNodeUrl = req.body.newNodeUrl;
+	const nodeNotAlreadyPresent =
+		blockchain.networkNodes.indexOf(newNodeUrl) == -1;
+	const notCurrentNode = blockchain.currentNodeUrl !== newNodeUrl;
+	if (nodeNotAlreadyPresent && notCurrentNode)
+		blockchain.networkNodes.push(newNodeUrl);
+	res.json({
+		message: "New node registered successfully",
+	});
+});
+
+app.post("/register-nodes-bulk", function (req, res) {
+	const allNetworkNodes = req.body.allNetworkNodes;
+	const pendingTransactions = req.body.pendingTransactions;
+
+	allNetworkNodes.forEach((networkNodesUrl) => {
+		const nodeNotAlreadyPresent =
+			blockchain.networkNodes.indexOf(networkNodesUrl) == -1;
+		const notCurrentNode = blockchain.currentNodeUrl !== networkNodesUrl;
+		if (nodeNotAlreadyPresent && notCurrentNode)
+			blockchain.networkNodes.push(networkNodesUrl);
+	});
+	// update pending transactions
+	blockchain.pendingTransactions = pendingTransactions;
+	res.json({
+		message: "Bulk registration successful",
+	});
+});
+
+const axios = require("axios");
+
+app.post("/unregister-and-broadcast-node", function (req, res) {
+	const oldNodeURL = req.body.oldNodeURL;
+
+	const removeNodePromise = [];
+	blockchain.networkNodes.forEach((networkNodesUrl) => {
+		const requestOptions = {
+			url: networkNodesUrl + "/unregister-node",
+			method: "POST",
+			data: { oldNodeURL: oldNodeURL },
+			headers: { "Content-Type": "application/json" },
+		};
+
+		removeNodePromise.push(axios(requestOptions));
+	});
+
+	Promise.all(removeNodePromise)
+		.then(() => {
+			if (blockchain.networkNodes.includes(oldNodeURL)) {
+				blockchain.networkNodes = blockchain.networkNodes.filter(
+					(node) => node !== oldNodeURL
+				);
+			}
+
+			res.json({
+				message: "Node removed from network successfully",
+			});
+		})
+		.catch((err) => res.status(400).json({ error: err.message }));
+});
+
+app.get("/consensus", async function (req, res) {
+	const requestPromises = [];
+
+	// get all network nodes and make a request to each one
+	blockchain.networkNodes.forEach((networkNodeUrl) => {
+		requestPromises.push(axios.get(`${networkNodeUrl}/blockchain`));
+	});
+
+	try {
+		const blockchains = await Promise.all(requestPromises);
+
+		// check if the length of the blockchains is greater than our current node blockchain
+		const currentChainLength = blockchain.chain.length;
+		let maxChainLength = currentChainLength;
+		let newLongestChain = null;
+		let newPendingTransactions = null;
+
+		blockchains.forEach((blockchain) => {
+			if (blockchain.data.chain.length > maxChainLength) {
+				maxChainLength = blockchain.data.chain.length;
+				newLongestChain = blockchain.data.chain;
+				newPendingTransactions = blockchain.data.pendingTransactions;
+			}
+		});
+
+		if (!newLongestChain) {
+			res.json({
+				message: "Current chain has not been replaced",
+				chain: blockchain.chain,
+			});
+		} else {
+			blockchain.chain = newLongestChain;
+			blockchain.pendingTransactions = newPendingTransactions;
+			res.json({
+				message: "This chain has been replaced",
+				chain: blockchain.chain,
+			});
+		}
+	} catch (error) {
+		res.status(400).json({ error: error.message });
+	}
+});
+
+// Block Explorer
 app.get("/blocks", (req, res) => {
 	res.json(blockchain.chain);
 });
@@ -215,19 +321,42 @@ app.get("/blocks/length", (req, res) => {
 	res.json(blockchain.chain.length);
 });
 
-app.get("/blocks/:id", (req, res) => {
-	const { id } = req.params;
-	const { length } = blockchain.chain;
+app.get("/block/:blockHash", (req, res) => {
+	const blockHash = req.params.blockHash;
+	const correctBlock = blockchain.getBlock(blockHash);
+	res.json({ block: correctBlock });
+});
 
-	const blocksReversed = blockchain.chain.slice().reverse();
+app.get("/blockByIndex/:index", (req, res) => {
+	const blockIndex = req.params.blockIndex;
+	const correctBlock = blockchain.getBlockByIndex(blockIndex);
+	res.json({ block: correctBlock });
+});
 
-	let startIndex = (id - 1) * 5;
-	let endIndex = id * 5;
+app.get("/block/:blockHash/transactions", (req, res) => {
+	const blockHash = req.params.blockHash;
+	const correctBlock = blockchain.getBlockTransactions(blockHash);
+	res.json({ trans: correctBlock });
+});
 
-	startIndex = startIndex < length ? startIndex : length;
-	endIndex = endIndex < length ? endIndex : length;
+app.get("/transaction/:transactionHash", (req, res) => {
+	const transactionHash = req.params.transactionHash;
+	const transactionData = blockchain.getTransaction(transactionHash);
+	res.json({ transaction: transactionData });
+});
 
-	res.json(blocksReversed.slice(startIndex, endIndex));
+app.get("/address/:address", (req, res) => {
+	const address = req.params.address;
+	const addressData = blockchain.getAddressData(address);
+	res.json({ addressData: addressData });
+});
+
+app.get("/all-transactions", function (req, res) {
+	res.json(blockchain.getAllTransactions());
+});
+
+app.get("/all-pending-transactions", function (req, res) {
+	res.json(blockchain.pendingTransactions);
 });
 
 app.post("/mine", (req, res) => {
@@ -300,55 +429,6 @@ app.get("/known-addresses", (req, res) => {
 
 	res.json(Object.keys(addressMap));
 });
-
-const walletFoo = new Wallet();
-const walletBar = new Wallet();
-
-const generateWalletTransaction = ({ wallet, recipient, amount }) => {
-	const transaction = wallet.createTransaction({
-		recipient,
-		amount,
-		chain: blockchain.chain,
-	});
-
-	transactionPool.setTransaction(transaction);
-};
-
-const walletAction = () =>
-	generateWalletTransaction({
-		wallet,
-		recipient: walletFoo.publicKey,
-		amount: 5,
-	});
-
-const walletFooAction = () =>
-	generateWalletTransaction({
-		wallet: walletFoo,
-		recipient: walletBar.publicKey,
-		amount: 10,
-	});
-
-const walletBarAction = () =>
-	generateWalletTransaction({
-		wallet: walletBar,
-		recipient: wallet.publicKey,
-		amount: 15,
-	});
-
-for (let i = 0; i < 20; i++) {
-	if (i % 3 === 0) {
-		walletAction();
-		walletFooAction();
-	} else if (i % 3 === 1) {
-		walletAction();
-		walletBarAction();
-	} else {
-		walletFooAction();
-		walletBarAction();
-	}
-
-	transactionMiner.mineTransactions();
-}
 
 app.listen(port, function () {
 	console.log(`Listening on port ${port}...`); // string interpolation: ${port}
