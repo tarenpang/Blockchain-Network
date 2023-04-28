@@ -6,7 +6,7 @@ const {
 } = require("./utils/config");
 const Transaction = require("../wallet/transaction");
 const Wallet = require("../wallet");
-const { cryptoHash } = require("./utils/crypto-utils");
+const { cryptoHash } = require("./utils/cryptoUtils");
 
 class Blockchain {
 	constructor() {
