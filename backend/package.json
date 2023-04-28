@@ -40,10 +40,6 @@
 		"hex-to-binary": "^1.0.1",
 		"history": "^4.7.2",
 		"http-status-codes": "^2.2.0",
-		"react": "^16.6.0",
-		"react-bootstrap": "^0.32.4",
-		"react-dom": "^16.6.0",
-		"react-router-dom": "^4.3.1",
 		"redis": "^2.8.0",
 		"uuid": "^3.3.2"
 	}
