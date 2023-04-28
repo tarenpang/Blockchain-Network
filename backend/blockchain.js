@@ -1,9 +1,12 @@
 const Block = require("./block");
-const { INITIAL_DIFFICULTY } = require("../config");
+const {
+	INITIAL_DIFFICULTY,
+	REWARD_INPUT,
+	MINING_REWARD,
+} = require("./utils/config");
 const Transaction = require("../wallet/transaction");
 const Wallet = require("../wallet");
-const { cryptoHash } = require("../utils/crypto-utils");
-const { REWARD_INPUT, MINING_REWARD } = require("####"); // TODO: fix path
+const { cryptoHash } = require("./utils/crypto-utils");
 
 class Blockchain {
 	constructor() {
