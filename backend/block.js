@@ -1,16 +1,33 @@
 const hexToBinary = require("hex-to-binary");
 const { GENESIS_DATA, MINE_RATE } = require("./utils/config");
 path;
-const { cryptoHash } = require("./utils/crypto-utils");
+const { cryptoHash } = require("./utils/cryptoUtils");
 
 class Block {
-	constructor({ timestamp, lastHash, hash, data, nonce, difficulty }) {
-		this.timestamp = timestamp;
-		this.lastHash = lastHash;
-		this.hash = hash;
-		this.data = data;
-		this.nonce = nonce;
+	constructor(
+		index,
+		transactions,
+		difficulty,
+		prevBlockHash,
+		minedBy,
+		blockDataHash,
+		nonce,
+		dateCreated,
+		blockHash
+	) {
+		this.index = index;
+		this.transactions = transactions;
 		this.difficulty = difficulty;
+		this.prevBlockHash = prevBlockHash;
+		this.minedBy = minedBy;
+		this.blockDataHash = blockDataHash;
+
+		// Calculate the block data hash if it is missing
+		if (this.blockDataHash === undefined) this.calculateBlockDataHash();
+
+		this.nonce = nonce;
+		this.dateCreated = dateCreated;
+		this.blockHash = blockHash;
 	}
 
 	static genesis() {
@@ -48,16 +65,37 @@ class Block {
 
 		return difficulty + 1;
 	}
+
+	calculateBlockDataHash() {
+		let blockData = {
+			index: this.index,
+			transactions: this.transactions.map((txn) =>
+				Object({
+					from: txn.from,
+					to: txn.to,
+					value: txn.value,
+					fee: txn.fee,
+					dateCreated: txn.dateCreated,
+					data: txn.data,
+					senderPubKey: txn.senderPubKey,
+					transactionDataHash: txn.transactionDataHash,
+					senderSignature: txn.senderSignature,
+					minedInBlockIndex: txn.minedInBlockIndex,
+					transferSuccessful: txn.transferSuccessful,
+				})
+			),
+			difficulty: this.difficulty,
+			prevBlockHash: this.prevBlockHash,
+			minedBy: this.minedBy,
+		};
+		let blockDataJSON = JSON.stringify(blockData);
+		this.blockDataHash = CryptoUtils.sha256(blockDataJSON);
+	}
+
+	calculateBlockHash() {
+		let data = `${this.blockDataHash}|${this.dateCreated}|${this.nonce}`;
+		this.blockHash = CryptoUtils.sha256(data);
+	}
 }
-// const genesis = (module.exports = Block);
-
-// const block1 = new Block({
-// 	lastHash: 'foo-lastHash',
-// 	hash: 'foo-hash',
-// 	data: 'foo-data',
-// 	timestamp: '01/01/01',
-// });
-
-// console.log('block1', block1);
 
 module.exports = Block;
