@@ -4,10 +4,7 @@ const cors = require("cors");
 const { StatusCodes } = require("http-status-codes");
 // const Config = require("./config");
 const Blockchain = require("./blockchain");
-const PubSub = require("./app/pubsub");
-const TransactionPool = require("./wallet/transaction-pool");
-const Wallet = require("./wallet");
-const TransactionMiner = require("./app/transaction-miner");
+// const PubSub = require("./app/pubsub");
 const port = process.argv[2];
 
 const DEFAULT_PORT = 5555;
@@ -17,8 +14,8 @@ const app = express();
 const blockchain = new Blockchain();
 const transactionPool = new TransactionPool();
 const wallet = new Wallet();
-const pubsub = new PubSub({ blockchain, transactionPool });
-// const pubsub = new PubSub({ blockchain, transactionPool, wallet }); // for PubNub
+// const pubsub = new PubSub({ blockchain, transactionPool });
+
 const transactionMiner = new TransactionMiner({
 	blockchain,
 	transactionPool,
@@ -71,6 +68,143 @@ app.get("/info", (req, res) => {
 		confirmedTransactions: blockchain.getConfirmedTransactions().length,
 		pendingTransactions: blockchain.pendingTransactions.length,
 	});
+});
+
+app.get("/address/:address/transactions", (req, res) => {
+	let address = req.params.address;
+	let txnHistory = blockchain.getTransactionHistory(address);
+	res.json(txnHistory);
+});
+
+app.get("/address/:address/balance", (req, res) => {
+	let address = req.params.address;
+	let balance = blockchain.getAccountBalance(address);
+	if (balance.errorMsg) res.status(StatusCodes.NOT_FOUND);
+	res.json(balance);
+});
+
+app.post("/transaction", function (req, res) {
+	const newTransaction = req.body;
+	const blockIndex =
+		blockchain.addTransactionToPendingTransactions(newTransaction);
+	res.json({
+		message: `Transaction will be added in block ${blockIndex}`,
+	});
+});
+
+const axios = require("axios");
+
+app.post("/transaction/broadcast", async function (req, res) {
+	const newTransaction = blockchain.addTransaction(req.body);
+	console.log(newTransaction);
+	if (newTransaction.errorMsg) {
+		res.json({ error: newTransaction.errorMsg });
+		return;
+	}
+
+	if (newTransaction.transactionDataHash) {
+		try {
+			const requestPromises = blockchain.networkNodes.map((node) =>
+				axios.post(`${node}/transaction`, newTransaction)
+			);
+			await Promise.all(requestPromises);
+			res.json({
+				message: "Transaction created and broadcasted",
+				transactionDataHash: newTransaction.transactionDataHash,
+			});
+		} catch (error) {
+			res.status(400).json({ error: error.message });
+		}
+	} else {
+		res.status(StatusCodes.BAD_REQUEST).json(newTransaction);
+	}
+});
+
+app.post("/mine", function (req, res) {
+	const { minerAddress, difficulty } = req.body;
+	const newBlock = blockchain.mineNextBlock(minerAddress, difficulty);
+
+	// broadcast the new block to other nodes
+	const requestPromises = [];
+	blockchain.networkNodes.forEach((node) => {
+		const requestOptions = {
+			url: `${node}/receive-new-block`,
+			method: "POST",
+			data: { newBlock },
+			headers: {
+				"Content-Type": "application/json",
+			},
+		};
+
+		requestPromises.push(axios(requestOptions));
+	});
+
+	Promise.all(requestPromises)
+		.then(() => {
+			res.json({
+				message: "New block mined and broadcasted successfully",
+				block: newBlock,
+			});
+		})
+		.catch((err) => res.status(400).json({ error: err.message }));
+});
+
+app.post("/receive-new-block", function (req, res) {
+	const block = blockchain.extendChain(req.body.newBlock);
+	if (!block.errorMsg) {
+		res.json({
+			message: "New block received and accepted",
+			block,
+		});
+	} else {
+		res.json({
+			message: "New block rejected",
+			block,
+		});
+	}
+});
+
+app.post("/register-and-broadcast-node", async function (req, res) {
+	const newNodeUrl = req.body.newNodeUrl;
+
+	if (blockchain.networkNodes.indexOf(newNodeUrl) == -1) {
+		blockchain.networkNodes.push(newNodeUrl);
+	}
+
+	const regNodesPromises = [];
+	blockchain.networkNodes.forEach((networkNodesUrl) => {
+		const requestOptions = {
+			url: `${networkNodesUrl}/register-node`,
+			method: "POST",
+			data: { newNodeUrl: newNodeUrl },
+			headers: { "Content-Type": "application/json" },
+		};
+
+		regNodesPromises.push(axios(requestOptions));
+	});
+
+	try {
+		await axios.all(regNodesPromises);
+
+		const bulkRegisterOptions = {
+			url: `${newNodeUrl}/register-nodes-bulk`,
+			method: "POST",
+			data: {
+				allNetworkNodes: [
+					...blockchain.networkNodes,
+					blockchain.currentNodeUrl,
+				],
+				pendingTransactions: blockchain.pendingTransactions,
+			},
+			headers: { "Content-Type": "application/json" },
+		};
+
+		await axios(bulkRegisterOptions);
+
+		res.json({ message: "New node registered with network successfully" });
+	} catch (err) {
+		res.status(400).json({ error: err.message });
+	}
 });
 
 app.get("/blocks", (req, res) => {
