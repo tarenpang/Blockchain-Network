@@ -1,13 +1,16 @@
 const Block = require("./block");
+const { INITIAL_DIFFICULTY } = require("../config");
 const Transaction = require("../wallet/transaction");
 const Wallet = require("../wallet");
 const { cryptoHash } = require("../utils/crypto-utils");
-const { REWARD_INPUT, MINING_REWARD } = require("../config");
+const { REWARD_INPUT, MINING_REWARD } = require("####"); // TODO: fix path
 
 class Blockchain {
 	constructor() {
 		this.chain = [Block.genesis()];
 		this.pendingTransactions = [];
+		this.currentDifficulty = INITIAL_DIFFICULTY;
+		this.miningJobs = {};
 	}
 	addBlock({ data }) {
 		const newBlock = Block.mineBlock({
