@@ -14,20 +14,20 @@ class Transaction {
 		minedInBlockIndex,
 		transferSuccessful
 	) {
-		this.from = from;
-		this.to = to;
-		this.value = value;
-		this.fee = fee;
-		this.dateCreated = dateCreated;
-		this.data = data;
-		this.senderPubKey = senderPubKey;
-		this.transactionDataHash = transactionDataHash;
+		this.from = from; // 40 hex digits
+		this.to = to; // 40 hex digits
+		this.value = value; // non-negative integer
+		this.fee = fee; // non-negative integer
+		this.dateCreated = dateCreated; // ISO8601_string
+		this.data = data; // optional string
+		this.senderPubKey = senderPubKey; // 65 hex digits
+		this.transactionDataHash = transactionDataHash; // 64 hex digits
 
 		if (this.transactionDataHash === undefined) this.calculateDataHash();
 
-		this.senderSignature = senderSignature;
-		this.minedInBlockIndex = minedInBlockIndex;
-		this.transferSuccessful = transferSuccessful;
+		this.senderSignature = senderSignature; // hex_number[2][64]
+		this.minedInBlockIndex = minedInBlockIndex; // integer / null (if not mined)
+		this.transferSuccessful = transferSuccessful; // boolean
 	}
 
 	calculateDataHash() {

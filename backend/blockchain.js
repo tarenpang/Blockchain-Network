@@ -1,18 +1,17 @@
 const Block = require("./block");
-const {
-	INITIAL_DIFFICULTY,
-	REWARD_INPUT,
-	MINING_REWARD,
-} = require("./utils/config");
+const config = require("./utils/config");
 const Transaction = require("../wallet/transaction");
 const Wallet = require("../wallet");
 const { cryptoHash } = require("./utils/cryptoUtils");
+const currentNodeUrl = process.argv[3];
 
 class Blockchain {
 	constructor() {
 		this.chain = [Block.genesis()];
 		this.pendingTransactions = [];
-		this.currentDifficulty = INITIAL_DIFFICULTY;
+		this.currentDifficulty = config.INITIAL_DIFFICULTY;
+		this.currentNodeUrl = currentNodeUrl;
+		this.networkNodes = [];
 		this.miningJobs = {};
 	}
 	addBlock({ data }) {
