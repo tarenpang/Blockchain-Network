@@ -1,13 +1,12 @@
 const Block = require("./block");
 const config = require("./utils/config");
-const Transaction = require("../wallet/transaction");
-const Wallet = require("../wallet");
+const Transaction = require("./transaction");
 const { cryptoHash } = require("./utils/cryptoUtils");
 const currentNodeUrl = process.argv[3];
 
 class Blockchain {
 	constructor() {
-		this.chain = [Block.genesis()];
+		this.chain = Block.genesisBlock();
 		this.pendingTransactions = [];
 		this.currentDifficulty = config.INITIAL_DIFFICULTY;
 		this.currentNodeUrl = currentNodeUrl;

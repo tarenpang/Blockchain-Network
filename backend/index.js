@@ -12,16 +12,6 @@ const ROOT_NODE_ADDRESS = `http://localhost:${DEFAULT_PORT}`;
 
 const app = express();
 const blockchain = new Blockchain();
-const transactionPool = new TransactionPool();
-const wallet = new Wallet();
-// const pubsub = new PubSub({ blockchain, transactionPool });
-
-const transactionMiner = new TransactionMiner({
-	blockchain,
-	transactionPool,
-	wallet,
-	pubsub,
-});
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -236,8 +226,6 @@ app.post("/register-nodes-bulk", function (req, res) {
 		message: "Bulk registration successful",
 	});
 });
-
-const axios = require("axios");
 
 app.post("/unregister-and-broadcast-node", function (req, res) {
 	const oldNodeURL = req.body.oldNodeURL;
