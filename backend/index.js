@@ -47,17 +47,22 @@ app.get("/info", (req, res) => {
 			? "Not connected to the IndiGOLD blockchain."
 			: blockchain.blocks[0].blockHash;
 
-	res.status(StatusCodes.OK).json({
-		about: "KU Blockchain Engineer Course / Blockchain Network Project",
-		nodeId: nodeId,
-		chainId: chainId,
-		nodeUrl: process.argv[3],
-		peers: blockchain.networkNodes.size,
-		blocksCount: blockchain.blocks.length,
-		cumulativeDifficulty: blockchain.calculateCumulativeDifficulty(),
+	res.json({
+		about: "IndiGOLD Blockchain Network",
+		nodeUrl: blockchain.currentNodeUrl,
+		peers: blockchain.networkNodes.length,
+		difficulty: blockchain.difficulty,
+		blocks: blockchain.chain.length,
+		chainId: blockchain.chain[0].blockHash,
+		cumulativeDifficulty: blockchain.calcCumulativeDifficulty(),
 		confirmedTransactions: blockchain.getConfirmedTransactions().length,
 		pendingTransactions: blockchain.pendingTransactions.length,
 	});
+});
+
+app.get("/addresses", (req, res) => {
+	let allAddresses = noobchain.getAllAddresses();
+	res.json(allAddresses);
 });
 
 app.get("/address/:address/transactions", (req, res) => {
@@ -75,8 +80,7 @@ app.get("/address/:address/balance", (req, res) => {
 
 app.post("/transaction", function (req, res) {
 	const newTransaction = req.body;
-	const blockIndex =
-		blockchain.addTransactionToPendingTransactions(newTransaction);
+	const blockIndex = blockchain.addNewTxnToPendingTxns(newTransaction);
 	res.json({
 		message: `Transaction will be added in block ${blockIndex}`,
 	});
@@ -329,7 +333,7 @@ app.get("/block/:blockHash/transactions", (req, res) => {
 
 app.get("/transaction/:transactionHash", (req, res) => {
 	const transactionHash = req.params.transactionHash;
-	const transactionData = blockchain.getTransaction(transactionHash);
+	const transactionData = blockchain.getTransactionByTxnHash(transactionHash);
 	res.json({ transaction: transactionData });
 });
 
@@ -355,67 +359,6 @@ app.post("/mine", (req, res) => {
 	pubsub.broadcastChain();
 
 	res.redirect("/blocks");
-});
-
-app.post("/transact", (req, res) => {
-	const { amount, recipient } = req.body;
-
-	let transaction = transactionPool.existingTransaction({
-		inputAddress: wallet.publicKey,
-	});
-
-	try {
-		if (transaction) {
-			transaction.update({ senderWallet: wallet, recipient, amount });
-		} else {
-			transaction = wallet.createTransaction({
-				recipient,
-				amount,
-				chain: blockchain.chain,
-			});
-		}
-	} catch (error) {
-		return res.status(400).json({ type: "error", message: error.message });
-	}
-
-	transactionPool.setTransaction(transaction);
-
-	pubsub.broadcastTransaction(transaction);
-
-	res.json({ type: "success", transaction });
-});
-
-app.get("/transaction-pool-map", (req, res) => {
-	res.json(transactionPool.transactionMap);
-});
-
-app.get("/mine-transactions", (req, res) => {
-	transactionMiner.mineTransactions();
-
-	res.redirect("/blocks");
-});
-
-app.get("/wallet-info", (req, res) => {
-	const address = wallet.publicKey;
-
-	res.json({
-		address,
-		balance: Wallet.calculateBalance({ chain: blockchain.chain, address }),
-	});
-});
-
-app.get("/known-addresses", (req, res) => {
-	const addressMap = {};
-
-	for (let block of blockchain.chain) {
-		for (let transaction of block.data) {
-			const recipient = Object.keys(transaction.outputMap);
-
-			recipient.forEach((recipient) => (addressMap[recipient] = recipient));
-		}
-	}
-
-	res.json(Object.keys(addressMap));
 });
 
 app.listen(port, function () {
