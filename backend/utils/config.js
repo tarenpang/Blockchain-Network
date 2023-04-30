@@ -1,31 +1,41 @@
-const MINE_RATE = 1000;
-const INITIAL_DIFFICULTY = 3;
+const CryptoUtils = require("./cryptoUtils");
 
-const date = new Date();
+const initialDifficulty = 3;
+const genesisDate = "2023-03-21T00:00:00.000Z";
+const blockReward = 5000000;
 
-date.setDate(date.getDate() - 30);
+const faucetPrivKey =
+	"3313b06752cd6276f9deb4fefef6f17e904b194808ea9dcf61f1125528b7f74a";
 
-const GENESIS_DATA = {
-	// screen case syntax == hard coded global values
-	timestamp: date,
-	lastHash: "-----",
-	hash: "hash-one",
-	difficulty: INITIAL_DIFFICULTY,
-	nonce: 0,
-	data: [],
+const initialFaucetTransaction = {
+	from: "0".repeat(40),
+	to: "0".repeat(40),
+	value: 1000000000000,
+	dateCreated: genesisDate,
+	data: "genesis tx",
+	senderPubKey: "0".repeat(65),
+	transactionDataHash: "0".repeat(64),
+	senderSignature: ["0".repeat(64), "0".repeat(64)],
+	minedInBlockIndex: 0,
+	transferSuccessful: true,
 };
 
-const STARTING_BALANCE = 1000;
-
-const REWARD_INPUT = { address: "*authorized-reward*" };
-
-const MINING_REWARD = 50;
+const genesisBlockData = {
+	index: 0,
+	transactions: [initialFaucetTransaction],
+	difficulty: initialDifficulty,
+	prevBlockHash: "0".repeat(64),
+	minedBy: "0".repeat(40),
+	blockDataHash: "0".repeat(64),
+	nonce: 0,
+	dateCreated: genesisDate,
+	blockHash: "0".repeat(64),
+	blockReward: blockReward,
+};
 
 module.exports = {
-	GENESIS_DATA,
-	MINE_RATE,
-	INITIAL_DIFFICULTY,
-	STARTING_BALANCE,
-	REWARD_INPUT,
-	MINING_REWARD,
+	genesisDate,
+	genesisBlockData,
+	initialDifficulty,
+	blockReward,
 };

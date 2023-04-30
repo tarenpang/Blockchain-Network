@@ -10,9 +10,7 @@ class Transaction {
 		data,
 		senderPubKey,
 		transactionDataHash,
-		senderSignature,
-		minedInBlockIndex,
-		transferSuccessful
+		senderSignature
 	) {
 		this.from = from; // 40 hex digits
 		this.to = to; // 40 hex digits
