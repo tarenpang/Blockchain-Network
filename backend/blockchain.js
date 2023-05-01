@@ -88,7 +88,7 @@ Blockchain.prototype.addTransaction = function (txnData) {
 	);
 
 	// Check for duplicate transactions
-	if (this.findTransactionByDataHash(tran.transactionDataHash))
+	if (this.getTransactionByDataHash(tran.transactionDataHash))
 		return { errorMsg: "Duplicated transaction: " + tran.transactionDataHash };
 
 	if (!tran.verifySignature())
@@ -103,13 +103,14 @@ Blockchain.prototype.addTransaction = function (txnData) {
 	return newTransaction;
 };
 
-// Find Transaction Given the Transaction Data Hash
-Blockchain.prototype.findTransactionByDataHash = function (txnDataHash) {
-	let allTransactions = this.getAllTransactions();
-	let matchingTransactions = allTransactions.filter(
-		(txn) => txn.txnDataHash === txnDataHash
+// Get Transaction Given the Transaction Data Hash
+Blockchain.prototype.getTransactionByDataHash = function (txnHash) {
+	const allTransactions = this.getAllTransactions();
+	let targetTransaction = allTransactions.filter(
+		(transaction) => transaction.transactionDataHash === txnHash
 	);
-	return matchingTransactions[0];
+
+	return targetTransaction[0];
 };
 
 // Add New Transaction to the Array of Pending Transactions
@@ -134,16 +135,20 @@ Blockchain.prototype.getConfirmedTransactions = function () {
 	return transactions;
 };
 
-// Get Transaction History of an Address
-Blockchain.prototype.getAddressTransactions = function (address) {
-	if (!ValidationUtils.isValidAddress(address)) {
+// Get Transaction History Given the Address
+Blockchain.prototype.getTransactionHistory = function (address) {
+	if (!ValidationUtils.isValidAddress(address))
 		return { errorMsg: "Invalid address" };
-	}
 
-	let transactions = this.getAllTransactions();
+	const transactions = this.getAllTransactions();
 	let transactionsByAddress = transactions.filter(
-		(txn) => txn.from === address || txn.to === address
+		(transaction) => transaction.from === address || transaction.to === address
 	);
+	// Sort the transactions by date
+	transactionsByAddress.sort((a, b) =>
+		a.dateCreated.localeCompare(b.dateCreated)
+	);
+
 	return transactionsByAddress;
 };
 
@@ -427,14 +432,14 @@ Blockchain.prototype.getAccountBalance = function (address) {
 		safeBalance: 0,
 		confirmedBalance: 0,
 		pendingBalance: 0,
-		safeCount: config.safeConfirmCount,
+		safeCount: Config.safeConfirmCount,
 	};
 	for (let tran of transactions) {
 		// Determine the number of blocks mined since the transaction was created
 
 		let confimationCount = 0;
 		if (typeof tran.minedInBlockIndex === "number") {
-			confimationCount = this.chain.length - tran.minedInBlockIndex;
+			confimationCount = this.blocks.length - tran.minedInBlockIndex;
 		}
 
 		// Calculate the address balance
@@ -460,7 +465,7 @@ Blockchain.prototype.getAccountBalance = function (address) {
 				balance.pendingBalance += Number(tran.value);
 			if (confimationCount > 0) balance.confirmedBalance += Number(tran.value);
 			if (
-				confimationCount >= config.safeConfirmCount &&
+				confimationCount >= Config.safeConfirmCount &&
 				tran.transferSuccessful
 			)
 				balance.safeBalance += Number(tran.value);
@@ -470,33 +475,34 @@ Blockchain.prototype.getAccountBalance = function (address) {
 	return balance;
 };
 
-// Get the Transactions & Balance of an Address
-Blockchain.prototype.getAddressData = function (address) {
-	const addressTransactions = [];
+// // Get the Transactions & Balance of an Address
+// Blockchain.prototype.getAddressData = function (address) {
+// 	const addressTransactions = [];
 
-	// Get all transactions from the blockchain
-	this.chain.forEach((block) => {
-		block.transactions.forEach((transaction) => {
-			// Add the transaction to the list if it is from the given address
-			if (transaction.to === address || transaction.from === address) {
-				addressTransactions.push(transaction);
-			}
-		});
-	});
-	// Calculate the balance of the given address
-	let balance = 0;
-	addressTransactions.forEach((transaction) => {
-		if (transaction.from === address) {
-			balance -= Number(transaction.value);
-		} else if (transaction.to === address) {
-			balance += Number(transaction.value);
-		}
-	});
-	return {
-		transactions: addressTransactions,
-		addressBalance: balance,
-	};
-};
+// 	// Get all transactions from the blockchain
+// 	this.chain.forEach((block) => {
+// 		block.transactions.forEach((transaction) => {
+// 			// Add the transaction to the list if it is from the given address
+// 			if (transaction.to === address || transaction.from === address) {
+// 				addressTransactions.push(transaction);
+// 			}
+// 		});
+// 	});
+
+// 	// Calculate the balance of the given address
+// 	let balance = 0;
+// 	addressTransactions.forEach((transaction) => {
+// 		if (transaction.from === address) {
+// 			balance -= Number(transaction.value);
+// 		} else if (transaction.to === address) {
+// 			balance += Number(transaction.value);
+// 		}
+// 	});
+// 	return {
+// 		transactions: addressTransactions,
+// 		addressBalance: balance,
+// 	};
+// };
 
 // Get All Addresses with Transactions within the Blockchain
 Blockchain.prototype.getAllAddresses = function () {
@@ -520,12 +526,12 @@ Blockchain.prototype.calcAllConfirmedBalances = function () {
 	let transactions = this.getConfirmedTransactions();
 	let balances = {};
 	for (let tran of transactions) {
-		balances[txn.from] = balances[txn.from] || 0;
-		balances[txn.to] = balances[txn.to] || 0;
-		balances[txn.from] -= txn.fee;
-		if (txn.transferSuccessful) {
-			balances[txn.from] -= txn.value;
-			balances[txn.to] += txn.value;
+		balances[tran.from] = balances[tran.from] || 0;
+		balances[tran.to] = balances[tran.to] || 0;
+		balances[tran.from] -= tran.fee;
+		if (tran.transferSuccessful) {
+			balances[tran.from] -= tran.value;
+			balances[tran.to] += tran.value;
 		}
 	}
 	return balances;

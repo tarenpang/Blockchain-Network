@@ -10,7 +10,9 @@ function Transaction(
 	data,
 	senderPubKey,
 	transactionDataHash,
-	senderSignature
+	senderSignature,
+	minedInBlockIndex,
+	transferSuccessful
 ) {
 	this.from = from; // 40 hex digits
 	this.to = to; // 40 hex digits
@@ -24,8 +26,8 @@ function Transaction(
 	if (this.transactionDataHash === undefined) this.calculateDataHash();
 
 	this.senderSignature = senderSignature; // hex_number[2][64]
-	this.minedInBlockIndex = undefined; // integer / null (if not mined)
-	this.transferSuccessful = undefined; // boolean
+	this.minedInBlockIndex = minedInBlockIndex; // integer / null (if not mined)
+	this.transferSuccessful = transferSuccessful; // boolean
 }
 
 // Calculate Transaction Data Hash
