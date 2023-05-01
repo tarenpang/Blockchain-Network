@@ -112,11 +112,41 @@ app.get("/transactions/pending", (req, res) => {
 	res.status(StatusCodes.OK).json(blockchain.pendingTransactions);
 });
 
+// Get Confirmed Transactions
+app.get("/transactions/confirmed", (req, res) => {
+	const confirmedTransactions = blockchain.getConfirmedTransactions();
+	if (!confirmedTransactions.length >= 1)
+		res.json({
+			errorMsg: "No confirmed transactions.",
+		});
+
+	res.status(StatusCodes.OK).json(confirmedTransactions);
+});
+
+// Get Transaction by Transaction Data Hash
+app.get("/transactions/:txnHash", (req, res) => {
+	let transactionHash = req.params.txnHash;
+	let transaction = blockchain.getTransactionByDataHash(transactionHash);
+	if (transaction) res.json(transaction);
+	else
+		res
+			.status(StatusCodes.NOT_FOUND)
+			.json({ errorMsg: "Invalid transaction hash" });
+});
+
+// List All Account Balances
+app.get("/balances", (req, res) => {
+	let confirmedBalances = blockchain.calcAllConfirmedBalances();
+	res.json(confirmedBalances);
+});
+
+// List All Addresses
 app.get("/addresses", (req, res) => {
 	let allAddresses = blockchain.getAllAddresses();
 	res.json(allAddresses);
 });
 
+// List All Transactions of a Given Address
 app.get("/address/:address/transactions", (req, res) => {
 	let address = req.params.address;
 	let txnHistory = blockchain.getTransactionHistory(address);
@@ -382,11 +412,11 @@ app.get("/transaction/:transactionHash", (req, res) => {
 	res.json({ transaction: transactionData });
 });
 
-app.get("/address/:address", (req, res) => {
-	const address = req.params.address;
-	const addressData = blockchain.getAddressData(address);
-	res.json({ addressData: addressData });
-});
+// app.get("/address/:address", (req, res) => {
+// 	const address = req.params.address;
+// 	const addressData = blockchain.getAddressData(address);
+// 	res.json({ addressData: addressData });
+// });
 
 app.get("/all-transactions", function (req, res) {
 	res.json(blockchain.getAllTransactions());
