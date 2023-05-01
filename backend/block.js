@@ -1,5 +1,6 @@
 const Config = require("./utils/config");
 const CryptoUtils = require("./utils/cryptoUtils");
+const Transaction = require("./transaction");
 
 function Block(
 	index,
@@ -28,40 +29,43 @@ function Block(
 	this.blockHash = blockHash; // hex_number[64]
 
 	// Calculate the block hash if it is missing
-	if (this.blockHash === undefined) this.calcBlockHash();
+	if (this.blockHash === undefined) this.calculateBlockHash();
 
 	this.blockReward = blockReward; // integer
 }
 
+// Calculate Block Data Hash
 Block.prototype.calcBlockDataHash = function () {
 	let blockData = {
 		index: this.index,
-		transactions: this.transactions.map((txns) =>
+		transactions: this.transactions.map((transaction) =>
 			Object({
-				from: txns.from,
-				to: txns.to,
-				value: txns.value,
-				fee: txns.fee,
-				dateCreated: txns.dateCreated,
-				data: txns.data,
-				senderPubKey: txns.senderPubKey,
-				transactionDataHash: txns.transactionDataHash,
-				senderSignature: txns.senderSignature,
-				minedInBlockIndex: txns.minedInBlockIndex,
-				transferSuccessful: txns.transferSuccessful,
+				from: transaction.from,
+				to: transaction.to,
+				value: transaction.value,
+				fee: transaction.fee,
+				dateCreated: transaction.dateCreated,
+				data: transaction.data,
+				senderPubKey: transaction.senderPubKey,
+				transactionDataHash: transaction.transactionDataHash,
+				senderSignature: transaction.senderSignature,
+				minedInBlockIndex: transaction.minedInBlockIndex,
+				transferSuccessful: transaction.transferSuccessful,
 			})
 		),
 		difficulty: this.difficulty,
 		prevBlockHash: this.prevBlockHash,
 		minedBy: this.minedBy,
 	};
-	let blockDataJSON = JSON.stringify(blockData);
-	this.blockDataHash = CryptoUtils.sha256(blockDataJSON);
+	const blockDataJSON = JSON.stringify(blockData).split(" ").join("");
+	return CryptoUtils.sha256(blockDataJSON).toString();
 };
 
-Block.prototype.calcBlockHash = function () {
-	let data = `${this.blockDataHash}|${this.dateCreated}|${this.nonce}`;
-	this.blockHash = CryptoUtils.sha256(data);
+// Calculate Block Hash
+Block.prototype.calculateBlockHash = function () {
+	this.blockHash = CryptoUtils.sha256(
+		this.blockDataHash + this.nonce + this.dateCreated
+	).toString();
 };
 
 module.exports = Block;

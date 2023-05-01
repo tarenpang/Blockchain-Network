@@ -1,4 +1,5 @@
-const config = require("./utils/config");
+const axios = require("axios");
+const Config = require("./utils/config");
 const Block = require("./block");
 const Transaction = require("./transaction");
 const { sha256 } = require("./utils/cryptoUtils");
@@ -6,30 +7,30 @@ const ValidationUtils = require("./utils/validationUtils");
 const currentNodeUrl = process.argv[3];
 
 function Blockchain() {
-	this.chain = [config.genesisBlock];
+	this.blocks = [Config.genesisBlock];
 	this.pendingTransactions = [];
-	this.currentDifficulty = config.initialDifficulty;
-	this.currentNodeUrl = currentNodeUrl;
+	this.difficulty = Config.initialDifficulty;
+	this.currentNodeUrl = Config.currentNodeUrl;
 	this.networkNodes = [];
 	this.miningJobs = {};
 }
 
 // Add New Block to the Blockchain
-Blockchain.prototype.addBlock = function (txnData) {
-	let txn = new Transaction(
-		txnData.from,
-		txnData.to,
-		txnData.value,
-		txnData.fee,
-		txnData.dateCreated,
-		txnData.data,
-		txnData.senderPubKey,
+Blockchain.prototype.addBlock = function (transactionData) {
+	let transaction = new Transaction(
+		transactionData.from,
+		transactionData.to,
+		transactionData.value,
+		transactionData.fee,
+		transactionData.dateCreated,
+		transactionData.data,
+		transactionData.senderPubKey,
 		undefined, // transactionDataHash
-		txnData.senderSignature
+		transactionData.senderSignature
 	);
 
-	this.pendingTransactions.push(txn);
-	return txn;
+	this.pendingTransactions.push(transaction);
+	return transaction;
 };
 
 // Get Block Given the Block Hash
@@ -127,7 +128,7 @@ Blockchain.prototype.getAllTransactions = function () {
 // Get Confirmed Transactions in the Blockchain
 Blockchain.prototype.getConfirmedTransactions = function () {
 	let transactions = [];
-	for (let block of this.chain) {
+	for (let block of this.blocks) {
 		transactions.push.apply(transactions, block.transactions);
 	}
 	return transactions;
@@ -198,7 +199,7 @@ Blockchain.prototype.removePendingTransactions = function (txnsToRemove) {
 // Calculate the Cumulative Difficulty of the Blockchain
 Blockchain.prototype.calcCumulativeDifficulty = function () {
 	let difficulty = 0;
-	for (let block of this.chain) {
+	for (let block of this.blocks) {
 		difficulty += 16 ** block.difficulty;
 	}
 	return difficulty;
@@ -529,5 +530,195 @@ Blockchain.prototype.calcAllConfirmedBalances = function () {
 	}
 	return balances;
 };
+
+// Reset the Blockchain
+Blockchain.prototype.resetChain = function () {
+	this.blocks = [Config.genesisBlock];
+	this.miningJobs = {};
+	this.pendingTransactions = [];
+	this.difficulty = Config.initialDifficulty;
+	this.miningJobs = {};
+	this.networkNodes = new Map();
+	this.networkNodes.set(this.nodeId, this.nodeUrl);
+	this.peers = [];
+	this.peers.push(this.nodeUrl);
+	this.peersData = {};
+	this.peersData[this.nodeId] = this.nodeUrl;
+};
+
+// // Get Peers Data
+// Blockchain.prototype.getPeersData = function () {
+// 	const peers = this.networkNodes.entries();
+
+// 	let peerObj = {};
+// 	for (const [key, value] of peers) {
+// 		peerObj[`${key}`] = value;
+// 	}
+// 	return peerObj;
+// };
+
+// // Register & Broadcast New Peer to Network
+// Blockchain.prototype.registerBroadcastNewPeerToNetwork = async function (
+// 	endpoints,
+// 	peerNodeId,
+// 	peerNodeUrl
+// ) {
+// 	await Promise.all(
+// 		endpoints.map((endpoint) =>
+// 			axios.post(endpoint, { peerNodeId, peerNodeUrl })
+// 		)
+// 	)
+// 		.then(function () {})
+// 		.catch(function (error) {
+// 			console.log("Peer registration error", error);
+// 		});
+// };
+
+// // Register All Nodes to New Peer
+// Blockchain.prototype.registerAllNodesToPeer = async function (allPeers) {
+// 	allPeers.forEach((peerUrl) => {
+// 		axios
+// 			.get(peerUrl + "/info")
+// 			.then((data) => {
+// 				const peerInfo = data.data;
+// 				const peers = peerInfo.peersMap;
+
+// 				for (let data in peers) {
+// 					const id = data;
+// 					const url = peers[id];
+// 					const peerNotPreExisting = !this.networkNodes.has(id);
+// 					const notCurrentNode = this.currentNodeURL !== url;
+
+// 					if (peerNotPreExisting && notCurrentNode) {
+// 						axios
+// 							.post(this.currentNodeURL + "/peers/connect", {
+// 								peerUrl: peerInfo.nodeUrl,
+// 							})
+// 							.then(function () {})
+// 							.catch(function () {});
+
+// 						return {
+// 							message: "Successfully registered network nodes to new peer",
+// 						};
+// 					}
+// 				}
+// 			})
+// 			.catch((error) => {
+// 				console.log("ERROR:", error);
+
+// 				return { errorMsg: "Error registering network to new peer node." };
+// 			});
+// 	});
+// };
+
+// // Broadcast New Block to Network
+// Blockchain.prototype.notifyPeersAboutNewBlock = function () {
+// 	const notification = {
+// 		blocksCount: this.blocks.length,
+// 		cumulativeDifficulty: this.cumulativeDifficulty(),
+// 		nodeUrl: this.currentNodeURL,
+// 	};
+
+// 	this.networkNodes.forEach((peerUrl) => {
+// 		axios
+// 			.post(peerUrl + "/peers/notify-new-block", notification)
+// 			.then(function () {})
+// 			.catch(function () {});
+// 	});
+// };
+
+// // Synchronize Blockchain
+// Blockchain.prototype.synchronizeTheChain = async function (peerNodeChain) {
+// 	// CALCULATE & COMPARE CUMULATIVE DIFFICULTIES
+// 	let currentNodeCumulativeDifficulty = this.calcCumulativeDifficulty();
+// 	let peerNodeCumulativeDifficulty = peerNodeChain.cumulativeDifficulty;
+
+// 	// Replace chain if validated peer chain is longer
+// 	if (peerNodeCumulativeDifficulty > currentNodeCumulativeDifficulty) {
+// 		try {
+// 			// Get peer blocks
+// 			const peerChainBlocks = (
+// 				await axios.get(peerNodeChain.nodeUrl + "/blocks")
+// 			).data;
+
+// 			// Validate
+// 			const isValid = this.validateChain(peerChainBlocks);
+// 			if (isValid.errorMsg) return isValid;
+
+// 			// Recalculate cumulative difficulties
+// 			currentNodeCumulativeDifficulty = this.calCumulativeDifficulty();
+// 			peerNodeCumulativeDifficulty = peerNodeChain.cumulativeDifficulty;
+
+// 			// Sync to peer if they have longer chain
+// 			if (peerNodeCumulativeDifficulty > currentNodeCumulativeDifficulty) {
+// 				this.blocks = peerChainBlocks;
+// 				this.miningJobs = {};
+// 			}
+
+// 			this.removePendingTransactions(this.getConfirmedTransactions());
+
+// 			// NOTIFY PEERS EVERY SYNC (when new block mined or received / longer chain arrival)
+// 			this.notifyPeersAboutNewBlock();
+// 		} catch (error) {
+// 			console.error(`Error synchronizing the chain: ${error}`);
+// 			return { errorMsg: error.message };
+// 		}
+// 	}
+// };
+
+// // Validate Chain
+// Blockchain.prototype.validateChain = function (peerChainBlocks) {
+// 	peerChainBlocks.forEach((block, index) => {
+// 		if (index === 0 && block[index] !== this.blocks[0]) {
+// 			return { errorMsg: "Invalid Chain. Genesis blocks must match" };
+// 		}
+
+// 		const isValidBlock = this.validateBlock(block);
+// 		if (isValidBlock.errorMsg) return isValidBlock;
+// 	});
+
+// 	return true;
+// };
+
+// // Synchronize Pending Transactions
+// Blockchain.prototype.synchronizePendingTransactions = async function (
+// 	peerNodeChain
+// ) {
+// 	if (peerNodeChain.pendingTransactions > 0) {
+// 		await axios
+// 			.get(peerNodeChain.nodeUrl + "/transactions/pending")
+// 			.then((data) => {
+// 				const transactions = data.data;
+
+// 				transactions.forEach((transaction) => {
+// 					const transactionAdded = this.createNewTransaction(transaction);
+
+// 					if (transactionAdded.transactionDataHash) {
+// 						this.broadcastTransactionToPeers(transactionAdded);
+// 					}
+// 				});
+// 			})
+// 			.catch((error) => console.log("ERROR::", error));
+// 	}
+// 	return;
+// };
+
+// // Broadcast Transaction to Peers
+// Blockchain.prototype.broadcastTransactionToPeers = async function (
+// 	transaction
+// ) {
+// 	let endpoints = [];
+// 	this.networkNodes.forEach((peerUrl) => {
+// 		endpoints.push(peerUrl + "/addToPendingTransactions");
+// 	});
+
+// 	await Promise.all(
+// 		endpoints.map((endpoint) => axios.post(endpoint, transaction))
+// 	)
+// 		.then(function () {})
+// 		.catch(function (error) {
+// 			console.log("ERROR:: ", error);
+// 		});
+// };
 
 module.exports = Blockchain;

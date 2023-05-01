@@ -5,18 +5,11 @@
 	"main": "index.js",
 	"scripts": {
 		"test": "jest --watchAll --verbose false",
-		"start": "npm run build-client && node index.js",
-		"dev": "npm run dev-client & npm run start-redis && nodemon index.js",
-		"start-redis": "redis-server --daemonize yes",
-		"node_1": "npm run dev-client & npm run start-redis && nodemon --watch src -e js index.js 5555 http://localhost:5555",
-		"node_2": "npm run dev-client & npm run start-redis && nodemon --watch src -e js index.js 5556 http://localhost:5556",
-		"node_3": "npm run dev-client & npm run start-redis && nodemon --watch src -e js index.js 5557 http://localhost:5557",
-		"node_4": "npm run dev-client & npm run start-redis && nodemon --watch src -e js index.js 5558 http://localhost:5558",
-		"node_5": "npm run dev-client & npm run start-redis && nodemon --watch src -e js index.js 5559 http://localhost:5559",
-		"dev-peer": "cross-env GENERATE_PEER_PORT='true' nodemon && index.js",
-		"build-client": "npm run clean && parcel build client/src/index.html --out-dir client/dist",
-		"dev-client": "npm run clean && parcel client/src/index.html --out-dir client/dist",
-		"clean": "rm -rf .cache client/dist"
+		"node_1": "nodemon --watch src -e js index.js 5555 http://localhost:5555",
+		"node_2": "nodemon --watch src -e js index.js 5556 http://localhost:5556",
+		"node_3": "nodemon --watch src -e js index.js 5557 http://localhost:5557",
+		"node_4": "nodemon --watch src -e js index.js 5558 http://localhost:5558",
+		"node_5": "nodemon --watch src -e js index.js 5559 http://localhost:5559"
 	},
 	"jest": {
 		"testEnvironment": "node"
