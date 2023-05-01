@@ -2,10 +2,12 @@ const bodyParser = require("body-parser");
 const express = require("express");
 const cors = require("cors");
 const { StatusCodes } = require("http-status-codes");
-// const Config = require("./config");
+const Config = require("./utils/config");
+const Block = require("./block");
 const Blockchain = require("./blockchain");
-// const PubSub = require("./app/pubsub");
+const host = "http://localhost";
 const port = process.argv[2];
+const axios = require("axios");
 
 const DEFAULT_PORT = 5555;
 const ROOT_NODE_ADDRESS = `http://localhost:${DEFAULT_PORT}`;
@@ -16,6 +18,21 @@ const blockchain = new Blockchain();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
+
+let blockchainNode = {
+	nodeId: "",
+	selfId: "",
+	peers: {},
+	chain: blockchain,
+};
+
+blockchainNode.init = function (host, port, blockchain) {
+	blockchainNode.nodeId =
+		new Date().getTime().toString(16) + Math.random().toString(16).substring(2);
+	blockchainNode.selfId = `${host}:${port}`;
+	blockchainNode.peers = {};
+	blockchainNode.chain = blockchain;
+};
 
 app.get("/", (req, res) => {
 	if (!res) {
@@ -38,30 +55,65 @@ app.get("/", (req, res) => {
 	}
 });
 
+// Node Info
 app.get("/info", (req, res) => {
-	const nodeId =
-		new Date().getTime().toString(16) + Math.random().toString(16).substring(2);
-
-	const chainId =
-		!blockchain.blocks.length >= 1
-			? "Not connected to the IndiGOLD blockchain."
-			: blockchain.blocks[0].blockHash;
-
-	res.json({
+	res.status(StatusCodes.OK).json({
 		about: "IndiGOLD Blockchain Network",
-		nodeUrl: blockchain.currentNodeUrl,
-		peers: blockchain.networkNodes.length,
-		difficulty: blockchain.difficulty,
-		blocks: blockchain.chain.length,
-		chainId: blockchain.chain[0].blockHash,
+		nodeId: blockchainNode.nodeId,
+		chainId: Config.chainId,
+		nodeUrl: Config.currentNodeURL,
+		peers: Object.keys(blockchainNode.peers).length,
+		currentDifficulty: blockchain.difficulty,
+		blocksCount: blockchain.blocks.length,
 		cumulativeDifficulty: blockchain.calcCumulativeDifficulty(),
 		confirmedTransactions: blockchain.getConfirmedTransactions().length,
 		pendingTransactions: blockchain.pendingTransactions.length,
 	});
 });
 
+// Node Debug
+app.get("/debug", (req, res) => {
+	res.status(StatusCodes.OK).json({
+		selfUrl: Config.currentNodeURL,
+		peers: blockchainNode.peers,
+		chain: blockchain.blocks,
+		pendingTransactions: blockchain.pendingTransactions,
+		currentDifficulty: blockchain.currentDifficulty,
+		miningJobs: blockchain.miningJobs,
+		confirmedBalances: blockchain.confirmedBalances,
+	});
+});
+
+// Get All Blocks
+app.get("/blocks", (req, res) => {
+	res.json(blockchain.blocks);
+});
+
+// Reset Chain to Genesis Block
+app.get("/debug/reset-chain", (req, res) => {
+	blockchain.resetChain();
+	res.status(StatusCodes.OK).json({
+		message: "Chain reset successfully.",
+		blockchain: blockchain,
+	});
+});
+
+// Get Block by Index
+app.get("/blocks/:index", (req, res) => {
+	let index = req.params.index;
+	let block = blockchainNode.chain.blocks[index];
+	if (block) res.json(block);
+	else
+		res.status(StatusCodes.NOT_FOUND).json({ errorMsg: "Invalid block index" });
+});
+
+// Get Pending Transactions
+app.get("/transactions/pending", (req, res) => {
+	res.status(StatusCodes.OK).json(blockchain.pendingTransactions);
+});
+
 app.get("/addresses", (req, res) => {
-	let allAddresses = noobchain.getAllAddresses();
+	let allAddresses = blockchain.getAllAddresses();
 	res.json(allAddresses);
 });
 
@@ -85,8 +137,6 @@ app.post("/transaction", function (req, res) {
 		message: `Transaction will be added in block ${blockIndex}`,
 	});
 });
-
-const axios = require("axios");
 
 app.post("/transaction/broadcast", async function (req, res) {
 	const newTransaction = blockchain.addTransaction(req.body);
@@ -302,11 +352,6 @@ app.get("/consensus", async function (req, res) {
 	} catch (error) {
 		res.status(400).json({ error: error.message });
 	}
-});
-
-// Block Explorer
-app.get("/blocks", (req, res) => {
-	res.json(blockchain.chain);
 });
 
 app.get("/blocks/length", (req, res) => {
