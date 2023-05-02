@@ -46,7 +46,7 @@ Transaction.prototype.calculateDataHash = function () {
 };
 
 // Sign Transaction
-Transaction.prototype.sign = function (privateKey) {
+Transaction.prototype.signTransaction = function (privateKey) {
 	this.senderSignature = CryptoUtils.signData(
 		this.transactionDataHash,
 		privateKey
