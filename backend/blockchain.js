@@ -36,7 +36,7 @@ Blockchain.prototype.addBlock = function (transactionData) {
 // Get Block Given the Block Hash
 Blockchain.prototype.getBlock = function (blockHash) {
 	let targetBlock = null;
-	this.chain.forEach((block) => {
+	this.blocks.forEach((block) => {
 		if (block.blockHash === blockHash) {
 			targetBlock = block;
 		}
@@ -47,7 +47,7 @@ Blockchain.prototype.getBlock = function (blockHash) {
 // Get Block Given the Block Index
 Blockchain.prototype.getBlockByIndex = function (blockIndex) {
 	let targetBlock = null;
-	this.chain.forEach((block) => {
+	this.blocks.forEach((block) => {
 		if (block.blockIndex === blockIndex) {
 			targetBlock = block;
 		}
@@ -57,7 +57,7 @@ Blockchain.prototype.getBlockByIndex = function (blockIndex) {
 
 // Get Last Block of the Blockchain
 Blockchain.prototype.getLastBlock = function () {
-	return this.chain[this.chain.length - 1];
+	return this.blocks[this.blocks.length - 1];
 };
 
 // Add New Transaction & Push to Pending Txn Pool Given the Txn Data
@@ -95,7 +95,7 @@ Blockchain.prototype.addNewTransaction = function (txnData) {
 		txnData.dateCreated,
 		txnData.data,
 		txnData.senderPubKey,
-		undefined, // transactionDataHash
+		txnData.transactionDataHash, // transactionDataHash
 		txnData.senderSignature
 	);
 
@@ -168,7 +168,7 @@ Blockchain.prototype.getTransactionHistory = function (address) {
 // Get a Block's Transactions Given the Block Hash
 Blockchain.prototype.getBlockTransactions = function (blockHash) {
 	let targteBlockTxns = null;
-	this.chain.forEach((block) => {
+	this.blocks.forEach((block) => {
 		if (block.blockHash === blockHash) {
 			targetBlockTxns = block.transactions;
 		}
@@ -182,7 +182,7 @@ Blockchain.prototype.getTransactionByTxnHash = function (transactionHash) {
 	let targetBlock = null;
 
 	// confirmed transactions
-	this.chain.forEach((block) => {
+	this.blocks.forEach((block) => {
 		block.transactions.forEach((transaction) => {
 			if (transaction.transactionDataHash === transactionHash) {
 				targetTransaction = transaction;
@@ -329,24 +329,6 @@ Blockchain.prototype.chainIsValid = function (blockchain) {
 		}
 	}
 
-	// Extend the Blockchain if the New Block is Valid
-	Blockchain.prototype.extendChain = function (newBlock) {
-		if (newBlock.index !== this.chain.length)
-			return {
-				errorMsg: "The submitted block was already mined by someone else",
-			};
-
-		let prevBlock = this.chain[this.chain.length - 1];
-		if (prevBlock.blockHash !== newBlock.prevBlockHash)
-			return { errorMsg: "Incorrect prevBlockHash" };
-
-		// The block is correct --> accept it
-		this.chain.push(newBlock);
-		this.miningJobs = {}; // Invalidate all mining jobs
-		this.pendingTransactions = [];
-		return newBlock;
-	};
-
 	// Check if the genesis block is valid
 	const genesisBlock = blockchain[0];
 	const correctNonce = genesisBlock["nonce"] === 0;
@@ -481,7 +463,7 @@ Blockchain.prototype.submitMinedBlock = function (
 	newBlock.nonce = nonce;
 	newBlock.calculateBlockHash();
 
-	let blockReward = config.blockReward;
+	let blockReward = Config.blockReward;
 	newBlock.blockReward = blockReward;
 
 	// Validate the block hash + the proof of work
@@ -497,6 +479,25 @@ Blockchain.prototype.submitMinedBlock = function (
 	//update local node
 	newBlock = this.extendChain(newBlock);
 
+	return newBlock;
+};
+
+// Extend the Blockchain if the New Block is Valid
+Blockchain.prototype.extendChain = function (newBlock) {
+	// Validate Block
+	if (newBlock.index !== this.blocks.length)
+		return {
+			errorMsg: "The submitted block was already mined by someone else",
+		};
+
+	let prevBlock = this.blocks[this.blocks.length - 1];
+	if (prevBlock.blockHash !== newBlock.prevBlockHash)
+		return { errorMsg: "Incorrect prevBlockHash" };
+
+	// Accept the New Block
+	this.blocks.push(newBlock);
+	this.miningJobs = {}; // Invalidate all mining jobs
+	this.pendingTransactions = [];
 	return newBlock;
 };
 
@@ -586,7 +587,7 @@ Blockchain.prototype.getAccountBalance = function (address) {
 // Get All Addresses with Transactions within the Blockchain
 Blockchain.prototype.getAllAddresses = function () {
 	let addresses = new Set();
-	this.chain.forEach((block) => {
+	this.blocks.forEach((block) => {
 		block.transactions.forEach((transaction) => {
 			// Add the transaction to the list if it is from the given address
 			addresses.add(transaction.to);

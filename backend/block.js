@@ -57,8 +57,8 @@ Block.prototype.calcBlockDataHash = function () {
 		prevBlockHash: this.prevBlockHash,
 		minedBy: this.minedBy,
 	};
-	const blockDataJSON = JSON.stringify(blockData).split(" ").join("");
-	return CryptoUtils.sha256(blockDataJSON).toString();
+	let blockDataJSON = JSON.stringify(blockData);
+	this.blockDataHash = CryptoUtils.sha256(blockDataJSON);
 };
 
 // Calculate Block Hash

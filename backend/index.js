@@ -202,6 +202,8 @@ app.post("/transaction", function (req, res) {
 app.get("/mining/get-mining-job/:miner-address", (req, res) => {
 	let address = req.params.address;
 	let blockCandidate = blockchain.getMiningJob(address);
+	// console.log(blockCandidate.transactions[0].to);
+	console.log(blockCandidate.transactions);
 	res.status(StatusCodes.OK).json({
 		index: blockCandidate.index,
 		transactionsIncluded: blockCandidate.transactions.length,
@@ -212,223 +214,258 @@ app.get("/mining/get-mining-job/:miner-address", (req, res) => {
 	});
 });
 
-app.post("/mine", function (req, res) {
-	const { minerAddress, difficulty } = req.body;
-	const newBlock = blockchain.mineNextBlock(minerAddress, difficulty);
-
-	// broadcast the new block to other nodes
-	const requestPromises = [];
-	blockchain.networkNodes.forEach((node) => {
-		const requestOptions = {
-			url: `${node}/receive-new-block`,
-			method: "POST",
-			data: { newBlock },
-			headers: {
-				"Content-Type": "application/json",
-			},
-		};
-
-		requestPromises.push(axios(requestOptions));
-	});
-
-	Promise.all(requestPromises)
-		.then(() => {
-			res.json({
-				message: "New block mined and broadcasted successfully",
-				block: newBlock,
-			});
-		})
-		.catch((err) => res.status(400).json({ error: err.message }));
-});
-
-app.post("/receive-new-block", function (req, res) {
-	const block = blockchain.extendChain(req.body.newBlock);
-	if (!block.errorMsg) {
+// Submit Mined Block
+app.post("/mining/submit-mined-block", (req, res) => {
+	let blockDataHash = req.body.blockDataHash;
+	let dateCreated = req.body.dateCreated;
+	let nonce = req.body.nonce;
+	let blockHash = req.body.blockHash;
+	let result = blockchain.submitMinedBlock(
+		blockDataHash,
+		dateCreated,
+		nonce,
+		blockHash
+	);
+	if (result.errorMsg) res.status(StatusCodes.BAD_REQUEST).json(result);
+	else {
 		res.json({
-			message: "New block received and accepted",
-			block,
+			message: `Block accepted to blockchain, mining reward: ${result.transactions[0].value} microcoins`,
 		});
-	} else {
-		res.json({
-			message: "New block rejected",
-			block,
-		});
+		blockchain.notifyPeersAboutNewBlock();
 	}
 });
 
-app.post("/register-and-broadcast-node", async function (req, res) {
-	const newNodeUrl = req.body.newNodeUrl;
-
-	if (blockchain.networkNodes.indexOf(newNodeUrl) == -1) {
-		blockchain.networkNodes.push(newNodeUrl);
-	}
-
-	const regNodesPromises = [];
-	blockchain.networkNodes.forEach((networkNodesUrl) => {
-		const requestOptions = {
-			url: `${networkNodesUrl}/register-node`,
-			method: "POST",
-			data: { newNodeUrl: newNodeUrl },
-			headers: { "Content-Type": "application/json" },
-		};
-
-		regNodesPromises.push(axios(requestOptions));
-	});
-
-	try {
-		await axios.all(regNodesPromises);
-
-		const bulkRegisterOptions = {
-			url: `${newNodeUrl}/register-nodes-bulk`,
-			method: "POST",
-			data: {
-				allNetworkNodes: [
-					...blockchain.networkNodes,
-					blockchain.currentNodeUrl,
-				],
-				pendingTransactions: blockchain.pendingTransactions,
-			},
-			headers: { "Content-Type": "application/json" },
-		};
-
-		await axios(bulkRegisterOptions);
-
-		res.json({ message: "New node registered with network successfully" });
-	} catch (err) {
-		res.status(400).json({ error: err.message });
-	}
+// Debug Mining a Block
+app.get("/debug/mine/:minerAddress/:difficulty", (req, res) => {
+	let minerAddress = req.params.minerAddress;
+	let difficulty = parseInt(req.params.difficulty) || 3;
+	let result = blockchain.mineNextBlock(minerAddress, difficulty);
+	if (result.errorMsg) res.status(StatusCodes.BAD_REQUEST);
+	res.json(result);
 });
 
-app.post("/register-node", function (req, res) {
-	const newNodeUrl = req.body.newNodeUrl;
-	const nodeNotAlreadyPresent =
-		blockchain.networkNodes.indexOf(newNodeUrl) == -1;
-	const notCurrentNode = blockchain.currentNodeUrl !== newNodeUrl;
-	if (nodeNotAlreadyPresent && notCurrentNode)
-		blockchain.networkNodes.push(newNodeUrl);
-	res.json({
-		message: "New node registered successfully",
-	});
+// List All Peers
+app.get("/peers", (req, res) => {
+	res.json(blockchainNode.peers);
 });
 
-app.post("/register-nodes-bulk", function (req, res) {
-	const allNetworkNodes = req.body.allNetworkNodes;
-	const pendingTransactions = req.body.pendingTransactions;
+// app.post("/mine", function (req, res) {
+// 	const { minerAddress, difficulty } = req.body;
+// 	const newBlock = blockchain.mineNextBlock(minerAddress, difficulty);
 
-	allNetworkNodes.forEach((networkNodesUrl) => {
-		const nodeNotAlreadyPresent =
-			blockchain.networkNodes.indexOf(networkNodesUrl) == -1;
-		const notCurrentNode = blockchain.currentNodeUrl !== networkNodesUrl;
-		if (nodeNotAlreadyPresent && notCurrentNode)
-			blockchain.networkNodes.push(networkNodesUrl);
-	});
-	// update pending transactions
-	blockchain.pendingTransactions = pendingTransactions;
-	res.json({
-		message: "Bulk registration successful",
-	});
-});
+// 	// broadcast the new block to other nodes
+// 	const requestPromises = [];
+// 	blockchain.networkNodes.forEach((node) => {
+// 		const requestOptions = {
+// 			url: `${node}/receive-new-block`,
+// 			method: "POST",
+// 			data: { newBlock },
+// 			headers: {
+// 				"Content-Type": "application/json",
+// 			},
+// 		};
 
-app.post("/unregister-and-broadcast-node", function (req, res) {
-	const oldNodeURL = req.body.oldNodeURL;
+// 		requestPromises.push(axios(requestOptions));
+// 	});
 
-	const removeNodePromise = [];
-	blockchain.networkNodes.forEach((networkNodesUrl) => {
-		const requestOptions = {
-			url: networkNodesUrl + "/unregister-node",
-			method: "POST",
-			data: { oldNodeURL: oldNodeURL },
-			headers: { "Content-Type": "application/json" },
-		};
+// 	Promise.all(requestPromises)
+// 		.then(() => {
+// 			res.json({
+// 				message: "New block mined and broadcasted successfully",
+// 				block: newBlock,
+// 			});
+// 		})
+// 		.catch((err) => res.status(400).json({ error: err.message }));
+// });
 
-		removeNodePromise.push(axios(requestOptions));
-	});
+// app.post("/receive-new-block", function (req, res) {
+// 	const block = blockchain.extendChain(req.body.newBlock);
+// 	if (!block.errorMsg) {
+// 		res.json({
+// 			message: "New block received and accepted",
+// 			block,
+// 		});
+// 	} else {
+// 		res.json({
+// 			message: "New block rejected",
+// 			block,
+// 		});
+// 	}
+// });
 
-	Promise.all(removeNodePromise)
-		.then(() => {
-			if (blockchain.networkNodes.includes(oldNodeURL)) {
-				blockchain.networkNodes = blockchain.networkNodes.filter(
-					(node) => node !== oldNodeURL
-				);
-			}
+// app.post("/register-and-broadcast-node", async function (req, res) {
+// 	const newNodeUrl = req.body.newNodeUrl;
 
-			res.json({
-				message: "Node removed from network successfully",
-			});
-		})
-		.catch((err) => res.status(400).json({ error: err.message }));
-});
+// 	if (blockchain.networkNodes.indexOf(newNodeUrl) == -1) {
+// 		blockchain.networkNodes.push(newNodeUrl);
+// 	}
 
-app.get("/consensus", async function (req, res) {
-	const requestPromises = [];
+// 	const regNodesPromises = [];
+// 	blockchain.networkNodes.forEach((networkNodesUrl) => {
+// 		const requestOptions = {
+// 			url: `${networkNodesUrl}/register-node`,
+// 			method: "POST",
+// 			data: { newNodeUrl: newNodeUrl },
+// 			headers: { "Content-Type": "application/json" },
+// 		};
 
-	// get all network nodes and make a request to each one
-	blockchain.networkNodes.forEach((networkNodeUrl) => {
-		requestPromises.push(axios.get(`${networkNodeUrl}/blockchain`));
-	});
+// 		regNodesPromises.push(axios(requestOptions));
+// 	});
 
-	try {
-		const blockchains = await Promise.all(requestPromises);
+// 	try {
+// 		await axios.all(regNodesPromises);
 
-		// check if the length of the blockchains is greater than our current node blockchain
-		const currentChainLength = blockchain.chain.length;
-		let maxChainLength = currentChainLength;
-		let newLongestChain = null;
-		let newPendingTransactions = null;
+// 		const bulkRegisterOptions = {
+// 			url: `${newNodeUrl}/register-nodes-bulk`,
+// 			method: "POST",
+// 			data: {
+// 				allNetworkNodes: [
+// 					...blockchain.networkNodes,
+// 					blockchain.currentNodeUrl,
+// 				],
+// 				pendingTransactions: blockchain.pendingTransactions,
+// 			},
+// 			headers: { "Content-Type": "application/json" },
+// 		};
 
-		blockchains.forEach((blockchain) => {
-			if (blockchain.data.chain.length > maxChainLength) {
-				maxChainLength = blockchain.data.chain.length;
-				newLongestChain = blockchain.data.chain;
-				newPendingTransactions = blockchain.data.pendingTransactions;
-			}
-		});
+// 		await axios(bulkRegisterOptions);
 
-		if (!newLongestChain) {
-			res.json({
-				message: "Current chain has not been replaced",
-				chain: blockchain.chain,
-			});
-		} else {
-			blockchain.chain = newLongestChain;
-			blockchain.pendingTransactions = newPendingTransactions;
-			res.json({
-				message: "This chain has been replaced",
-				chain: blockchain.chain,
-			});
-		}
-	} catch (error) {
-		res.status(400).json({ error: error.message });
-	}
-});
+// 		res.json({ message: "New node registered with network successfully" });
+// 	} catch (err) {
+// 		res.status(400).json({ error: err.message });
+// 	}
+// });
 
-app.get("/blocks/length", (req, res) => {
-	res.json(blockchain.chain.length);
-});
+// app.post("/register-node", function (req, res) {
+// 	const newNodeUrl = req.body.newNodeUrl;
+// 	const nodeNotAlreadyPresent =
+// 		blockchain.networkNodes.indexOf(newNodeUrl) == -1;
+// 	const notCurrentNode = blockchain.currentNodeUrl !== newNodeUrl;
+// 	if (nodeNotAlreadyPresent && notCurrentNode)
+// 		blockchain.networkNodes.push(newNodeUrl);
+// 	res.json({
+// 		message: "New node registered successfully",
+// 	});
+// });
 
-app.get("/block/:blockHash", (req, res) => {
-	const blockHash = req.params.blockHash;
-	const correctBlock = blockchain.getBlock(blockHash);
-	res.json({ block: correctBlock });
-});
+// app.post("/register-nodes-bulk", function (req, res) {
+// 	const allNetworkNodes = req.body.allNetworkNodes;
+// 	const pendingTransactions = req.body.pendingTransactions;
 
-app.get("/blockByIndex/:index", (req, res) => {
-	const blockIndex = req.params.blockIndex;
-	const correctBlock = blockchain.getBlockByIndex(blockIndex);
-	res.json({ block: correctBlock });
-});
+// 	allNetworkNodes.forEach((networkNodesUrl) => {
+// 		const nodeNotAlreadyPresent =
+// 			blockchain.networkNodes.indexOf(networkNodesUrl) == -1;
+// 		const notCurrentNode = blockchain.currentNodeUrl !== networkNodesUrl;
+// 		if (nodeNotAlreadyPresent && notCurrentNode)
+// 			blockchain.networkNodes.push(networkNodesUrl);
+// 	});
+// 	// update pending transactions
+// 	blockchain.pendingTransactions = pendingTransactions;
+// 	res.json({
+// 		message: "Bulk registration successful",
+// 	});
+// });
 
-app.get("/block/:blockHash/transactions", (req, res) => {
-	const blockHash = req.params.blockHash;
-	const correctBlock = blockchain.getBlockTransactions(blockHash);
-	res.json({ trans: correctBlock });
-});
+// app.post("/unregister-and-broadcast-node", function (req, res) {
+// 	const oldNodeURL = req.body.oldNodeURL;
 
-app.get("/transaction/:transactionHash", (req, res) => {
-	const transactionHash = req.params.transactionHash;
-	const transactionData = blockchain.getTransactionByTxnHash(transactionHash);
-	res.json({ transaction: transactionData });
-});
+// 	const removeNodePromise = [];
+// 	blockchain.networkNodes.forEach((networkNodesUrl) => {
+// 		const requestOptions = {
+// 			url: networkNodesUrl + "/unregister-node",
+// 			method: "POST",
+// 			data: { oldNodeURL: oldNodeURL },
+// 			headers: { "Content-Type": "application/json" },
+// 		};
+
+// 		removeNodePromise.push(axios(requestOptions));
+// 	});
+
+// 	Promise.all(removeNodePromise)
+// 		.then(() => {
+// 			if (blockchain.networkNodes.includes(oldNodeURL)) {
+// 				blockchain.networkNodes = blockchain.networkNodes.filter(
+// 					(node) => node !== oldNodeURL
+// 				);
+// 			}
+
+// 			res.json({
+// 				message: "Node removed from network successfully",
+// 			});
+// 		})
+// 		.catch((err) => res.status(400).json({ error: err.message }));
+// });
+
+// app.get("/consensus", async function (req, res) {
+// 	const requestPromises = [];
+
+// 	// get all network nodes and make a request to each one
+// 	blockchain.networkNodes.forEach((networkNodeUrl) => {
+// 		requestPromises.push(axios.get(`${networkNodeUrl}/blockchain`));
+// 	});
+
+// 	try {
+// 		const blockchains = await Promise.all(requestPromises);
+
+// 		// check if the length of the blockchains is greater than our current node blockchain
+// 		const currentChainLength = blockchain.chain.length;
+// 		let maxChainLength = currentChainLength;
+// 		let newLongestChain = null;
+// 		let newPendingTransactions = null;
+
+// 		blockchains.forEach((blockchain) => {
+// 			if (blockchain.data.chain.length > maxChainLength) {
+// 				maxChainLength = blockchain.data.chain.length;
+// 				newLongestChain = blockchain.data.chain;
+// 				newPendingTransactions = blockchain.data.pendingTransactions;
+// 			}
+// 		});
+
+// 		if (!newLongestChain) {
+// 			res.json({
+// 				message: "Current chain has not been replaced",
+// 				chain: blockchain.chain,
+// 			});
+// 		} else {
+// 			blockchain.chain = newLongestChain;
+// 			blockchain.pendingTransactions = newPendingTransactions;
+// 			res.json({
+// 				message: "This chain has been replaced",
+// 				chain: blockchain.chain,
+// 			});
+// 		}
+// 	} catch (error) {
+// 		res.status(400).json({ error: error.message });
+// 	}
+// });
+
+// app.get("/blocks/length", (req, res) => {
+// 	res.json(blockchain.chain.length);
+// });
+
+// app.get("/block/:blockHash", (req, res) => {
+// 	const blockHash = req.params.blockHash;
+// 	const correctBlock = blockchain.getBlock(blockHash);
+// 	res.json({ block: correctBlock });
+// });
+
+// app.get("/blockByIndex/:index", (req, res) => {
+// 	const blockIndex = req.params.blockIndex;
+// 	const correctBlock = blockchain.getBlockByIndex(blockIndex);
+// 	res.json({ block: correctBlock });
+// });
+
+// app.get("/block/:blockHash/transactions", (req, res) => {
+// 	const blockHash = req.params.blockHash;
+// 	const correctBlock = blockchain.getBlockTransactions(blockHash);
+// 	res.json({ trans: correctBlock });
+// });
+
+// app.get("/transaction/:transactionHash", (req, res) => {
+// 	const transactionHash = req.params.transactionHash;
+// 	const transactionData = blockchain.getTransactionByTxnHash(transactionHash);
+// 	res.json({ transaction: transactionData });
+// });
 
 // app.get("/address/:address", (req, res) => {
 // 	const address = req.params.address;
@@ -436,23 +473,23 @@ app.get("/transaction/:transactionHash", (req, res) => {
 // 	res.json({ addressData: addressData });
 // });
 
-app.get("/all-transactions", function (req, res) {
-	res.json(blockchain.getAllTransactions());
-});
+// app.get("/all-transactions", function (req, res) {
+// 	res.json(blockchain.getAllTransactions());
+// });
 
-app.get("/all-pending-transactions", function (req, res) {
-	res.json(blockchain.pendingTransactions);
-});
+// app.get("/all-pending-transactions", function (req, res) {
+// 	res.json(blockchain.pendingTransactions);
+// });
 
-app.post("/mine", (req, res) => {
-	const { data } = req.body;
+// app.post("/mine", (req, res) => {
+// 	const { data } = req.body;
 
-	blockchain.addBlock({ data });
+// 	blockchain.addBlock({ data });
 
-	pubsub.broadcastChain();
+// 	pubsub.broadcastChain();
 
-	res.redirect("/blocks");
-});
+// 	res.redirect("/blocks");
+// });
 
 app.listen(port, function () {
 	console.log(`Listening on port ${port}...`); // string interpolation: ${port}
