@@ -153,11 +153,41 @@ app.get("/address/:address/transactions", (req, res) => {
 	res.json(txnHistory);
 });
 
+// List Balance of a Given Address
 app.get("/address/:address/balance", (req, res) => {
 	let address = req.params.address;
 	let balance = blockchain.getAccountBalance(address);
 	if (balance.errorMsg) res.status(StatusCodes.NOT_FOUND);
 	res.json(balance);
+});
+
+// Create and Broadcast New Transaction to Peers
+app.post("/transactions/send", function (req, res) {
+	const newTransaction = blockchain.addNewTransaction(req.body);
+	if (newTransaction.errorMsg) {
+		res.json({ error: newTransaction.errorMsg });
+		return;
+	}
+
+	const axiosRequests = [];
+	bitcoin.networkNodes.forEach((networkNodeUrl) => {
+		const requestOptions = {
+			url: networkNodeUrl + "/transaction",
+			method: "POST",
+			data: newTransaction,
+			responseType: "json",
+		};
+
+		axiosRequests.push(axios(requestOptions));
+	});
+
+	Promise.all(axiosRequests)
+		.then((data) => {
+			res.json({ note: "Transaction created and broadcast successfully." });
+		})
+		.catch((err) => {
+			res.status(400).json({ error: err.message });
+		});
 });
 
 app.post("/transaction", function (req, res) {
@@ -168,30 +198,18 @@ app.post("/transaction", function (req, res) {
 	});
 });
 
-app.post("/transaction/broadcast", async function (req, res) {
-	const newTransaction = blockchain.addTransaction(req.body);
-	console.log(newTransaction);
-	if (newTransaction.errorMsg) {
-		res.json({ error: newTransaction.errorMsg });
-		return;
-	}
-
-	if (newTransaction.transactionDataHash) {
-		try {
-			const requestPromises = blockchain.networkNodes.map((node) =>
-				axios.post(`${node}/transaction`, newTransaction)
-			);
-			await Promise.all(requestPromises);
-			res.json({
-				message: "Transaction created and broadcasted",
-				transactionDataHash: newTransaction.transactionDataHash,
-			});
-		} catch (error) {
-			res.status(400).json({ error: error.message });
-		}
-	} else {
-		res.status(StatusCodes.BAD_REQUEST).json(newTransaction);
-	}
+// Get Mining Job
+app.get("/mining/get-mining-job/:miner-address", (req, res) => {
+	let address = req.params.address;
+	let blockCandidate = blockchain.getMiningJob(address);
+	res.status(StatusCodes.OK).json({
+		index: blockCandidate.index,
+		transactionsIncluded: blockCandidate.transactions.length,
+		difficulty: blockCandidate.difficulty,
+		expectedReward: blockCandidate.transactions[0].value,
+		rewardAddress: blockCandidate.transactions[0].to,
+		blockDataHash: blockCandidate.blockDataHash,
+	});
 });
 
 app.post("/mine", function (req, res) {

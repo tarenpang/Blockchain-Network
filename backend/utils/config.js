@@ -37,7 +37,7 @@ const genesisFaucetTransaction = new Transaction(
 	nullAddress, // from address
 	faucetAddress, // to Address
 	1000000000000, // value of transfer
-	0, // fee for mining
+	10, // fee for mining
 	genesisDate, // dateCreated
 	genesisData, // data (payload)
 	nullPubKey, // senderPubKey
@@ -75,6 +75,8 @@ module.exports = {
 	blockReward,
 	chainId,
 	currentNodeURL,
+	defaultServerHost: "localhost",
+	defaultServerPort: 5555,
 	faucetAddress,
 	faucetPrivKey,
 	faucetPubKey,
@@ -87,8 +89,12 @@ module.exports = {
 	minerPrivKey,
 	minerPubKey,
 	minerAddress,
+	minTransactionFee: 10,
+	maxTransactionFee: 1000000,
+	maxTransferValue: 10000000000000,
 	nodeId,
 	nullAddress,
 	nullPubKey,
 	nullSignature,
+	safeConfirmCount: 3,
 };

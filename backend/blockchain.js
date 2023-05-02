@@ -9,8 +9,8 @@ const currentNodeUrl = process.argv[3];
 function Blockchain() {
 	this.blocks = [Config.genesisBlock];
 	this.pendingTransactions = [];
-	this.difficulty = Config.initialDifficulty;
-	this.currentNodeUrl = Config.currentNodeUrl;
+	this.currentDifficulty = Config.initialDifficulty;
+	this.currentNodeUrl = currentNodeUrl;
 	this.networkNodes = [];
 	this.miningJobs = {};
 }
@@ -60,16 +60,28 @@ Blockchain.prototype.getLastBlock = function () {
 	return this.chain[this.chain.length - 1];
 };
 
-// Add Transaction Given the Transacton Data
-Blockchain.prototype.addTransaction = function (txnData) {
+// Add New Transaction & Push to Pending Txn Pool Given the Txn Data
+Blockchain.prototype.addNewTransaction = function (txnData) {
 	// Validate the transaction data
+	// const isValidTransaction = this.validateTransaction(txnData);
+	// if (isValidTransaction.errorMsg) return isValidTransaction;
+	// Validate the transaction & add it to the pending transactions
 	if (!ValidationUtils.isValidAddress(txnData.from))
 		return { errorMsg: "Invalid sender address: " + txnData.from };
 	if (!ValidationUtils.isValidAddress(txnData.to))
 		return { errorMsg: "Invalid recipient address: " + txnData.to };
 	if (!ValidationUtils.isValidPublicKey(txnData.senderPubKey))
 		return { errorMsg: "Invalid public key: " + txnData.senderPubKey };
-	if (!ValidationUtils.isValidSignature(txnData.senderSignature))
+	let senderAddr = CryptoUtils.publicKeyToAddress(txnData.senderPubKey);
+	if (senderAddr !== txnData.from)
+		return { errorMsg: "The public key should match the sender address" };
+	if (!ValidationUtils.isValidTransferValue(txnData.value))
+		return { errorMsg: "Invalid transfer value: " + txnnData.value };
+	if (!ValidationUtils.isValidFee(txnData.fee))
+		return { errorMsg: "Invalid transaction fee: " + txnData.fee };
+	if (!ValidationUtils.isValidDate(txnData.dateCreated))
+		return { errorMsg: "Invalid date: " + txnData.dateCreated };
+	if (!ValidationUtils.isValidSignatureFormat(txnData.senderSignature))
 		return {
 			errorMsg:
 				'Invalid or missing signature. Expected signature format: ["hexnum", "hexnum"]',
@@ -87,16 +99,17 @@ Blockchain.prototype.addTransaction = function (txnData) {
 		txnData.senderSignature
 	);
 
-	// Check for duplicate transactions
-	if (this.getTransactionByDataHash(tran.transactionDataHash))
-		return { errorMsg: "Duplicated transaction: " + tran.transactionDataHash };
+	// Check for Duplicate Transactions
+	if (this.getTransactionByDataHash(txn.transactionDataHash))
+		return { errorMsg: "Duplicated transaction: " + txn.transactionDataHash };
 
-	if (!tran.verifySignature())
-		return { errorMsg: "Invalid signature: " + tranData.senderSignature };
+	if (!txn.verifySignature())
+		return { errorMsg: "Invalid signature: " + txnData.senderSignature };
 
-	let balances = this.getAccountBalance(tran.from);
-	if (balances.confirmedBalance < tran.value + tran.fee)
-		return { errorMsg: "Unsufficient sender balance at address: " + tran.from };
+	// Check for Sufficient Sender Balance
+	let balances = this.getAccountBalance(txn.from);
+	if (balances.confirmedBalance < txn.value + txn.fee)
+		return { errorMsg: "Unsufficient sender balance at address: " + txn.from };
 
 	this.pendingTransactions.push(newTransaction);
 
@@ -190,6 +203,73 @@ Blockchain.prototype.getTransactionByTxnHash = function (transactionHash) {
 	} else {
 		return { transaction: targetTransaction, block: targetBlock };
 	}
+};
+
+// Validate Transaction
+Blockchain.prototype.validateTransaction = function (txnData) {
+	const missingFields = ValidationUtils.isMissingFields(txnData);
+	if (missingFields) return { errorMsg: missingFields };
+
+	const invalidFields = ValidationUtils.isValidFieldValues(txnData);
+	if (invalidFields) return { errorMsg: invalidFields };
+
+	const isValidRecipient = ValidationUtils.isValidAddress(txnData.to);
+	if (!isValidRecipient) return { errorMsg: "Invalid Recipient Address" };
+
+	const isValidTransferValue = ValidationUtils.isValidTransferValue(
+		txnData.value
+	);
+	if (!isValidTransferValue) return { errorMsg: "Invalid transfer value" };
+
+	const isValidTransferFee = ValidationUtils.isValidTransferFee(txnData.fee);
+	if (!isValidTransferFee) return { errorMsg: "Invalid transfer fee" };
+
+	const isValidPublicKey = ValidationUtils.isValidPublicKey(
+		txnData.senderPubKey
+	);
+	if (!isValidPublicKey) return { errorMsg: "Invalid Public Key" };
+
+	if (txnData.transactionDataHash) {
+		const recalculatedDataHash = CryptoHashUtils.calcTransactionDataHash(
+			txnData.from,
+			txnData.to,
+			txnData.value,
+			txnData.fee,
+			txnData.dateCreated,
+			txnData.data,
+			txnData.senderPubKey
+		);
+
+		if (txnData.transactionDataHash !== recalculatedDataHash) {
+			return { errorMsg: "Invalid data hash" };
+		}
+
+		const isValidSender = ValidationUtils.isValidAddress(txnData.from);
+		if (!isValidSender) return { errorMsg: "Invalid Sender Address" };
+
+		const signature = txnData.senderSignature;
+		const isValidSignature = ValidationUtils.isValidSignature(signature);
+		if (!isValidSignature) return { errorMsg: "Invalid Signature" };
+
+		if (
+			!CryptoHashUtils.verifySignature(
+				txnData.transactionDataHash,
+				txnData.senderPubKey,
+				txnData.senderSignature
+			)
+		) {
+			return { errorMsg: `Signature failed verification: ${signature}` };
+		}
+
+		const transactionDataHash = txnData.transactionDataHash;
+		const checkForCollisions =
+			this.findTransactionByDataHash(transactionDataHash);
+		if (checkForCollisions) {
+			return { errorMsg: `Duplicate transaction: ${transactionDataHash}` };
+		}
+	}
+
+	return true;
 };
 
 // Remove Invalid Transactions from the Array of Pending Transactions
@@ -287,7 +367,7 @@ Blockchain.prototype.chainIsValid = function (blockchain) {
 
 // Get the Mining Job for the Next Block
 Blockchain.prototype.getMiningJob = function (minerAddress) {
-	let nextBlockIndex = this.chain.length;
+	let nextBlockIndex = this.blocks.length;
 
 	// Deep clone all pending transactions & sort them by fee
 	let transactions = JSON.parse(JSON.stringify(this.pendingTransactions));
@@ -295,15 +375,15 @@ Blockchain.prototype.getMiningJob = function (minerAddress) {
 
 	// Prepare the coinbase transaction -> it will collect all tx fees
 	let coinbaseTransaction = new Transaction(
-		config.nullAddress, // from (address)
+		Config.nullAddress, // from (address)
 		minerAddress, // to (address)
-		config.blockReward, // value (of transfer)
+		Config.blockReward, // value (of transfer)
 		0, // fee (for mining)
 		new Date().toISOString(), // dateCreated
 		"coinbase tx", // data (payload / comments)
-		config.nullPubKey, // senderPubKey
+		Config.nullPubKey, // senderPubKey
 		undefined, // transactionDataHash
-		config.nullSignature, // senderSignature
+		Config.nullSignature, // senderSignature
 		nextBlockIndex, // minedInBlockIndex
 		true
 	);
@@ -342,8 +422,8 @@ Blockchain.prototype.getMiningJob = function (minerAddress) {
 	transactions.unshift(coinbaseTransaction);
 
 	// Prepare the next block candidate (block template)
-	let prevBlockHash = this.chain[this.chain.length - 1].blockHash;
-	let blockReward = config.blockReward;
+	let prevBlockHash = this.blocks[this.blocks.length - 1].blockHash;
+	let blockReward = Config.blockReward;
 	let nextBlockCandidate = new Block(
 		nextBlockIndex,
 		transactions,
@@ -432,7 +512,6 @@ Blockchain.prototype.getAccountBalance = function (address) {
 		safeBalance: 0,
 		confirmedBalance: 0,
 		pendingBalance: 0,
-		safeCount: Config.safeConfirmCount,
 	};
 	for (let tran of transactions) {
 		// Determine the number of blocks mined since the transaction was created
