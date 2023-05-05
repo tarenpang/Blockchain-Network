@@ -60,7 +60,7 @@ const genesisBlock = new Block(
 	0 // mining reward
 );
 
-const chainId = genesisBlock.blockHash;
+const blockchainId = genesisBlock.blockHash;
 
 // generate unique id using datetime and random number
 const generateUniqueId = () => {
@@ -72,8 +72,8 @@ const generateUniqueId = () => {
 const nodeId = generateUniqueId();
 
 module.exports = {
+	blockchainId,
 	blockReward,
-	chainId,
 	currentNodeURL,
 	defaultServerHost: "localhost",
 	defaultServerPort: 5555,

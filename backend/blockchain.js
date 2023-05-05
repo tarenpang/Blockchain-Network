@@ -12,6 +12,9 @@ function Blockchain() {
 	this.currentDifficulty = Config.initialDifficulty;
 	this.currentNodeUrl = currentNodeUrl;
 	this.networkNodes = [];
+	if (this.networkNodes.size === 0) {
+		this.networkNodes.set(Config.currentNodeId, Config.currentNodeURL);
+	}
 	this.miningJobs = {};
 }
 
@@ -205,6 +208,14 @@ Blockchain.prototype.getTransactionByTxnHash = function (transactionHash) {
 	}
 };
 
+// Add Transaction to the Array of Pending Transactions
+Blockchain.prototype.addTransactionToPendingTransactions = function (
+	transactionObj
+) {
+	this.pendingTransactions.push(transactionObj);
+	return this.getLastBlock()["index"] + 1;
+};
+
 // Validate Transaction
 Blockchain.prototype.validateTransaction = function (txnData) {
 	const missingFields = ValidationUtils.isMissingFields(txnData);
@@ -263,7 +274,7 @@ Blockchain.prototype.validateTransaction = function (txnData) {
 
 		const transactionDataHash = txnData.transactionDataHash;
 		const checkForCollisions =
-			this.findTransactionByDataHash(transactionDataHash);
+			this.getTransactionByTxnHash(transactionDataHash);
 		if (checkForCollisions) {
 			return { errorMsg: `Duplicate transaction: ${transactionDataHash}` };
 		}
