@@ -413,16 +413,19 @@ Blockchain.prototype.getMiningJob = function (minerAddress) {
 	coinbaseTransaction.calculateDataHash();
 	transactions.unshift(coinbaseTransaction);
 
-	// Prepare the next block candidate (block template)
+	// Prepare Next Block Candidate
 	let prevBlockHash = this.blocks[this.blocks.length - 1].blockHash;
 	let blockReward = Config.blockReward;
 	let nextBlockCandidate = new Block(
-		nextBlockIndex,
-		transactions,
-		this.currentDifficulty,
-		prevBlockHash,
-		minerAddress,
-		undefined,
+		nextBlockIndex, // index (integer)
+		transactions, // transactions (array)
+		this.currentDifficulty, // difficulty (integer)
+		prevBlockHash, // prevBlockHash (hex_number[64])
+		minerAddress, // minedBy (address -> 40 hex digits)
+		blockDataHash, // blockDataHash (40 hex digits)
+		nonce, // nonce (integer)
+		dateCreated, // dateCreated (ISO8601_string)
+		blockHash, // blockHash (hex_number[64])
 		blockReward
 	);
 
@@ -646,11 +649,11 @@ Blockchain.prototype.resetChain = function () {
 Blockchain.prototype.getPeersInfo = function () {
 	const peers = this.peersMap.entries();
 
-	let peerObj = {};
-	for (const [key, value] of peers) {
-		peerObj[`${key}`] = value;
+	let peersObj = {};
+	for (let [key, value] of peers) {
+		peersObj[`${key}`] = value;
 	}
-	return peerObj;
+	return peersObj;
 };
 
 // Broadcast New Peer to Network
