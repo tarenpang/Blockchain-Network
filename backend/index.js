@@ -10,8 +10,8 @@ const nodeId =
 	new Date().getTime().toString(16) + Math.random().toString(16).substring(2);
 const host = "http://localhost";
 const port = process.argv[2];
+const rootNodeUrl = `${host}:5555`;
 const currentNodeURL = `${host}:${port}`;
-let peersMap = {}; // Map of nodeId: nodeUrl
 let blockchainId = Config.blockchainId;
 
 const app = express();
@@ -49,7 +49,8 @@ app.get("/info", (req, res) => {
 		nodeId: nodeId,
 		blockchainId: Config.blockchainId,
 		nodeUrl: currentNodeURL,
-		peers: peersMap.length,
+		peersNumInNetwork: blockchain.peersMap.size,
+		peersMap: blockchain.getPeersInfo(),
 		currentDifficulty: blockchain.difficulty,
 		blocksCount: blockchain.blocks.length,
 		cumulativeDifficulty: blockchain.calcCumulativeDifficulty(),
@@ -62,7 +63,7 @@ app.get("/info", (req, res) => {
 app.get("/debug", (req, res) => {
 	res.status(StatusCodes.OK).json({
 		selfUrl: Config.currentNodeURL,
-		peers: peersMap,
+		peers: blockchain.getPeersInfo(),
 		chain: blockchain.blocks,
 		pendingTransactions: blockchain.pendingTransactions,
 		currentDifficulty: blockchain.currentDifficulty,
@@ -97,7 +98,7 @@ app.get("/blocks/:index", (req, res) => {
 // Get Block by Block Hash
 app.get("/block/:blockHash", (req, res) => {
 	const blockHash = req.params.blockHash;
-	const correctBlock = noobchain.getBlock(blockHash);
+	const correctBlock = blockchain.getBlock(blockHash);
 	res.json({ block: correctBlock });
 });
 
@@ -105,18 +106,13 @@ app.get("/block/:blockHash", (req, res) => {
 app.post("/transaction", function (req, res) {
 	const newTransaction = req.body;
 	const blockIndex =
-		bitcoin.addTransactionToPendingTransactions(newTransaction);
+		blockchain.addTransactionToPendingTransactions(newTransaction);
 	res.json({ note: `Transaction will be added in block ${blockIndex}.` });
 });
 
-// Add Transaction to Pending Transactions
-app.post("/transaction", function (req, res) {
-	const newTransaction = req.body;
-	const blockIndex =
-		blockchain.addTransactionToPendingTransactions(newTransaction);
-	res.json({
-		message: `Transaction will be added in block ${blockIndex}`,
-	});
+// Get All Transactions
+app.get("/transactions/all", (req, res) => {
+	res.status(StatusCodes.OK).json(blockchain.getAllTransactions());
 });
 
 // Get Pending Transactions
@@ -258,67 +254,102 @@ app.get("/debug/mine/:minerAddress/:difficulty", (req, res) => {
 
 // List All Peers
 app.get("/peers", (req, res) => {
-	console.log(peersMap);
-	res.status(StatusCodes.OK).json(peersMap);
+	const peers = blockchain.getPeersInfo();
+	res.status(StatusCodes.OK).json(peers);
 });
 
 // Connect a Peer
 app.post("/peers/connect", (req, res) => {
-	let peerUrl = req.body.peerUrl;
-	if (peerUrl === undefined)
-		return res
-			.status(StatusCodes.BAD_REQUEST)
-			.json({ errorMsg: "'peerUrl' not in the request body" });
+	const peer = req.body.peerUrl;
+	let peerNodeId;
+	let peerNodeUrl;
 
-	console.log("Status: Attempting to connect to peer: " + peerUrl);
+	if (peer === undefined) {
+		return res.status(StatusCodes.BAD_REQUEST).json({
+			errorMsg: "Request body missing the 'peerUrl:' value",
+		});
+	}
+
+	// 1. Validate Peer
 	axios
-		.get(peerUrl + "/info")
-		.then(function (result) {
-			if (nodeId === result.data.nodeId) {
-				res
-					.status(StatusCodes.CONFLICT)
-					.json({ errorMsg: "Cannot connect to current node" });
-			} else if (node.peers[result.data.nodeId]) {
-				console.log("Error: Already connected to peer: " + peerUrl);
-				res
-					.status(StatusCodes.CONFLICT)
-					.json({ errorMsg: "Already connected to peer: " + peerUrl });
-			} else if (blockchainId !== result.data.blockchainId) {
-				console.log("Error: Chain ID cannot be different");
-				res
-					.status(StatusCodes.BAD_REQUEST)
-					.json({ errorMsg: "Nodes should have the same chain ID" });
+		.get(peer + "/info")
+		.then(async function (peerInfo) {
+			peerInfo = peerInfo.data;
+			peerNodeId = peerInfo.nodeId;
+			peerNodeUrl = peerInfo.nodeUrl;
+			// Avoid connecting to self
+			if (peerNodeUrl === Config.currentNodeURL) {
+				res.status(StatusCodes.CONFLICT).json({
+					errorMsg: "Cannot connect to self.",
+				}); // Chain ID's must match
+			} else if (peerInfo.blockchainId !== blockchain.blocks[0].blockHash) {
+				res.status(StatusCodes.BAD_REQUEST).json({
+					errorMsg: "Chain ID's must match",
+				}); // Avoid double-connecting to same peer
+			} else if (blockchain.peersMap.has(peerNodeId)) {
+				res.status(StatusCodes.CONFLICT).json({
+					errorMsg: `Already connected to peer: ${peerNodeUrl}`,
+				});
 			} else {
-				// Remove all peers with the same URL + add the new peer
-				for (let nodeId in node.peers)
-					if (peersMap[nodeId] === peerUrl) delete peersMap[nodeId];
-				peersMap[result.data.nodeId] = peerUrl;
-				console.log("Successfully connected to peer: " + peerUrl);
+				// Remove any peer with the same URL
+				blockchain.peersMap.forEach((peerUrl, peerId) => {
+					if (peerUrl === peerNodeUrl) {
+						blockchain.peersMap.delete(peerId);
+					}
+				});
 
-				// Try to connect back the remote peer to self
-				axios
-					.post(peerUrl + "/peers/connect", { peerUrl: node.selfUrl })
+				// 2. Register new peer with current node
+				blockchain.peersMap.set(peerNodeId, peerNodeUrl);
+
+				// 3. Register current node with new peer (bi-directional connection)
+				await axios
+					.post(peerNodeUrl + "/peers/connect", {
+						peerUrl: blockchain.currentNodeURL,
+					})
 					.then(function () {})
 					.catch(function () {});
 
-				// Synchronize the blockchain + pending transactions
-				syncBlockchainFromPeerChain(result.data);
-				node.syncPendingTxnsFromPeerChain(result.data);
+				let endpoints = [];
+				blockchain.peersMap.forEach((peerUrl) => {
+					endpoints.push(peerUrl + "/register-broadcast-peer");
+				});
 
-				res.json({ message: "Connected to peer: " + peerUrl });
+				// 4. Broadcast and register peer to all network nodes
+				await Promise.all(
+					endpoints.map((endpoint) =>
+						axios.post(endpoint, { peerNodeId, peerNodeUrl })
+					)
+				)
+					.then(() => {
+						// 5. Synchronize chains and transactions
+						blockchain.syncBlockchainFromPeerChain(peerInfo);
+						blockchain.syncPendingTransactionsFromPeerChain(peerInfo);
+					})
+					.catch(function (error) {
+						console.log("Peer registration error", error);
+					});
+
+				// 6. Register all network nodes to new peer
+				axios
+					.post(peerNodeUrl + "/register-network-to-peer")
+					.then(function () {})
+					.catch(function () {});
+
+				res.status(StatusCodes.OK).json({
+					message: `Successfully connected to peer: ${peerNodeUrl}`,
+				});
 			}
 		})
-		.catch(function (error) {
-			console.log(`Error: connecting to peer: ${peerUrl} failed.`);
-			res
-				.status(StatusCodes.BAD_REQUEST)
-				.json({ errorMsg: "Cannot connect to peer: " + peerUrl });
+		.catch((error) => {
+			res.status(StatusCodes.BAD_REQUEST).json({
+				errorMsg: `Cannot connect to peer: ${peer}`,
+			});
 		});
 });
 
 // Notify Peers about New Block
 app.post("/peers/notify-new-block", (req, res) => {
-	syncBlockchainFromPeerChain(req.body);
+	blockchain.syncBlockchainFromPeerChain(req.body);
 	res.json({ message: "Thank you for the notification." });
 });
 
@@ -328,17 +359,13 @@ app.post("/register-peer", function (req, res) {
 	// console.log("nodeUrl: ", nodeUrl);
 
 	// Check if nodeUrl already exists in Peers map
-	if (peersMap[nodeUrl]) {
+	if (blockchain.peersMap[nodeUrl]) {
 		console.log(`Error registering node: ${nodeUrl} is already in the network`);
 		return res.sendStatus(StatusCodes.BAD_REQUEST);
 	}
 
-	// Generate a new nodeId
-	const nodeId =
-		new Date().getTime().toString(16) + Math.random().toString(16).substring(2);
-
 	// Add New peer to the Current Node Peers Map
-	peersMap[nodeUrl] = nodeId;
+	blockchain.peersMap[nodeUrl] = nodeId;
 
 	// Send a successful response
 	res.json({ nodeId: nodeId });
@@ -346,146 +373,49 @@ app.post("/register-peer", function (req, res) {
 	console.log(
 		`Node registered successfully. Node ID: ${nodeId}, Node URL: ${nodeUrl}`
 	);
-
-	// Broadcast the new peer to all existing peers
-	// broadcastNewPeer(nodeUrl);
 });
-
-// Register the node with the root node
-const nodeUrl = `http://localhost:${port}`;
-// console.log("nodeUrl: ", nodeUrl);
-// console.log("nodeId: ", nodeId);
-// console.log("currentNodeURL: ", currentNodeURL);
-
-axios
-	.post(`${nodeUrl}/register-peer`, { nodeUrl })
-	.then((res) => {
-		console.log(res.data);
-	})
-	.catch((err) => {
-		console.error(`Error registering node: ${err.message}`);
-	});
 
 // Register and Broadcast Peer to the Network
-app.post("/register-and-broadcast-peer", function (req, res) {
-	const newNodeUrl = req.body.newNodeUrl;
-	if (blockchain.networkNodes.indexOf(newNodeUrl) == -1)
-		blockchain.networkNodes.push(newNodeUrl);
+app.post("/register-broadcast-peer", (req, res) => {
+	console.log("peerMapBefore: ", blockchain.peersMap);
+	let nodeIdNotUndefined = false;
+	const peerNotPreExisting = !blockchain.peersMap.has(nodeId);
+	const notCurrentNode = blockchain.currentNodeURL !== currentNodeURL;
 
-	const regNodesPromises = [];
-	blockchain.networkNodes.forEach((networkNodeUrl) => {
-		const requestOptions = {
-			method: "POST",
-			url: `${networkNodeUrl}/register-node`,
-			data: { newNodeUrl: newNodeUrl },
-			json: true,
-		};
+	if (nodeId !== undefined) {
+		nodeIdNotUndefined = true;
+	} else {
+		nodeIdNotUndefined = false;
+	}
 
-		regNodesPromises.push(axios(requestOptions));
-	});
+	if (nodeIdNotUndefined && peerNotPreExisting && notCurrentNode) {
+		blockchain.peersMap.set(nodeId, currentNodeURL);
+	}
+	console.log("peerMapAfter: ", blockchain.peersMap);
 
-	// reverse registration
-	Promise.all(regNodesPromises)
-		.then((data) => {
-			const bulkRegisterOptions = {
-				method: "POST",
-				url: `${newNodeUrl}/register-nodes-bulk`,
-				data: {
-					allNetworkNodes: [
-						...blockchain.networkNodes,
-						blockchain.currentNodeUrl,
-					],
-				},
-				json: true,
-			};
-
-			return axios(bulkRegisterOptions);
-		})
-		.then((data) => {
-			res.json({ note: "New node registered with network successfully." });
-		})
-		.catch((error) => {
-			console.log(error);
-			res.status(500).send({
-				error: "An error occurred while registering the node with the network.",
-			});
-		});
+	res.json({ message: "Peer already registered" });
 });
 
-// >>>>>>>>>>>>>>>SYNCHRONIZATION<<<<<<<<<<<<<<<
+// // >>>>>>>>>> Register the New Node <<<<<<<<<<
+// const nodeUrl = `http://localhost:${port}`;
 
-// Broadcast New Block to Peers
-broadcastNewBlockToPeers = async function () {
-	let notification = {
-		blocksCount: blockchain.blocks.length,
-		cumulativeDifficulty: blockchain.calcCumulativeDifficulty(),
-		nodeUrl: currentNodeURL,
-	};
-	for (let nodeId in node.peers) {
-		let peerUrl = peersMap[nodeId];
-		console.log(`Notifying peer ${peerUrl} about the new block`);
-		axios
-			.post(peerUrl + "/peers/notify-new-block", notification)
-			.then(function () {})
-			.catch(function () {});
-	}
-};
+// axios
+// 	.post(`${nodeUrl}/register-peer`, { nodeUrl })
+// 	.then((res) => {
+// 		console.log(res.data);
+// 	})
+// 	.catch((err) => {
+// 		console.error(`Error registering node: ${err.message}`);
+// 	});
 
-// Broadcast New Transaction to Peers
-broadcastTransactionToPeers = async function (tran) {
-	for (let nodeId in peersMap) {
-		let peerUrl = peersMap[nodeId];
-		console.log(
-			`Broadcasting a transaction ${tran.transactionsHash} to peer ${peerUrl}`
-		);
-		axios
-			.post(peerUrl + "/transactions/send", txn)
-			.then(function () {})
-			.catch(function () {});
-	}
-};
-
-// Sync the Blockchain from Peer Chain Info
-syncBlockchainFromPeerChain = async function (peerChainData) {
-	try {
-		let thisChainDiff = blockchain.calcCumulativeDifficulty();
-		let peerChainDiff = peerChainData.cumulativeDifficulty;
-		if (peerChainDiff > thisChainDiff) {
-			console.log(
-				`Chain sync started. Peer: ${peerChainData.nodeUrl}. Expected chain length = ${peerChainData.blocksCount}, expected cummulative difficulty = ${peerChainDiff}.`
-			);
-			let blocks = (await axios.get(peerChainData.nodeUrl + "/blocks")).data;
-			let chainIncreased = blockchain.processLongerChain(blocks);
-			if (chainIncreased) {
-				broadcastNewBlockToPeers();
-			}
-		}
-	} catch (err) {
-		console.log("Error loading the chain: " + err);
-	}
-};
-
-syncPendingTxnsFromPeerChain = async function (peerChainData) {
-	try {
-		if (peerChainData.pendingTransactions > 0) {
-			console.log(
-				`Pending transactions sync started. Peer: ${peerChainData.nodeUrl}`
-			);
-			let transactions = (
-				await axios.get(peerChainData.nodeUrl + "/transactions/pending")
-			).data;
-			for (let tran of transactions) {
-				let newTransaction = blockchain.addNewTransaction(tran);
-				if (newTransaction.transactionDataHash) {
-					// Added a new pending tx --> broadcast it to all known peers
-					broadcastTransactionToPeers(newTransaction);
-				}
-			}
-		}
-	} catch (err) {
-		console.log("Error loading the pending transactions: " + err);
-	}
-};
+// axios
+// 	.post(`${nodeUrl}/register-broadcast-peer`, { nodeUrl })
+// 	.then((res) => {
+// 		console.log(res.data);
+// 	})
+// 	.catch((err) => {
+// 		console.error(`Error registering node: ${err.message}`);
+// 	});
 
 // Start listening on the specified port
 app.listen(port, function () {

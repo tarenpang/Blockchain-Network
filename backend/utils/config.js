@@ -5,7 +5,9 @@ const Block = require("../block");
 const initialDifficulty = 5;
 const genesisDate = "2023-03-21T00:00:00.000Z";
 const blockReward = 5000000;
-const currentNodeURL = process.argv[3];
+const host = "http://localhost";
+const port = process.argv[2];
+const currentNodeURL = `${host}:${port}`;
 const genesisNodeURL = "http://localhost:3555";
 
 // Genesis Data
