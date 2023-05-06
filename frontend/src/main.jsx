@@ -13,6 +13,9 @@ import Navbar from "./navigation/Navbar";
 import Explorer from "./pages/Explorer";
 import LandingPage from "./pages/LandingPage";
 import Wallet from "./pages/Wallet";
+import TransactionDetails from "./pages/TransactionDetails";
+import BlockDetails from "./pages/BlockDetails";
+import AddressDetails from "./pages/AddressDetails";
 
 const Layout = () => {
 	return (
@@ -30,6 +33,12 @@ const router = createBrowserRouter(
 			<Route path="/faucet" element={<Faucet />}></Route>
 			<Route path="/explorer" element={<Explorer />}></Route>
 			<Route path="/wallet" element={<Wallet />}></Route>
+			<Route
+				path="/transaction/:txHash"
+				element={<TransactionDetails />}
+			></Route>
+			<Route path="/block/:blockHash" element={<BlockDetails />}></Route>
+			<Route path="/address/:address" element={<AddressDetails />}></Route>
 		</Route>
 	)
 );

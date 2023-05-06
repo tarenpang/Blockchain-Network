@@ -49,7 +49,7 @@ app.get("/info", (req, res) => {
 		nodeId: nodeId,
 		blockchainId: Config.blockchainId,
 		nodeUrl: currentNodeURL,
-		peersNumInNetwork: blockchain.peersMap.size,
+		peersOnNetwork: blockchain.peersMap.size,
 		peersMap: blockchain.getPeersInfo(),
 		currentDifficulty: blockchain.difficulty,
 		blocksCount: blockchain.blocks.length,
@@ -62,6 +62,7 @@ app.get("/info", (req, res) => {
 // Node Debug
 app.get("/debug", (req, res) => {
 	res.status(StatusCodes.OK).json({
+		nodeId: nodeId,
 		selfUrl: Config.currentNodeURL,
 		peers: blockchain.getPeersInfo(),
 		chain: blockchain.blocks,
@@ -72,11 +73,6 @@ app.get("/debug", (req, res) => {
 	});
 });
 
-// Get All Blocks
-app.get("/blocks", (req, res) => {
-	res.json(blockchain.blocks);
-});
-
 // Reset Chain to Genesis Block
 app.get("/debug/reset-chain", (req, res) => {
 	blockchain.resetChain();
@@ -84,6 +80,11 @@ app.get("/debug/reset-chain", (req, res) => {
 		message: "Chain reset successfully.",
 		blockchain: blockchain,
 	});
+});
+
+// Get All Blocks
+app.get("/blocks", (req, res) => {
+	res.json(blockchain.blocks);
 });
 
 // Get Block by Index
@@ -132,7 +133,7 @@ app.get("/transactions/confirmed", (req, res) => {
 });
 
 // Get Transaction by Transaction Data Hash
-app.get("/transactions/:transaction-hash", (req, res) => {
+app.get("/transactions/:txnHash", (req, res) => {
 	let transactionHash = req.params.txnHash;
 	let transaction = blockchain.getTransactionByDataHash(transactionHash);
 	if (transaction) res.json(transaction);
@@ -208,7 +209,7 @@ app.post("/transactions/send", function (req, res) {
 
 // Get Mining Job
 app.get("/mining/get-mining-job/:miner-address", (req, res) => {
-	let address = req.params.address;
+	let address = req.params.minerAddress;
 	let blockCandidate = blockchain.getMiningJob(address);
 	// console.log(blockCandidate.transactions[0].to);
 	console.log(blockCandidate.transactions);
@@ -365,7 +366,11 @@ app.post("/register-peer", function (req, res) {
 	}
 
 	// Add New peer to the Current Node Peers Map
-	blockchain.peersMap[nodeUrl] = nodeId;
+	// blockchain.peersMap[nodeUrl] = nodeId;
+	let firstKey = blockchain.peersMap.keys().next().value;
+	blockchain.peersMap.delete(firstKey);
+
+	blockchain.peersMap.set(nodeId, nodeUrl);
 
 	// Send a successful response
 	res.json({ nodeId: nodeId });
@@ -397,16 +402,16 @@ app.post("/register-broadcast-peer", (req, res) => {
 });
 
 // // >>>>>>>>>> Register the New Node <<<<<<<<<<
-// const nodeUrl = `http://localhost:${port}`;
+const nodeUrl = `http://localhost:${port}`;
 
-// axios
-// 	.post(`${nodeUrl}/register-peer`, { nodeUrl })
-// 	.then((res) => {
-// 		console.log(res.data);
-// 	})
-// 	.catch((err) => {
-// 		console.error(`Error registering node: ${err.message}`);
-// 	});
+axios
+	.post(`${nodeUrl}/register-peer`, { nodeUrl })
+	.then((res) => {
+		console.log(res.data);
+	})
+	.catch((err) => {
+		console.error(`Error registering node: ${err.message}`);
+	});
 
 // axios
 // 	.post(`${nodeUrl}/register-broadcast-peer`, { nodeUrl })
