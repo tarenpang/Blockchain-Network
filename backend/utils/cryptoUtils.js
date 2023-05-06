@@ -46,20 +46,66 @@ function signData(data, privKey) {
 	return [signature.r.toString(16), signature.s.toString(16)];
 }
 
-// function decompressPublicKey(publicKeyCompressed) {
-// 	let pubKeyX = publicKeyCompressed.substring(0, 64);
-// 	let pubKeyYOdd = parseInt(publicKeyCompressed.substring(64));
-// 	let pubKeyPoint = secp256k1.curve.pointFromX(pubKeyX, pubKeyYOdd);
+// Transaction data hash
+function calcTransactionDataHash(
+	from,
+	to,
+	value,
+	fee,
+	dateCreated,
+	data,
+	senderPubKey
+) {
+	const transactionData = {
+		from,
+		to,
+		value,
+		fee,
+		dateCreated,
+		data,
+		senderPubKey,
+	};
+	if (!transactionData.data) delete transactionData.data;
+	const transactionDataJSON = JSON.stringify(transactionData)
+		.split(" ")
+		.join("");
+	return sha256(transactionDataJSON).toString();
+}
 
-// 	return pubKeyPoint;
-// }
+// Block data hash
+function calcBlockDataHash(
+	index,
+	transactions,
+	difficulty,
+	prevBlockHash,
+	minedBy
+) {
+	let blockData = {
+		index,
+		transactions: transactions.map((transaction) =>
+			Object({
+				from: transaction.from,
+				to: transaction.to,
+				value: transaction.value,
+				fee: transaction.fee,
+				dateCreated: transaction.dateCreated,
+				data: transaction.data,
+				senderPubKey: transaction.senderPubKey,
+				transactionDataHash: transaction.transactionDataHash,
+				senderSignature: transaction.senderSignature,
+				minedInBlockIndex: transaction.minedInBlockIndex,
+				transferSuccessful: transaction.transferSuccessful,
+			})
+		),
+		difficulty,
+		prevBlockHash,
+		minedBy,
+	};
 
-// function verifySignature(data, publicKey, signature) {
-// 	let pubKeyPoint = decompressPublicKey(publicKey);
-// 	let keyPair = secp256k1.keyPair({ pub: pubKeyPoint });
-// 	let valid = keyPair.verify(data, { r: signature[0], s: signature[1] });
-// 	return valid;
-// }
+	const blockDataJSON = JSON.stringify(blockData).split(" ").join("");
+
+	return sha256(blockDataJSON).toString();
+}
 
 const verifySignature = ({ publicKey, data, signature }) => {
 	const keyFromPublic = secp256k1.keyFromPublic(publicKey, "hex");
@@ -68,6 +114,8 @@ const verifySignature = ({ publicKey, data, signature }) => {
 };
 
 module.exports = {
+	calcBlockDataHash,
+	calcTransactionDataHash,
 	cryptoHash,
 	sha256,
 	secp256k1,
