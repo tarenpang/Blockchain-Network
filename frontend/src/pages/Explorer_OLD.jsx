@@ -31,40 +31,42 @@ function Explorer() {
 			<br></br>
 			<SearchBar></SearchBar>
 			<br></br>
-			<div class="container-fluid">
-				<div class="card">
-					<div class="card-body">
-						<h4 class="card-title">
-							Confirmed Blocks: {allConfirmedBlocks.length}
-						</h4>
-						<div class="scrollable">
+			<div class="row-container">
+				<div>
+					<div class="outlined">
+						<Container fluid>
+							<Col md="auto">Confirmed Blocks: {allConfirmedBlocks.length}</Col>
 							{allConfirmedBlocks.length > 0 &&
 								allConfirmedBlocks.map((d, index) => (
 									<Row>
-										<p>Index: {`${d.index}`}</p>
-										<p>BlockHash: {`${d.blockHash.slice(0, 20)}...`}</p>
-										<p>Mined By: {`${d.minedBy.slice(0, 20)}...`}</p>
+										<Col>&nbsp;</Col>
+										<Col>Index: {`${d.index}`}</Col>
+										<Col>BlockHash: {`${d.blockHash.slice(0, 20)}...`}</Col>
+										<Col>Mined By: {`${d.minedBy.slice(0, 20)}...`}</Col>
 									</Row>
 								))}
-						</div>
+						</Container>
 					</div>
 				</div>
-
-				<div class="card">
-					<div class="card-body">
-						<h4 class="card-title">
-							Confirmed Transactions: {allConfirmedTransactions.length}
-						</h4>
-						<div class="scrollable">
-							{allConfirmedBlocks.length > 0 &&
-								allConfirmedBlocks.map((d, index) => (
+				<br></br>
+				<div>
+					<div class="outlined">
+						<Container fluid>
+							<Col md="auto">
+								Confirmed Transactions: {allConfirmedTransactions.length}
+							</Col>
+							{allConfirmedTransactions.length > 0 &&
+								allConfirmedTransactions.map((d, index) => (
 									<Row>
-										<p>TransactionHash: {`${d.index}`}</p>
-										<p>To: {`${d.blockHash.slice(0, 20)}...`}</p>
-										<p>From: {`${d.minedBy.slice(0, 20)}...`}</p>
+										<Col>&nbsp;</Col>
+										<Col>
+											TxnHash: {`${d.transactionDataHash.slice(0, 20)}...`}
+										</Col>
+										<Col>To: {`${d.to.slice(0, 20)}...`}</Col>
+										<Col>From: {`${d.from.slice(0, 20)}...`}</Col>
 									</Row>
 								))}
-						</div>
+						</Container>
 					</div>
 				</div>
 			</div>

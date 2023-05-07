@@ -37,18 +37,20 @@ function SearchBar() {
 		search();
 	};
 	return (
-		<div>
+		<div class="center">
 			<Form className="d-flex" onSubmit={handleSubmit}>
-				<Form.Control
-					type="search"
-					placeholder="Search by Block Hash/Txn Hash/Addresss"
-					className="me-2"
-					aria-label="Search"
-					onChange={(e) => {
-						setSearchInput(e.target.value);
-						console.log(e.target.value);
-					}}
-				/>
+				<div class="col-sm-10">
+					<Form.Control
+						type="search"
+						placeholder="Search by Block Hash/Txn Hash/Addresss"
+						className="me-2"
+						aria-label="Search"
+						onChange={(e) => {
+							setSearchInput(e.target.value);
+							console.log(e.target.value);
+						}}
+					/>
+				</div>
 				<Button type="submit">Search</Button>
 			</Form>
 		</div>
