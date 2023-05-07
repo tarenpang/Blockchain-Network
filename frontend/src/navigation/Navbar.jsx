@@ -1,5 +1,5 @@
 import React from "react";
-import topo from "../assets/topo-icon.png";
+import topo from "../assets/topo-icon-purple.png";
 import { Link } from "react-router-dom";
 
 const Navbar = () => {
