@@ -87,21 +87,23 @@ app.get("/blocks", (req, res) => {
 	res.json(blockchain.blocks);
 });
 
-// Get Block by Index
-app.get("/blocks/:index", (req, res) => {
-	let index = req.params.index;
-	let block = node.chain.blocks[index];
-	if (block) res.json(block);
-	else
-		res.status(StatusCodes.NOT_FOUND).json({ errorMsg: "Invalid block index" });
-});
-
 // Get Block by Block Hash
 app.get("/block/:blockHash", (req, res) => {
 	const blockHash = req.params.blockHash;
-	const correctBlock = blockchain.getBlock(blockHash);
-	res.json({ block: correctBlock });
+	const targetBlock = blockchain.getBlock(blockHash);
+	if (targetBlock) res.json(targetBlock);
+	else
+		res.status(StatusCodes.NOT_FOUND).json({ errorMsg: "Invalid block hash" });
 });
+
+// Get Block by Index
+// app.get("/block/:index", (req, res) => {
+// 	let index = req.params.index;
+// 	let block = blockchain.blocks[index];
+// 	if (block) res.json(block);
+// 	else
+// 		res.status(StatusCodes.NOT_FOUND).json({ errorMsg: "Invalid block index" });
+// });
 
 // Create a New Transaction
 app.post("/transaction", function (req, res) {

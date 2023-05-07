@@ -33,11 +33,8 @@ function BlockDetails() {
 							<Container fluid>
 								<Row>
 									<Col>&nbsp;</Col>
-									<Col>Block Hash: {`${currentBlock.blockHash}`}</Col>
-									{/* <Col>
-										Transactions: {`${currentBlock.transactions.length}`}
-									</Col> */}
-									<Col>Mined by: {`${currentBlock.minedBy}`}</Col>
+									<Col>BlockHash: {`${currentBlock.blockHash}`}</Col>
+									<Col>Mined By: {`${currentBlock.minedBy}`}</Col>
 									<Col>Difficulty: {`${currentBlock.difficulty}`}</Col>
 									<Col>Date: {`${currentBlock.dateCreated}`}</Col>
 								</Row>

@@ -12,7 +12,7 @@ function SearchBar() {
 		if (emptyInput) {
 			return false;
 		}
-		if (input.startsWith("c2d")) {
+		if (hashInput && (input.startsWith("c2d") || input.startsWith("000"))) {
 			return `/block/${input.toString()}`;
 		}
 		if (hashInput) {

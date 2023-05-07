@@ -13,11 +13,14 @@
 	"dependencies": {
 		"@headlessui/react": "^1.7.14",
 		"@heroicons/react": "^2.0.17",
+		"@material-ui/core": "^4.12.4",
 		"axios": "^1.4.0",
 		"bootstrap": "^5.2.3",
 		"ethers": "^6.3.0",
+		"loading": "^1.13.3",
 		"react": "^18.2.0",
 		"react-bootstrap": "^2.7.3",
+		"react-circular-progressbar": "^2.1.0",
 		"react-dom": "^18.2.0",
 		"react-router-dom": "^6.10.0"
 	},
