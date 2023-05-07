@@ -14,7 +14,7 @@ function BlockDetails() {
 	useEffect(() => {
 		(async function loadData() {
 			const currentBlock = await axios.get(
-				`http://localhost:5555/blocks/blockHash/${blockHash}`
+				`http://localhost:5555/block/${blockHash}`
 			);
 			setCurrentBlock(currentBlock.data);
 		})();
@@ -34,9 +34,9 @@ function BlockDetails() {
 								<Row>
 									<Col>&nbsp;</Col>
 									<Col>Block Hash: {`${currentBlock.blockHash}`}</Col>
-									<Col>
+									{/* <Col>
 										Transactions: {`${currentBlock.transactions.length}`}
-									</Col>
+									</Col> */}
 									<Col>Mined by: {`${currentBlock.minedBy}`}</Col>
 									<Col>Difficulty: {`${currentBlock.difficulty}`}</Col>
 									<Col>Date: {`${currentBlock.dateCreated}`}</Col>

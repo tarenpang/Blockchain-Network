@@ -12,8 +12,8 @@ function SearchBar() {
 		if (emptyInput) {
 			return false;
 		}
-		if (input.startsWith("000")) {
-			return `/blocks/${input.toString()}`;
+		if (input.startsWith("c2d")) {
+			return `/block/${input.toString()}`;
 		}
 		if (hashInput) {
 			return `/transaction/${input.toString()}`;
