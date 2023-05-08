@@ -47,7 +47,11 @@ const Navbar = () => {
 										data-bs-toggle="dropdown"
 										aria-expanded="false"
 									>
+<<<<<<< HEAD
+										<Link to="/mine">Mine</Link>
+=======
 										Mine
+>>>>>>> origin/main
 									</a>
 									<ul class="dropdown-menu">
 										<li>

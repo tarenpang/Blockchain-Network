@@ -35,7 +35,8 @@ function Explorer() {
 				<div class="card">
 					<div class="card-body">
 						<h4 class="card-title">
-							Confirmed Blocks: {allConfirmedBlocks.length}
+							{/* Confirmed Blocks: {allConfirmedBlocks.length} */}
+							Latest Blocks
 						</h4>
 						<div class="scrollable">
 							{allConfirmedBlocks.length > 0 &&
@@ -44,6 +45,7 @@ function Explorer() {
 										<p>Index: {`${d.index}`}</p>
 										<p>BlockHash: {`${d.blockHash.slice(0, 20)}...`}</p>
 										<p>Mined By: {`${d.minedBy.slice(0, 20)}...`}</p>
+										<hr />
 									</Row>
 								))}
 						</div>
@@ -53,7 +55,8 @@ function Explorer() {
 				<div class="card">
 					<div class="card-body">
 						<h4 class="card-title">
-							Confirmed Transactions: {allConfirmedTransactions.length}
+							{/* Confirmed Transactions: {allConfirmedTransactions.length} */}
+							Latest Transactions
 						</h4>
 						<div class="scrollable">
 							{allConfirmedBlocks.length > 0 &&
@@ -62,6 +65,7 @@ function Explorer() {
 										<p>TransactionHash: {`${d.index}`}</p>
 										<p>To: {`${d.blockHash.slice(0, 20)}...`}</p>
 										<p>From: {`${d.minedBy.slice(0, 20)}...`}</p>
+										<hr />
 									</Row>
 								))}
 						</div>
