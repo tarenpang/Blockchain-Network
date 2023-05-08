@@ -201,13 +201,47 @@ app.post("/transactions/send", function (req, res) {
 		});
 });
 
-// app.post("/transaction", function (req, res) {
-// 	const newTransaction = req.body;
-// 	const blockIndex = blockchain.addNewTxnToPendingTxns(newTransaction);
-// 	res.json({
-// 		message: `Transaction will be added in block ${blockIndex}`,
-// 	});
-// });
+// Mine the Pending Transactions
+app.post("/mine", function (req, res) {
+	const { minerAddress, difficulty } = req.body;
+	const newBlock = blockchain.mineNextBlock(minerAddress, difficulty);
+
+	// broadcast the new block to other nodes
+	const axiosPromises = [];
+	blockchain.peersMap.forEach((url, nodeId) => {
+		const requestOptions = {
+			url: `${url}/blockchain/add-block`,
+			method: "POST",
+			data: { newBlock },
+			headers: { "Content-Type": "application/json" },
+		};
+		axiosPromises.push(axios(requestOptions));
+	});
+
+	Promise.all(axiosPromises)
+		.then(() => {
+			res.json({
+				message: "New block mined and broadcasted successfully",
+				block: newBlock,
+			});
+		})
+		.catch((err) => res.status(400).json({ error: err.message }));
+});
+
+app.post("/blockchain/add-block", function (req, res) {
+	const block = blockchain.extendChain(req.body.newBlock);
+	if (!block.errorMsg) {
+		res.json({
+			message: "New block received and accepted",
+			block,
+		});
+	} else {
+		res.json({
+			message: "New block rejected",
+			block,
+		});
+	}
+});
 
 // Get Mining Job
 app.get("/mining/get-mining-job/:miner-address", (req, res) => {

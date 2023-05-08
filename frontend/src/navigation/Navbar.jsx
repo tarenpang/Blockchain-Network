@@ -47,7 +47,7 @@ const Navbar = () => {
 										data-bs-toggle="dropdown"
 										aria-expanded="false"
 									>
-										Transact
+										<Link to="/mine">Mine</Link>
 									</a>
 									<ul class="dropdown-menu">
 										<li>

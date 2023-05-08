@@ -284,10 +284,11 @@ Blockchain.prototype.validateTransaction = function (txnData) {
 
 // Remove Invalid Transactions from the Array of Pending Transactions
 Blockchain.prototype.removePendingTransactions = function (txnsToRemove) {
-	let tranHashesToRemove = new Set();
-	for (let t of txnsToRemove) txnHashesToRemove.add(t.transactionDataHash);
+	let transactionHashesToRemove = new Set();
+	for (let t of transactionHashesToRemove)
+		txnHashesToRemove.add(t.transactionDataHash);
 	this.pendingTransactions = this.pendingTransactions.filter(
-		(t) => !txnHashesToRemove.has(t.transactionDataHash)
+		(t) => !transactionHashesToRemove.has(t.transactionDataHash)
 	);
 };
 
@@ -422,11 +423,8 @@ Blockchain.prototype.getMiningJob = function (minerAddress) {
 		this.currentDifficulty, // difficulty (integer)
 		prevBlockHash, // prevBlockHash (hex_number[64])
 		minerAddress, // minedBy (address -> 40 hex digits)
-		blockDataHash, // blockDataHash (40 hex digits)
-		nonce, // nonce (integer)
-		dateCreated, // dateCreated (ISO8601_string)
-		blockHash, // blockHash (hex_number[64])
-		blockReward
+		undefined,
+		blockReward // integer
 	);
 
 	this.miningJobs[nextBlockCandidate.blockDataHash] = nextBlockCandidate;

@@ -25,6 +25,7 @@ function BlockDetails() {
 			<br />
 			<h1>Block {`${currentBlock.index}`} Details</h1>
 			<br></br>
+
 			<div class="row-container">
 				<div>
 					<br></br>
