@@ -545,7 +545,7 @@ Blockchain.prototype.getAccountBalance = function (address) {
 				if (tran.transferSuccessful)
 					balance.confirmedBalance -= Number(tran.value);
 			}
-			if (confimationCount >= config.safeConfirmCount) {
+			if (confimationCount >= Config.safeConfirmCount) {
 				balance.safeBalance -= Number(tran.fee);
 				if (tran.transferSuccessful) balance.safeBalance -= Number(tran.value);
 			}

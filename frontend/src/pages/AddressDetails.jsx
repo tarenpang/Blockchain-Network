@@ -1,3 +1,4 @@
+// import  * from "myBackend";
 import "../../custom.css";
 import React from "react";
 import axios from "axios";
@@ -27,28 +28,31 @@ function AddressDetails() {
 			<br />
 			<h1>Address Details</h1>
 			<br></br>
-			<h3>Address: {`${address}`}</h3>
-			<h3>Balance: {`${addressBalance.confirmedBalance}`}</h3>
-			<div class="row-container">
+			<div className="center-text">
+				<h4>Address: {`${address}`}</h4>
+				<div className="center-text">
+					<h4>Balance: {`${addressBalance.confirmedBalance}`}</h4>
+				</div>
+			</div>
+			<br></br>
+			<div className="card-wide">
 				<div>
 					<br></br>
 					<div>
-						<div class="outlined">
-							<Container fluid>
-								{addressTransactions.length > 0 &&
-									addressTransactions.map((d, index) => (
-										<Row>
-											<Col>&nbsp;</Col>
-											<Col>
-												TxnHash: {`${d.transactionDataHash.slice(0, 20)}...`}
-											</Col>
-											<Col>To: {`${d.to.slice(0, 20)}...`}</Col>
-											<Col>From: {`${d.from.slice(0, 20)}...`}</Col>
-											<Col>Value: {`${d.value}`}</Col>
-											<Col>Fee: {`${d.fee}`}</Col>
-										</Row>
-									))}
-							</Container>
+						<div className="card-body-wide">
+							{/* <Container fluid> */}
+							{addressTransactions.length > 0 &&
+								addressTransactions.map((d, index) => (
+									<Row>
+										<p>&nbsp;</p>
+										<p>TxnHash: {`${d.transactionDataHash.slice(0, 20)}...`}</p>
+										<p>To: {`${d.to.slice(0, 20)}...`}</p>
+										<p>From: {`${d.from.slice(0, 20)}...`}</p>
+										<p>Value: {`${d.value}`}</p>
+										<p>Fee: {`${d.fee}`}</p>
+									</Row>
+								))}
+							{/* </Container> */}
 						</div>
 					</div>
 				</div>

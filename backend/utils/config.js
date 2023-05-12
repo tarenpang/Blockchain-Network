@@ -3,8 +3,10 @@ const Transaction = require("../transaction");
 const Block = require("../block");
 
 const initialDifficulty = 5;
-const genesisDate = "2023-03-21T00:00:00.000Z";
-const blockReward = 5000000;
+const genesisDate = new Date(
+	new Date().setDate(new Date().getDate() - 15)
+).getTime();
+const blockReward = 5;
 const host = "http://localhost";
 const port = process.argv[2];
 const currentNodeURL = `${host}:${port}`;
@@ -39,7 +41,7 @@ const genesisFaucetTransaction = new Transaction(
 	nullAddress, // from address
 	faucetAddress, // to Address
 	1000000000000, // value of transfer
-	10, // fee for mining
+	5, // fee for mining
 	genesisDate, // dateCreated
 	genesisData, // data (payload)
 	nullPubKey, // senderPubKey
@@ -91,7 +93,7 @@ module.exports = {
 	minerPrivKey,
 	minerPubKey,
 	minerAddress,
-	minTransactionFee: 10,
+	minTransactionFee: 1,
 	maxTransactionFee: 1000000,
 	maxTransferValue: 10000000000000,
 	nodeId,

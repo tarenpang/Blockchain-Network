@@ -25,21 +25,17 @@ const Navbar = () => {
 						<img className="logo-icon" src={topo}></img>
 						<div class="collapse navbar-collapse" id="navbarSupportedContent">
 							<ul class="navbar-nav me-auto mb-2 mb-lg-0 list-unstyled">
+								<li class="nav-item">{<Link to="/explorer">Explorer</Link>}</li>
+
 								<li class="nav-item">
-									{
-										/* <a class="nav-link active" aria-current="page" href="#">
-										Explorer
-									</a> */
-										<Link to="/explorer">Explorer</Link>
-									}
-								</li>
-								<li class="nav-item">
-									{/* <a class="nav-link" href="#">
-										Wallet
-									</a> */}
 									<Link to="/wallet">Wallet</Link>
 								</li>
-								<li class="nav-item dropdown">
+
+								<li class="nav-item">
+									<Link to="/mine">Mine</Link>
+								</li>
+
+								{/* <li class="nav-item dropdown">
 									<a
 										class="nav-link dropdown-toggle"
 										href="#"
@@ -47,18 +43,16 @@ const Navbar = () => {
 										data-bs-toggle="dropdown"
 										aria-expanded="false"
 									>
-<<<<<<< HEAD
 										<Link to="/mine">Mine</Link>
-=======
-										Mine
->>>>>>> origin/main
 									</a>
+
 									<ul class="dropdown-menu">
 										<li>
 											<a class="dropdown-item" href="#">
 												Action
 											</a>
 										</li>
+
 										<li>
 											<a class="dropdown-item" href="#">
 												Another action
@@ -73,7 +67,9 @@ const Navbar = () => {
 											</a>
 										</li>
 									</ul>
-								</li>
+
+								</li> */}
+
 								<li class="nav-item">
 									{/* <a class="nav-link" href="#">
 										Faucet

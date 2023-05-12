@@ -23,23 +23,23 @@ function BlockDetails() {
 	return (
 		<div>
 			<br />
-			<h1>Block {`${currentBlock.index}`} Details</h1>
+			<h1>Block {`${currentBlock.index}`} - Details</h1>
 			<br></br>
 
-			<div class="row-container">
+			<div className="card-wide">
 				<div>
 					<br></br>
 					<div>
-						<div class="outlined">
-							<Container fluid>
-								<Row>
-									<Col>&nbsp;</Col>
-									<Col>BlockHash: {`${currentBlock.blockHash}`}</Col>
-									<Col>Mined By: {`${currentBlock.minedBy}`}</Col>
-									<Col>Difficulty: {`${currentBlock.difficulty}`}</Col>
-									<Col>Date: {`${currentBlock.dateCreated}`}</Col>
-								</Row>
-							</Container>
+						<div class="card-body-wide">
+							{/* <Container fluid> */}
+							<Row>
+								<p>&nbsp;</p>
+								<p>BlockHash: {`${currentBlock.blockHash}`}</p>
+								<p>Mined By: {`${currentBlock.minedBy}`}</p>
+								<p>Difficulty: {`${currentBlock.difficulty}`}</p>
+								<p>Date: {`${currentBlock.dateCreated}`}</p>
+							</Row>
+							{/* </Container> */}
 						</div>
 					</div>
 				</div>
@@ -49,3 +49,7 @@ function BlockDetails() {
 }
 
 export default BlockDetails;
+
+{
+	/* <div class="card-body"></div>; */
+}

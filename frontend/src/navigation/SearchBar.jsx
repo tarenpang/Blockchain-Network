@@ -42,7 +42,7 @@ function SearchBar() {
 				<div class="col-sm-10">
 					<Form.Control
 						type="search"
-						placeholder="Search by Block Hash/Txn Hash/Addresss"
+						placeholder="Search by Block Hash / Transaction Hash / Addresss"
 						className="me-2"
 						aria-label="Search"
 						onChange={(e) => {
