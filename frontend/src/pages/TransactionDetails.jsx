@@ -22,23 +22,21 @@ function TransactionDetails() {
 			<br />
 			<h1>Transaction Details</h1>
 			<br></br>
-			<div class="row-container">
+			<div className="card-wide">
 				<div>
 					<br></br>
 					<div>
-						<div class="outlined">
-							<Container fluid>
-								<Row>
-									<Col>&nbsp;</Col>
-									<Col>
-										TxnHash: {`${currentTransaction.transactionDataHash}`}
-									</Col>
-									<Col>To: {`${currentTransaction.to}`}</Col>
-									<Col>From: {`${currentTransaction.from}`}</Col>
-									<Col>Amount: {`${currentTransaction.value}`}</Col>
-									<Col>Date: {`${currentTransaction.dateCreated}`}</Col>
-								</Row>
-							</Container>
+						<div className="card-body-wide">
+							{/* <Container fluid> */}
+							<Row>
+								<p>&nbsp;</p>
+								<p>TxnHash: {`${currentTransaction.transactionDataHash}`}</p>
+								<p>From: {`${currentTransaction.from}`}</p>
+								<p>To: {`${currentTransaction.to}`}</p>
+								<p>Amount: {`${currentTransaction.value}`}</p>
+								<p>Date: {`${currentTransaction.dateCreated}`}</p>
+							</Row>
+							{/* </Container> */}
 						</div>
 					</div>
 				</div>

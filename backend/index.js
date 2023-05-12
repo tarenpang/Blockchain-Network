@@ -205,7 +205,7 @@ app.post("/transactions/send", function (req, res) {
 app.post("/mine", function (req, res) {
 	const { minerAddress, difficulty } = req.body;
 	const newBlock = blockchain.mineNextBlock(minerAddress, difficulty);
-
+	console.log("newBlock: ", newBlock);
 	// broadcast the new block to other nodes
 	const axiosPromises = [];
 	blockchain.peersMap.forEach((url, nodeId) => {
@@ -217,6 +217,7 @@ app.post("/mine", function (req, res) {
 		};
 		axiosPromises.push(axios(requestOptions));
 	});
+	console.log("axiosPromises: ", axiosPromises);
 
 	Promise.all(axiosPromises)
 		.then(() => {

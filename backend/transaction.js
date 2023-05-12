@@ -63,3 +63,4 @@ Transaction.prototype.verifySignature = function () {
 };
 
 module.exports = Transaction;
+// export default Transaction;
