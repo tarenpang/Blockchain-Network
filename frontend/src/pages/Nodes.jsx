@@ -63,7 +63,7 @@ function Mine() {
 		};
 
 		const body = {
-			minerAddress: secureLocalStorage.getItem("address"),
+			minerAddress: "2fddcc7a8d6b888497ea60aa0079d3ba0da170dd",
 			difficulty: 5,
 		};
 
@@ -83,7 +83,7 @@ function Mine() {
 			// 	return node;
 			// });
 			toast.success(result, {
-				position: "top-right",
+				position: "bottom-right",
 				theme: "colored",
 			});
 
@@ -108,11 +108,11 @@ function Mine() {
 				theme="light"
 			/>
 			<br />
-			<h1>Mine</h1>
+			<h1>Syncing the Network Nodes</h1>
 			<div className="center-img">
 				<img
 					style={{ width: 225, height: 200 }}
-					src="../src/assets/pickaxe-83.png"
+					src="../src/assets/nodes-85.png"
 					alt="Pickaxe Image"
 				></img>
 			</div>

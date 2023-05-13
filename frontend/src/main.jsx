@@ -14,6 +14,7 @@ import Explorer from "./pages/Explorer";
 import LandingPage from "./pages/LandingPage";
 import Wallet from "./pages/Wallet";
 import Mine from "./pages/Mine";
+import Nodes from "./pages/Nodes";
 import TransactionDetails from "./pages/TransactionDetails";
 import BlockDetails from "./pages/BlockDetails";
 import AddressDetails from "./pages/AddressDetails";
@@ -35,6 +36,7 @@ const router = createBrowserRouter(
 			<Route path="/explorer" element={<Explorer />}></Route>
 			<Route path="/wallet" element={<Wallet />}></Route>
 			<Route path="/mine" element={<Mine />}></Route>
+			<Route path="/nodes" element={<Nodes />}></Route>
 			<Route
 				path="/transaction/:txHash"
 				element={<TransactionDetails />}

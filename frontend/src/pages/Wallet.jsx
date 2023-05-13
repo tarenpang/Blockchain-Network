@@ -262,7 +262,15 @@ function Wallet() {
 			{!loggedIn && (
 				<div>
 					<h1>Welcome to the IndiGold Wallet</h1>
-					<br></br>
+
+					<div className="center-img">
+						<img
+							style={{ width: 225, height: 200 }}
+							src="../src/assets/wallet-85.png"
+							alt="Wallet Image"
+						></img>
+					</div>
+					<br />
 					<div className="container-fluid">
 						<div className="card">
 							<div className="card-body">
@@ -318,7 +326,15 @@ function Wallet() {
 			{loggedIn && (
 				<div>
 					<h1>Wallet</h1>
-					<div>
+					<div className="center-img-2">
+						<img
+							style={{ width: 225, height: 200 }}
+							src="../src/assets/wallet-85.png"
+							alt="Wallet Image"
+						></img>
+					</div>
+					<br />
+					<div className="bg-glass">
 						<h3 className="center-text">Balance: {balance.confirmedBalance}</h3>
 						<h4 className="center-text">
 							Address: {secureLocalStorage.getItem("address")}
@@ -329,8 +345,25 @@ function Wallet() {
 						<div className="cred-card">
 							<div className="card-body">
 								<h4 className="card-title-1">Wallet Credentials</h4>
-								<p style={{ fontSize: "12px" }}>{generatedKeys}</p>
-								<br></br>
+								<p />
+								{/* <p style={{ fontSize: "12px" }}>{generatedKeys}</p> */}
+								<p style={{ fontSize: "12px" }}>
+									<b>{`Private Key: `}</b>
+									{secureLocalStorage.getItem("privKey")}
+								</p>
+								<p />
+								<p style={{ fontSize: "12px" }}>
+									<b>{`Public Key: `}</b>
+									{secureLocalStorage.getItem("pubKey")}
+								</p>
+								<p />
+								<p style={{ fontSize: "12px" }}>
+									<b>{`Blockchain Address: `}</b>
+									{secureLocalStorage.getItem("address")}
+								</p>
+								{/* <p style={{ fontSize: "12px" }}>{generatedKeys.publicKey}</p> */}
+								{/* <p style={{ fontSize: "12px" }}>{generatedKeys.address}</p> */}
+								<br />
 								<Button onClick={handleLogin} type="submit">
 									Log out
 								</Button>

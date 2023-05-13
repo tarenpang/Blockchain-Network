@@ -159,10 +159,10 @@ Blockchain.prototype.getTransactionHistory = function (address) {
 	let transactionsByAddress = transactions.filter(
 		(transaction) => transaction.from === address || transaction.to === address
 	);
-	// Sort the transactions by date
-	transactionsByAddress.sort((a, b) =>
-		a.dateCreated.localeCompare(b.dateCreated)
-	);
+	// // Sort the transactions by date
+	// transactionsByAddress.sort((a, b) =>
+	// 	a.dateCreated.localeCompare(b.dateCreated)
+	// );
 
 	return transactionsByAddress;
 };
