@@ -40,19 +40,25 @@ function AddressDetails() {
 					<br></br>
 					<div>
 						<div className="card-body-wide">
-							{/* <Container fluid> */}
-							{addressTransactions.length > 0 &&
-								addressTransactions.map((d, index) => (
-									<Row>
-										<p>&nbsp;</p>
-										<p>TxnHash: {`${d.transactionDataHash.slice(0, 20)}...`}</p>
-										<p>To: {`${d.to.slice(0, 20)}...`}</p>
-										<p>From: {`${d.from.slice(0, 20)}...`}</p>
-										<p>Value: {`${d.value}`}</p>
-										<p>Fee: {`${d.fee}`}</p>
-									</Row>
-								))}
-							{/* </Container> */}
+							<div className="scrollable">
+								{/* <Container fluid> */}
+								{addressTransactions.length > 0 &&
+									addressTransactions.map((d, index) => (
+										<Row>
+											<p className="ln-ht">
+												TxnHash: {`${d.transactionDataHash.slice(0, 20)}...`}
+											</p>
+											<p className="ln-ht">To: {`${d.to.slice(0, 20)}...`}</p>
+											<p className="ln-ht">
+												From: {`${d.from.slice(0, 20)}...`}
+											</p>
+											<p className="ln-ht">Value: {`${d.value}`}</p>
+											<p className="ln-ht">Fee: {`${d.fee}`}</p>
+											<hr />
+										</Row>
+									))}
+								{/* </Container> */}
+							</div>
 						</div>
 					</div>
 				</div>

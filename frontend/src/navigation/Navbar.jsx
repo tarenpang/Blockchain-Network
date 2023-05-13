@@ -32,6 +32,10 @@ const Navbar = () => {
 								</li>
 
 								<li class="nav-item">
+									<Link to="/nodes">Nodes</Link>
+								</li>
+
+								<li class="nav-item">
 									<Link to="/mine">Mine</Link>
 								</li>
 
