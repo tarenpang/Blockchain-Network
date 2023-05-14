@@ -11,6 +11,7 @@ function Block(
 	blockDataHash,
 	nonce,
 	dateCreated,
+	// timestamp,
 	blockHash,
 	blockReward
 ) {
@@ -26,6 +27,7 @@ function Block(
 
 	this.nonce = nonce; // integer
 	this.dateCreated = dateCreated; // ISO8601_string
+	// this.timestamp = timestamp; // Unix timestamp
 	this.blockHash = blockHash; // hex_number[64]
 
 	// Calculate the block hash if it is missing
@@ -45,6 +47,7 @@ Block.prototype.calcBlockDataHash = function () {
 				value: transaction.value,
 				fee: transaction.fee,
 				dateCreated: transaction.dateCreated,
+				// timestamp: transaction.dateCreated.getTime(),
 				data: transaction.data,
 				senderPubKey: transaction.senderPubKey,
 				transactionDataHash: transaction.transactionDataHash,

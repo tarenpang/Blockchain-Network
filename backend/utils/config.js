@@ -3,7 +3,8 @@ const Transaction = require("../transaction");
 const Block = require("../block");
 
 const initialDifficulty = 5;
-const genesisDate = new Date(
+const genesisDate = new Date(new Date().setDate(new Date().getDate() - 15));
+const genesisTimestamp = new Date(
 	new Date().setDate(new Date().getDate() - 15)
 ).getTime();
 const blockReward = 5;
@@ -88,6 +89,7 @@ module.exports = {
 	genesisBlock,
 	genesisDate,
 	genesisData,
+	genesisTimestamp,
 	genesisNodeURL,
 	initialDifficulty,
 	minerPrivKey,

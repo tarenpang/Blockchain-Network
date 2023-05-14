@@ -16,10 +16,50 @@
 
 .bg-glass {
 	/* border: 2px solid white; */
-	padding: 3px;
-	width: 500px;
-	height: 90px;
+	padding: 1px;
+	/* padding-bottom: -10px; */
+	width: 580px;
+	height: 100px;
 	margin: 0 auto;
+	border-radius: 5px;
+	backdrop-filter: blur(5px);
+	background-color: rgba(55, 12, 94, 0.6);
+}
+
+.bg-glass-1 {
+	/* border: 2px solid white; */
+	padding: 1px;
+	/* padding-bottom: -10px; */
+	width: 500px;
+	height: 60px;
+	margin: 0 auto;
+	margin-left: 120px;
+	border-radius: 5px;
+	backdrop-filter: blur(5px);
+	background-color: rgba(55, 12, 94, 0.6);
+}
+
+.bg-glass-2 {
+	/* border: 2px solid white; */
+	padding: 1px;
+	/* padding-bottom: -10px; */
+	width: 520px;
+	height: 80px;
+	margin: 0 auto;
+	margin-left: 120px;
+	border-radius: 5px;
+	backdrop-filter: blur(5px);
+	background-color: rgba(55, 12, 94, 0.6);
+}
+
+.bg-glass-3 {
+	/* border: 2px solid white; */
+	padding: 1px;
+	/* padding-bottom: -10px; */
+	width: 250px;
+	height: 60px;
+	margin: 0 auto;
+	margin-left: 260px;
 	border-radius: 5px;
 	backdrop-filter: blur(5px);
 	background-color: rgba(55, 12, 94, 0.6);
@@ -64,6 +104,12 @@
 	flex-flow: row wrap;
 	justify-content: space-between;
 	align-content: space-around;
+}
+
+.custom-btn {
+	background: #b029a0;
+	border-color: #b029a0;
+	color: #fff;
 }
 
 .first-line {
@@ -114,6 +160,19 @@
 	background-color: rgba(55, 12, 94, 0.6);
 }
 
+.card-md-1 {
+	display: flex;
+	flex-direction: column;
+	border: 2px solid white;
+	width: 520px;
+	height: 320px;
+	margin: 0 auto;
+	margin-right: 140px;
+	border-radius: 5px;
+	backdrop-filter: blur(5px);
+	background-color: rgba(55, 12, 94, 0.6);
+}
+
 .card-wallet-txn {
 	border: 2px solid white;
 	padding: 15px;
@@ -135,6 +194,17 @@
 	backdrop-filter: blur(5px);
 	background-color: rgba(55, 12, 94, 0.6);
 }
+
+.card-wide-1 {
+	border: 2px solid white;
+	/* padding: 15px; */
+	width: 650px;
+	height: 370px;
+	margin: 0 auto;
+	border-radius: 5px;
+	backdrop-filter: blur(5px);
+	background-color: rgba(55, 12, 94, 0.6);
+}
 .card-body {
 	/* padding-right: 15px; */
 	display: flex;
@@ -150,8 +220,24 @@
 	align-content: center;
 }
 
+.card-body-md-1 {
+	height: 290px;
+	padding-left: 20px;
+	padding-right: 20px;
+	display: flex;
+	flex-direction: column;
+	align-content: center;
+}
+
 .card-body-wide {
 	padding-left: 50px;
+	display: flex;
+	flex-direction: column;
+	align-content: center;
+}
+
+.card-body-wide-1 {
+	padding-left: 22px;
 	display: flex;
 	flex-direction: column;
 	align-content: center;
@@ -234,6 +320,13 @@
 	text-align: center;
 }
 
+.flex-justify-end {
+	/* padding-right: 15px; */
+	display: flex;
+	flex-direction: row;
+	justify-content: right;
+}
+
 .ln-ht {
 	/* font-size: 1.2em; */
 	line-height: 0.8;
@@ -244,6 +337,10 @@
 	overflow-x: hidden;
 	overflow-y: auto;
 	max-height: 300px;
+}
+
+.text-indent {
+	padding: 20px;
 }
 
 a {

@@ -7,6 +7,7 @@ function Transaction(
 	value,
 	fee,
 	dateCreated,
+	// timestamp,
 	data,
 	senderPubKey,
 	transactionDataHash,
@@ -19,6 +20,7 @@ function Transaction(
 	this.value = value; // non-negative integer
 	this.fee = fee; // non-negative integer
 	this.dateCreated = dateCreated; // ISO8601_string
+	// this.timestamp = timestamp; // Unix timestamp
 	this.data = data; // optional string
 	this.senderPubKey = senderPubKey; // 65 hex digits
 	this.transactionDataHash = transactionDataHash; // 64 hex digits
@@ -38,6 +40,7 @@ Transaction.prototype.calculateDataHash = function () {
 		value: this.value,
 		fee: this.fee,
 		dateCreated: this.dateCreated,
+		// timestamp: this.dateCreated.getTime(),
 		data: this.data,
 		senderPubKey: this.senderPubKey,
 	};
