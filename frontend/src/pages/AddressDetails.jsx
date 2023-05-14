@@ -28,32 +28,42 @@ function AddressDetails() {
 			<br />
 			<h1>Address Details</h1>
 			<br></br>
-			<div className="center-text">
+			<div className="center-text bg-glass-2">
 				<h4>Address: {`${address}`}</h4>
 				<div className="center-text">
 					<h4>Balance: {`${addressBalance.confirmedBalance}`}</h4>
 				</div>
 			</div>
 			<br></br>
-			<div className="card-wide">
+			<div className="card-wide-1">
 				<div>
 					<br></br>
 					<div>
-						<div className="card-body-wide">
+						<div className="card-body-wide-1">
 							<div className="scrollable">
 								{/* <Container fluid> */}
 								{addressTransactions.length > 0 &&
 									addressTransactions.map((d, index) => (
 										<Row>
 											<p className="ln-ht">
-												TxnHash: {`${d.transactionDataHash.slice(0, 20)}...`}
+												<b>TxnHash:</b> {` ${d.transactionDataHash}`}
 											</p>
-											<p className="ln-ht">To: {`${d.to.slice(0, 20)}...`}</p>
 											<p className="ln-ht">
-												From: {`${d.from.slice(0, 20)}...`}
+												<b>Date:</b>
+												{` ${d.dateCreated}`}
 											</p>
-											<p className="ln-ht">Value: {`${d.value}`}</p>
-											<p className="ln-ht">Fee: {`${d.fee}`}</p>
+											<p className="ln-ht">
+												<b>From:</b> {` ${d.from}`}
+											</p>
+											<p className="ln-ht">
+												<b>To:</b> {` ${d.to}`}
+											</p>
+											<p className="ln-ht">
+												<b>Value:</b> {` ${d.value}`}
+											</p>
+											<p className="ln-ht">
+												<b>Fee:</b> {` ${d.fee}`}
+											</p>
 											<hr />
 										</Row>
 									))}

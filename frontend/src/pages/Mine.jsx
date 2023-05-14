@@ -84,7 +84,7 @@ function Mine() {
 			// });
 			toast.success(result, {
 				position: "top-right",
-				theme: "colored",
+				theme: "light",
 			});
 
 			// Update the node list

@@ -2,9 +2,7 @@ import "../../custom.css";
 import React from "react";
 import axios from "axios";
 import { useState, useEffect } from "react";
-import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
 import SearchBar from "../navigation/SearchBar";
 // import ReactTooltip from "react-tooltip";
 // import { 'document-duplicate' } from "@heroicons/react";
@@ -27,8 +25,10 @@ function Explorer() {
 	}, []);
 
 	const howLongAgo = function (dateCreated) {
+		const dt = new Date(dateCreated);
+		const timestamp = dt.getTime();
 		const now = new Date();
-		const then = dateCreated;
+		const then = timestamp;
 		const diff = now - then;
 		const seconds = Math.floor(diff / 1000);
 		const minutes = Math.floor(seconds / 60);

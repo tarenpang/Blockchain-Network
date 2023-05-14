@@ -445,6 +445,8 @@ Blockchain.prototype.mineNextBlock = function (minerAddress, difficulty) {
 	do {
 		nextBlock.nonce++;
 		nextBlock.calculateBlockHash();
+		console.log("nonce: ", nextBlock.nonce);
+		console.log("blockHash: ", nextBlock.blockHash);
 	} while (!ValidationUtils.isValidDifficulty(nextBlock.blockHash, difficulty));
 
 	// Submit the mined block

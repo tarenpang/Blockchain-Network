@@ -182,7 +182,7 @@ function Wallet() {
 			value: Number(value),
 			fee: 1,
 			// dateCreated: new Date().toISOString(),
-			dateCreated: new Date().getTime(),
+			dateCreated: new Date(),
 			data,
 			senderPubKey: secureLocalStorage.getItem("pubKey"),
 		};
@@ -361,8 +361,6 @@ function Wallet() {
 									<b>{`Blockchain Address: `}</b>
 									{secureLocalStorage.getItem("address")}
 								</p>
-								{/* <p style={{ fontSize: "12px" }}>{generatedKeys.publicKey}</p> */}
-								{/* <p style={{ fontSize: "12px" }}>{generatedKeys.address}</p> */}
 								<br />
 								<Button onClick={handleLogin} type="submit">
 									Log out
