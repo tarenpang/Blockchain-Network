@@ -54,12 +54,12 @@
 
 .bg-glass-3 {
 	/* border: 2px solid white; */
-	padding: 1px;
+	padding: 8px;
 	/* padding-bottom: -10px; */
-	width: 250px;
+	width: 800px;
 	height: 60px;
 	margin: 0 auto;
-	margin-left: 260px;
+	margin-left: 20px;
 	border-radius: 5px;
 	backdrop-filter: blur(5px);
 	background-color: rgba(55, 12, 94, 0.6);
@@ -186,9 +186,6 @@
 
 .card-wide {
 	border: 2px solid white;
-	/* padding: 15px; */
-	width: 700px;
-	height: 370px;
 	margin: 0 auto;
 	border-radius: 5px;
 	backdrop-filter: blur(5px);
@@ -230,7 +227,9 @@
 }
 
 .card-body-wide {
-	padding-left: 50px;
+	height: 100%;
+	padding: 1px;
+	padding-left: 25px;
 	display: flex;
 	flex-direction: column;
 	align-content: center;

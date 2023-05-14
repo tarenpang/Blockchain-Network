@@ -54,7 +54,7 @@ function BlockDetails() {
 			<h1>Block Details</h1>
 			<p />
 			<div className="center-text bg-glass-3">
-				<h3>Block Index: {`${currentBlock.index}`}</h3>
+				<h4>Block Hash: {`${currentBlock.blockHash}`}</h4>
 			</div>
 			<br />
 			<div className="card-wide">
@@ -63,7 +63,10 @@ function BlockDetails() {
 						<div class="card-body-wide">
 							<div className="scrollable">
 								<Row>
-									{/* <p>Block Index: {`${currentBlock.index}`}</p> */}
+									<p>
+										<b>Block Index:</b>
+										{` ${currentBlock.index}`}
+									</p>
 									<details>
 										<summary>
 											<b>Transactions:</b>
@@ -116,13 +119,22 @@ function BlockDetails() {
 										<b>Difficulty:</b> {`${currentBlock.difficulty}`}
 									</p>
 									<p>
+										<b>PrevBlockHash:</b> {`${currentBlock.prevBlockHash}`}
+									</p>
+									<p>
 										<b>Mined By:</b> {`${currentBlock.minedBy}`}
 									</p>
 									<p>
-										<b>Date:</b> {`${currentBlock.dateCreated}`}
+										<b>blockDataHash:</b> {`${currentBlock.blockDataHash}`}
 									</p>
 									<p>
-										<b>BlockHash:</b> {`${currentBlock.blockHash}`}
+										<b>nonce:</b> {`${currentBlock.nonce}`}
+									</p>
+									<p>
+										<b>Date Created:</b> {`${currentBlock.dateCreated}`}
+									</p>
+									<p>
+										<b>Block Reward:</b> {`${currentBlock.blockReward}`}
 									</p>
 								</Row>
 							</div>

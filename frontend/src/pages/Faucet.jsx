@@ -117,7 +117,7 @@ function Faucet() {
 				<img
 					style={{ width: 225, height: 200 }}
 					src="../src/assets/faucet-85.png"
-					alt="Pickaxe Image"
+					alt="Faucet Image"
 				></img>
 			</div>
 			<br />

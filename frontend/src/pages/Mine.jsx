@@ -64,7 +64,7 @@ function Mine() {
 
 		const body = {
 			minerAddress: secureLocalStorage.getItem("address"),
-			difficulty: 5,
+			difficulty: 3,
 		};
 
 		const miningResult = await axios.post(
