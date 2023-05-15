@@ -18,36 +18,6 @@ function BlockDetails() {
 		})();
 	}, []);
 
-	const howLongAgo = function (dateCreated) {
-		const dt = new Date(dateCreated);
-		const timestamp = dt.getTime();
-		const now = new Date();
-		const then = timestamp;
-		const diff = now - then;
-		const seconds = Math.floor(diff / 1000);
-		const minutes = Math.floor(seconds / 60);
-		const hours = Math.floor(seconds / 3600);
-		const days = Math.floor(seconds / 86400);
-		const weeks = Math.floor(seconds / 604800);
-		const months = Math.floor(seconds / 2629800);
-		const years = Math.floor(seconds / 31557600);
-		if (seconds < 60) {
-			return `${seconds} seconds ago`;
-		} else if (minutes < 60) {
-			return `${minutes} minutes ago`;
-		} else if (hours < 24) {
-			return `${hours} hours ago`;
-		} else if (days < 7) {
-			return `${days} days ago`;
-		} else if (weeks < 4) {
-			return `${weeks} weeks ago`;
-		} else if (months < 12) {
-			return `${months} months ago`;
-		} else {
-			return `${years} years ago`;
-		}
-	};
-
 	return (
 		<div>
 			<br />
