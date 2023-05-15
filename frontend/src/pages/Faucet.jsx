@@ -129,10 +129,10 @@ function Faucet() {
 				<div className="card-md-1">
 					<div className="card-body-md-1">
 						<div>
-							<p />
+							<br />
 							<p className="ln-ht">
-								&#8226;&nbsp;IndiGOLD Faucet is a Free Service for Crypto
-								Tokens.
+								&#8226;&nbsp;<b>IndiGOLD Faucet</b> is a free service for
+								obtaining <b>IndiGOLD Coins</b>.
 							</p>
 							<p className="ln-ht">
 								&#8226;&nbsp;A 90 second waiting period is required between
