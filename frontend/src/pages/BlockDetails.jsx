@@ -30,8 +30,8 @@ function BlockDetails() {
 			<div className="card-wide">
 				<div>
 					<div>
-						<div class="card-body-wide">
-							<div className="scrollable">
+						<div class="card-body-wide-2">
+							<div className="scrollable-1">
 								<Row>
 									<p>
 										<b>Block Index:</b>
@@ -78,8 +78,10 @@ function BlockDetails() {
 																<b>Transaction Hash:</b>{" "}
 																{`${d.transactionHash}`}
 															</p>
+															<br />
+															<span className="line"></span>
 														</div>
-														<hr />
+														{/* <hr /> */}
 													</details>
 												</div>
 											))}

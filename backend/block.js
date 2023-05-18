@@ -26,12 +26,10 @@ function Block(
 	if (this.blockDataHash === undefined) this.calcBlockDataHash();
 
 	this.nonce = nonce; // integer
-	this.dateCreated = dateCreated; // ISO8601_string
+	this.dateCreated = dateCreated || Config.genesisDate; // ISO8601_string
 	// this.timestamp = timestamp; // Unix timestamp
 	this.blockHash = blockHash; // hex_number[64]
-
-	// Calculate the block hash if it is missing
-	if (this.blockHash === undefined) this.calculateBlockHash();
+	if (!blockHash) this.calculateBlockHash();
 
 	this.blockReward = blockReward; // integer
 }
@@ -69,6 +67,28 @@ Block.prototype.calculateBlockHash = function () {
 	this.blockHash = CryptoUtils.sha256(
 		this.blockDataHash + this.nonce + this.dateCreated
 	).toString();
+};
+
+// Genesis Block
+Block.genesisBlock = function () {
+	if (Config.currentNodeURL === Config.genesisNodeURL) {
+		const genesisBlock = new Block(
+			0, // block index
+			[Transaction.initialFaucetTransaction()], // transactions
+			0, // current difficulty
+			undefined, // prevBlockHash
+			Config.minerAddress, // minedBy
+			undefined, // blockDataHash
+			0, // nonce
+			Config.genesisDate, // dateCreated
+			0, // blockHash
+			5 // mining reward
+		);
+
+		return [genesisBlock];
+	} else {
+		return;
+	}
 };
 
 module.exports = Block;

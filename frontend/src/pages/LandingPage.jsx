@@ -11,8 +11,11 @@ function LandingPage() {
 			<br />
 			<img className="logo" src={logo}></img>
 			<br />
-			<div className="bg-glass">
-				<h1>IndiGOLD Blockchain</h1>
+			<div className="bg-glass-4">
+				<h2 className="center-text" style={{ paddingTop: 10 }}>
+					Welcome to the
+				</h2>
+				<h1 className="ln-ht-2">IndiGOLD Blockchain</h1>
 			</div>
 		</div>
 	);

@@ -6,13 +6,13 @@ const CryptoUtils = require("./utils/cryptoUtils");
 const ValidationUtils = require("./utils/validationUtils");
 
 function Blockchain() {
-	this.blocks = [Config.genesisBlock];
+	this.blocks = Block.genesisBlock();
 	this.pendingTransactions = [];
 	this.currentDifficulty = Config.initialDifficulty;
 	this.currentNodeUrl = Config.currentNodeUrl;
 	this.peersMap = new Map(); // MAP of peer nodes in the network
 	if (this.peersMap.size === 0) {
-		this.peersMap.set(Config.currentNodeId, Config.currentNodeURL);
+		this.peersMap.set(Config.nodeId, Config.currentNodeURL);
 	}
 	this.miningJobs = {};
 }
@@ -568,35 +568,6 @@ Blockchain.prototype.getAccountBalance = function (address) {
 	return balance;
 };
 
-// // Get the Transactions & Balance of an Address
-// Blockchain.prototype.getAddressData = function (address) {
-// 	const addressTransactions = [];
-
-// 	// Get all transactions from the blockchain
-// 	this.chain.forEach((block) => {
-// 		block.transactions.forEach((transaction) => {
-// 			// Add the transaction to the list if it is from the given address
-// 			if (transaction.to === address || transaction.from === address) {
-// 				addressTransactions.push(transaction);
-// 			}
-// 		});
-// 	});
-
-// 	// Calculate the balance of the given address
-// 	let balance = 0;
-// 	addressTransactions.forEach((transaction) => {
-// 		if (transaction.from === address) {
-// 			balance -= Number(transaction.value);
-// 		} else if (transaction.to === address) {
-// 			balance += Number(transaction.value);
-// 		}
-// 	});
-// 	return {
-// 		transactions: addressTransactions,
-// 		addressBalance: balance,
-// 	};
-// };
-
 // Get All Addresses with Transactions within the Blockchain
 Blockchain.prototype.getAllAddresses = function () {
 	let addresses = new Set();
@@ -673,6 +644,43 @@ Blockchain.prototype.broadcastNewPeerToNetwork = async function (
 		});
 };
 
+// Register All Nodes to Peer
+Blockchain.prototype.registerAllNodesToPeer = async function (allPeers) {
+	allPeers.forEach((peerUrl) => {
+		axios
+			.get(peerUrl + "/info")
+			.then((data) => {
+				const peerInfo = data.data;
+				const peers = peerInfo.peersMap;
+
+				for (let data in peers) {
+					const id = data;
+					const url = peers[id];
+					const peerNotPreExisting = !this.peersMap.has(id);
+					const notCurrentNode = this.currentNodeURL !== url;
+
+					if (peerNotPreExisting && notCurrentNode) {
+						axios
+							.post(this.currentNodeURL + "/peers/connect", {
+								peerUrl: peerInfo.nodeUrl,
+							})
+							.then(function () {})
+							.catch(function () {});
+
+						return {
+							message: "Successfully registered network nodes to new peer",
+						};
+					}
+				}
+			})
+			.catch((error) => {
+				console.log("ERROR:", error);
+
+				return { errorMsg: "Error registering network to new peer node." };
+			});
+	});
+};
+
 // Broadcast the New Block to All Peers
 Blockchain.prototype.broadcastNewBlockToPeers = function () {
 	const notification = {
@@ -695,11 +703,11 @@ Blockchain.prototype.syncBlockchainFromPeerChain = async function (
 ) {
 	console.log("peerChainInfo Sync Chain", peerChainInfo);
 	console.log("Cumulative Difficulty", peerChainInfo.cumulativeDifficulty);
-	// CALCULATE & COMPARE CUMULATIVE DIFFICULTIES
+	// Calc and compare cumulative difficulties
 	let currentChainCumulativeDifficulty = this.calcCumulativeDifficulty();
 	let peerChainCumulativeDifficulty = peerChainInfo.cumulativeDifficulty;
 
-	// IF PEER CHAIN IS LONGER, VALIDATE AND SWITCH OVER
+	// Validate Longest Chain & Replace if Valid
 	if (peerChainCumulativeDifficulty > currentChainCumulativeDifficulty) {
 		try {
 			// Get peer blocks
@@ -707,7 +715,7 @@ Blockchain.prototype.syncBlockchainFromPeerChain = async function (
 				await axios.get(peerChainInfo.nodeUrl + "/blocks")
 			).data;
 
-			// Validate
+			// Validate Chain
 			const isValid = this.validateChain(peerChainBlocks);
 			if (isValid.errorMsg) return isValid;
 
