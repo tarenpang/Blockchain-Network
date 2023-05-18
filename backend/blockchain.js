@@ -150,6 +150,11 @@ Blockchain.prototype.getConfirmedTransactions = function () {
 	return transactions;
 };
 
+// Get All Pending Transactions
+Blockchain.prototype.getPendingTransactions = function () {
+	return this.pendingTransactions;
+};
+
 // Get Transaction History Given the Address
 Blockchain.prototype.getTransactionHistory = function (address) {
 	if (!ValidationUtils.isValidAddress(address))
@@ -697,12 +702,18 @@ Blockchain.prototype.broadcastNewBlockToPeers = function () {
 	});
 };
 
-// Synchronize the Blockchain
+// Synchronize the Blockchain from Peer Chain
 Blockchain.prototype.syncBlockchainFromPeerChain = async function (
 	peerChainInfo
 ) {
-	console.log("peerChainInfo Sync Chain", peerChainInfo);
-	console.log("Cumulative Difficulty", peerChainInfo.cumulativeDifficulty);
+	// console.log("peerChainInfo Sync Chain", peerChainInfo);
+	// console.log("Cumulative Difficulty", peerChainInfo.cumulativeDifficulty);
+
+	// Check Peer's Cumulative Difficulty in GET /info
+	// if (peerChainInfo.cumulativeDifficulty === undefined) {
+	//   return { errorMsg: "Peer's cumulative difficulty is undefined" };
+	// }
+
 	// Calc and compare cumulative difficulties
 	let currentChainCumulativeDifficulty = this.calcCumulativeDifficulty();
 	let peerChainCumulativeDifficulty = peerChainInfo.cumulativeDifficulty;
@@ -784,7 +795,7 @@ Blockchain.prototype.broadcastTransactionToPeers = async function (
 	transaction
 ) {
 	let endpoints = [];
-	this.networkNodes.forEach((peerUrl) => {
+	this.peersMap.forEach((peerUrl) => {
 		endpoints.push(peerUrl + "/addToPendingTransactions");
 	});
 
