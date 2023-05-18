@@ -1,116 +1,211 @@
 import React, { useState, useEffect } from "react";
 import Card from "react-bootstrap/Card";
 import { Button, Form, InputGroup } from "react-bootstrap";
-import FloatingLabel from "react-bootstrap/FloatingLabel";
 import axios from "axios";
-import "react-circular-progressbar/dist/styles.css";
-import purplecryptochart from "../assets/purplecryptochart.jpg";
+import EC from "elliptic";
+import CryptoJS from "crypto-js";
+import secureLocalStorage from "react-secure-storage";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+var elliptic = EC.ec;
+var secp256k1 = new elliptic("secp256k1");
+
 function Faucet() {
-	const [address, setAddress] = useState("");
-	const [amount, setAmount] = useState("");
-	const [faucetBalance, setFaucetBalance] = useState(1000000000000); // Initial faucet balance
-	//const [loading, setLoading] = useState(false);
-	//const [progress, setProgress] = useState(0);
-	//const [disabled, setDisabled] = useState(false);
-	//const [balance, setBalance] = useState(0);
-	//let faucetBalance = 1000000000000;
-	/* useEffect(() => {
-      const timer = setInterval(() => {
-        setProgress((prevProgress) =>
-          prevProgress >= 100 ? 0 : prevProgress + 1
-        );
-      }, 900);
-      return () => {
-        clearInterval(timer);
-      };
-    }, []);
-    */
-	const handleChange = (event) => {
-		const { name, value } = event.target;
-		if (name === "address") {
-			setAddress(value);
-		} else if (name === "amount") {
-			setAmount(value);
+	//const faucetBalance = 1000000000000; // Initial faucet balance
+	const transactionTimeout = 90; // Timeout in seconds
+	const [recipient, setRecipient] = useState("");
+	const [value, setValue] = useState("");
+	const [balance, setBalance] = useState("");
+	const [canTransact, setCanTransact] = useState(true);
+	const [timeoutSeconds, setTimeoutSeconds] = useState(transactionTimeout);
+	// const [donationRecipient, setDonationRecipient] = useState("");
+	// const [donationAmount, setDonationAmount] = useState(0);
+	const [signedTx, setSignedTx] = useState("");
+	const [isSigned, setIsSigned] = useState(false);
+	useEffect(() => {
+		let interval;
+		if (!canTransact) {
+			interval = setInterval(() => {
+				setTimeoutSeconds((prevSeconds) => prevSeconds - 1);
+			}, 1000);
 		}
-	};
-	const handleClick = async () => {
+		return () => {
+			clearInterval(interval);
+		};
+	}, [canTransact]);
+	/*const handleChange = (event) => {
+    const { name, value } = event.target;
+    if (name === "address") {
+      setAddress(address);
+      console.log("address: ", address);
+    } else if (name === "amount") {
+      setValue(value);
+      console.log("value: ", value);
+    }
+  };
+*/
+	useEffect(() => {
+		(async function loadData() {
+			const balance = await axios.get(
+				`http://localhost:5555/address/dcf964b76eaa2cf6fedae5e71b4fa8c79e7a936f/balance`
+			);
+			setBalance(balance.data);
+		})();
+	}, []);
+	const handleTransaction = () => {
 		// Deduct the specified amount from the faucet balance
-		setFaucetBalance((prevBalance) => prevBalance - parseInt(amount));
+		//  const updatedFaucetBalance = parseInt(faucetBalance) - parseInt(amount, 10);
 		// Send the transaction to the recipient wallet
-		sendTransaction(wallet.address);
+		sendTransaction(balance);
+		// Reset the address and amount fields
+		setAddress("");
+		setAmount("");
+		// Disable transactions for the timeout duration
+		setCanTransact(false);
+		setTimeoutSeconds(transactionTimeout);
+	};
+	//Enable transactions after the timeout duration
+	setTimeout(() => {
+		setCanTransact(true);
+	}, transactionTimeout * 1000);
+	/*  const sendTransaction = () => {
+    // Replace this with actual transaction logic
+    const currentTransaction = {
+      sender: "dcf964b76eaa2cf6fedae5e71b4fa8c79e7a936f",
+      recipient: address,
+      amount: amount,
+    };
+    console.log("Transaction sent to:", currentTransaction.data);
+    // Update the faucet balance
+    //   setBalance(balance);
+  };
+*/
+	function signData(data, privKey) {
+		const secp256k1 = new elliptic("secp256k1");
+		let keyPair = secp256k1.keyFromPrivate(privKey);
+		let signature = keyPair.sign(data);
+		return [signature.r.toString(16), signature.s.toString(16)];
+	}
+	const signTransaction = () => {
+		const validAddress = /^[0-9a-f]{40}$/.test(recipient);
+		const validValue = /^\d*\.?\d*$/.test(value);
+		if (!value || !recipient) {
+			toast.error("Both Recipient and Value Required!", {
+				position: "top-right",
+				theme: "light",
+			});
+			return;
+		}
+		if (!validAddress) {
+			toast.error("Invalid Recipient Address!", {
+				position: "top-right",
+				theme: "light",
+			});
+			return;
+		}
+		if (!validValue) {
+			toast.error("Invalid Value!", {
+				position: "top-right",
+				theme: "light",
+			});
+			return;
+		}
+		if (
+			value > balance.confirmedBalance ||
+			balance.confirmedBalance - value < 0
+		) {
+			toast.error("Invalid Funds!", {
+				position: "top-right",
+				theme: "light",
+			});
+			return;
+		}
+		let transaction = {
+			from: "dcf964b76eaa2cf6fedae5e71b4fa8c79e7a936f",
+			to: recipient,
+			value: Number(value),
+			fee: 1,
+			// dateCreated: new Date().toISOString(),
+			dateCreated: new Date(),
+			data: "foo data",
+			senderPubKey:
+				"8d6df948d3de9226a08556df1ddede4f045f2e4a962b8cb9d98f228748675a01",
+		};
+		if (!transaction.data) delete transaction.data;
+
+		let transactionJSON = JSON.stringify(transaction);
+		transaction.transactionDataHash =
+			CryptoJS.SHA256(transactionJSON).toString();
+
+		transaction.senderSignature = signData(
+			transaction.transactionDataHash,
+			secureLocalStorage.getItem("privKey")
+		);
+
+		let signedTransaction = JSON.stringify(transaction);
+		setSignedTx(signedTransaction);
+		setIsSigned(true);
+		toast.success("Transaction signed", {
+			position: "top-right",
+			theme: "light",
+		});
 	};
 	const sendTransaction = async () => {
+		signTransaction();
 		try {
-			// Code to send the transaction to the recipient wallet
-			// Replace this with your actual implementation using a web3 library or API
-			console.log(`Transaction sent to ${wallet.address} for amount ${amount}`);
+			const config = {
+				headers: {
+					"Content-Type": "application/json",
+				},
+			};
+			let result = await axios.post(
+				`http://localhost:5555/transaction`,
+				signedTx,
+				config
+			);
+			const error = result.data.error;
+			if (error) {
+				console.log("error" + error);
+			} else {
+				toast.success("Transaction sent", {
+					position: "top-right",
+					theme: "light",
+				});
+				setIsSigned(false);
+				setRecipient("");
+				setValue("");
+				// setData("");
+				console.log("success");
+			}
 		} catch (error) {
-			if (isNaN) console.log("Failed to send transaction:", error);
+			console.log("error2" + error);
 		}
 	};
-	/*const handleDonate = async () => {
-          //
-          const response = await fetch(`/donate`, {
-            method: "GET",
-          });
-          setDisabled(false);
-          setLoading(false);
-          if (response.ok) {
-            const data = await response.json();
-            console.log(`Donation transaction hash: ${data.txHash}`);
-            // display a success message to the user
-          } else {
-            console.error(`Failed to donate: ${response.statusText}`);
-            // display an error message to the user
-          }
-        };
-        const handleWithdrawal = async () => {
-          setLoading(true);
-          setDisabled(true);
-          await axios.post("/api/faucet/withdraw", { address, amount });
-          setLoading(false);
-          setDisabled(false);
-          startProgress();
-        };
-        const startProgress = () => {
-          let intervalId;
-          let count = 0;
-          intervalId = setInterval(() => {
-            count++;
-            if (count > 100) {
-              clearInterval(intervalId);
-              setProgress(0);
-              return;
-            }
-            setProgress(count);
-          }, 900);
-        };
-        useEffect(() => {
-          const fetchBalance = async () => {
-            const response = await fetch(`/balance?address=${address}`);
-            if (response.ok) {
-              const data = await response.json();
-              setBalance(data.balance);
-            } else {
-              console.error(`Failed to get balance: ${response.statusText}`);
-              setBalance(0);
-            }
-          };
-          if (address) {
-            fetchBalance();
-          }
-        }, [address]);
-      */
-	//const addressBalance = balance > 0 ? `Balance: ${balance}` : "";
+	/*const handleDonate = () => {
+    // Replace this with donation logic
+    const donationAmount = 1000000000000; // Donation Amount
+    // Send the donation transaction to the recipient wallet
+    sendTransaction(balance - donationAmount);
+    //<h3 className="center-text">Balance: {balance.confirmedBalance}</h3>;
+    // Update the donation recipient and amount
+   // setDonationRecipient();
+    setDonationAmount(donationAmount);
+    // Reset the address and amount fields
+    setAddress("");
+    setAmount("");
+  };
+*/
+	/* Disable transactions for the timeout duration
+  setCanTransact(false);
+  setTimeoutSeconds(transactionTimeout);
+  // Enable transactions after the timeout duration
+  setTimeout(() => {
+    setCanTransact(true);
+  }, transactionTimeout * 1000);
+  */
 	return (
 		<div>
-			{/* <ToastContainer
-				position="top-right"
-				closeOnClick
-				draggable
-				pauseOnHover
-				theme="light"
-			/> */}
 			<br />
 			<h1>IndiGOLD Faucet</h1>
 			<div className="center-img">
@@ -122,17 +217,17 @@ function Faucet() {
 			</div>
 			<br />
 			<div className="bg-glass-1 center-text">
-				<h3>Available Balance: {faucetBalance} </h3>
+				<h3>Available Balance: {balance.currentBalance}</h3>
 			</div>
 			<br />
 			<div className="container-fluid">
 				<div className="card-md-1">
 					<div className="card-body-md-1">
 						<div>
-							<br />
+							<p />
 							<p className="ln-ht">
-								&#8226;&nbsp;<b>IndiGOLD Faucet</b> is a free service for
-								obtaining <b>IndiGOLD Coins</b>.
+								&#8226;&nbsp;IndiGOLD Faucet is a Free Service for Crypto
+								Tokens.
 							</p>
 							<p className="ln-ht">
 								&#8226;&nbsp;A 90 second waiting period is required between
@@ -146,7 +241,6 @@ function Faucet() {
 									variant="success"
 									type="button"
 									value="Submit"
-									onClick={handleClick}
 								>
 									Donate
 								</Button>
@@ -156,22 +250,56 @@ function Faucet() {
 							<InputGroup.Text id="basic-addon1">
 								Recipient Address
 							</InputGroup.Text>
-							<Form.Control type="address" placeholder="Address" />
+							<Form.Control
+								type="recipient"
+								id="recipient"
+								name="recipient"
+								value={recipient}
+								onChange={(e) => {
+									setRecipient(e.target.value);
+									console.log(e.target.value);
+								}}
+								placeholder="Recipient"
+							/>
 						</InputGroup>
 						<div>
 							<Card.Text></Card.Text>
 						</div>
 						<InputGroup className="mb-3">
 							<InputGroup.Text id="basic-addon1">Amount</InputGroup.Text>
-							<Form.Control type="address" placeholder="IndiGOLD Amount" />
+							<Form.Control
+								type="value"
+								id="value"
+								name="value"
+								value={value}
+								onChange={(e) => {
+									setValue(e.target.value);
+									console.log(e.target.value);
+								}}
+								placeholder="IndiGOLD Amount"
+							/>
 						</InputGroup>
-						{/* <FloatingLabel controlId="floatingInput" label="Amount">
-									<Form.Control type="amount" placeholder="IndiGOLD Amount" />
-								</FloatingLabel> */}
 						<br />
-						<Button type="button" onClick={handleClick}>
+						<Button
+							type="button"
+							onClick={sendTransaction}
+							disabled={!canTransact}
+						>
 							Get Coins
 						</Button>
+						{!canTransact && (
+							<p>Next transaction available in {timeoutSeconds} seconds.</p>
+						)}
+						{/* Donation Details */}
+						{/* {donationRecipient && (
+              <div className="container-fluid">
+                <div className="card-md-5 center" onChange={sendTransaction}>
+                  <h3>Transaction Details</h3>
+                  <p>Recipient: {donationRecipient}</p>
+                  <p>Amount: {donationAmount}</p>
+                </div>
+              </div>
+         )} */}
 					</div>
 				</div>
 			</div>

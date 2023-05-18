@@ -64,19 +64,19 @@ function Explorer() {
 			<div className="container-fluid">
 				<div className="card">
 					<div className="card-body">
-						<h4 className="card-title">
+						<h4 className="card-title-0">
 							{/* Confirmed Blocks: {allConfirmedBlocks.length} */}
 							Latest Blocks
 						</h4>
 						<div className="scrollable">
 							{allConfirmedBlocks.length > 0 &&
 								allConfirmedBlocks.map((d, index) => (
-									<Row>
+									<Row className="blk-data">
 										<p className="first-line ln-ht">
 											<span>
 												Index: <span className="blue-text">{`${d.index}`}</span>
 											</span>
-											<span className="pink-text">
+											<span className="text-pink">
 												{howLongAgo(`${d.dateCreated}`)}
 											</span>
 										</p>
@@ -103,14 +103,14 @@ function Explorer() {
 
 				<div className="card">
 					<div className="card-body">
-						<h4 className="card-title">
+						<h4 className="card-title-0">
 							{/* Confirmed Transactions: {allConfirmedTransactions.length} */}
 							Latest Transactions
 						</h4>
 						<div className="scrollable">
 							{allConfirmedTransactions.length > 0 &&
 								allConfirmedTransactions.map((d, index) => (
-									<Row>
+									<Row className="txn-data">
 										<p className="first-line ln-ht">
 											<span>
 												{/* TxnHash: <span className="blue-text">{`${d.transactionDataHash}`}</span> */}
@@ -122,7 +122,7 @@ function Explorer() {
 													7
 												)}...${d.transactionDataHash.slice(57, 64)}`}</a>
 											</span>
-											<span className="pink-text">
+											<span className="text-pink">
 												{howLongAgo(`${d.dateCreated}`)}
 											</span>
 										</p>

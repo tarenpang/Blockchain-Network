@@ -14,6 +14,19 @@
 	-webkit-text-size-adjust: 100%;
 }
 
+.arrow-bright {
+	/* color: #17c6fc; */
+	color: #fff;
+	text-shadow: 0 0 5px #fff, 0 0 8px #fff, 0 0 19px #fff,
+		0 0 40px rgb(140, 0, 255), 0 0 88px rgb(140, 0, 255),
+		0 0 90px rgb(140, 0, 255), 0 0 100px rgb(140, 0, 255),
+		0 0 149px rgb(140, 0, 255);
+}
+
+.arrow-dull {
+	color: #5c416f;
+}
+
 .bg-glass {
 	/* border: 2px solid white; */
 	padding: 1px;
@@ -65,6 +78,23 @@
 	background-color: rgba(55, 12, 94, 0.6);
 }
 
+.bg-glass-4 {
+	/* border: 2px solid white; */
+	/* padding: 1px; */
+	/* padding-bottom: -10px; */
+	width: 480px;
+	height: 120px;
+	margin: 0 auto;
+	border-radius: 5px;
+	backdrop-filter: blur(5px);
+	background-color: rgba(55, 12, 94, 0.6);
+}
+
+.blk-data {
+	padding-left: 12px;
+	padding-right: 12px;
+}
+
 .blue-text {
 	color: #64dbff;
 }
@@ -75,6 +105,41 @@
 	flex-direction: column;
 }
 
+.box-adj {
+	border: 3px solid #2864f5;
+	border-radius: 3px;
+	padding: 5px;
+}
+
+.box-adj-glow {
+	border: 3px solid #2864f5;
+	border-radius: 3px;
+	padding: 5px;
+	box-shadow: 0 0 5px 2px #48abe0, 0 0 6px 2px #ebecca, 0 0 8px 6px #8a2be2,
+		0 0 6px 3px #ff1493;
+}
+
+.box-target {
+	border: 3px solid #e551d7;
+	border-radius: 3px;
+	padding: 5px;
+}
+
+.box-target-glow {
+	border: 3px solid #e551d7;
+	border-radius: 3px;
+	padding: 5px;
+	box-shadow: 0 0 5px 2px #48abe0, 0 0 6px 2px #ebecca, 0 0 8px 6px #8a2be2,
+		0 0 6px 3px #ff1493;
+}
+
+.btn-justify-end {
+	/* padding-right: 15px; */
+	display: inline-block;
+	/* flex-direction: row; */
+	/* justify-content: right; */
+}
+
 .btn-pair {
 	display: flex;
 	flex-direction: row;
@@ -82,63 +147,9 @@
 	align-items: center;
 }
 
-.pink-text {
-	color: #e551d7;
-}
-
-.container-fluid {
-	display: flex;
-	flex-direction: column;
-	min-width: 780px;
-	display: flex;
-	flex-wrap: wrap;
-	flex-flow: row wrap;
-	justify-content: space-between;
-	align-content: space-around;
-}
-
-.container-fluid-1 {
-	min-width: 880px;
-	display: flex;
-	flex-wrap: wrap;
-	flex-flow: row wrap;
-	justify-content: space-between;
-	align-content: space-around;
-}
-
-.custom-btn {
-	background: #b029a0;
-	border-color: #b029a0;
-	color: #fff;
-}
-
-.first-line {
-	display: flex;
-	flex-direction: row;
-	justify-content: space-between;
-	align-items: center;
-}
-
-.logo {
-	margin: auto;
-	display: block;
-	max-width: 45%;
-}
-
-.logo-icon {
-	display: block;
-	padding-bottom: 3px;
-	max-width: 35px;
-}
-
-.navbar-nav > li {
-	padding-left: 25px;
-	padding-right: 25px;
-}
-
 .card {
 	border: 2px solid white;
-	padding: 15px;
+	padding: 2px;
 	width: 350px;
 	height: 370px;
 	margin: 0 auto;
@@ -173,6 +184,19 @@
 	background-color: rgba(55, 12, 94, 0.6);
 }
 
+.card-md-2 {
+	display: flex;
+	flex-direction: column;
+	border: 2px solid white;
+	width: 560px;
+	height: 350px;
+	margin: 0 auto;
+	margin-right: 100px;
+	border-radius: 5px;
+	backdrop-filter: blur(5px);
+	background-color: rgba(55, 12, 94, 0.6);
+}
+
 .card-wallet-txn {
 	border: 2px solid white;
 	padding: 15px;
@@ -186,6 +210,9 @@
 
 .card-wide {
 	border: 2px solid white;
+	padding: 1px;
+	width: 650px;
+	height: 370px;
 	margin: 0 auto;
 	border-radius: 5px;
 	backdrop-filter: blur(5px);
@@ -217,6 +244,14 @@
 	align-content: center;
 }
 
+.card-body-md-0 {
+	height: 100%;
+	padding-left: 15px;
+	display: flex;
+	flex-direction: column;
+	align-content: center;
+}
+
 .card-body-md-1 {
 	height: 290px;
 	padding-left: 20px;
@@ -226,10 +261,18 @@
 	align-content: center;
 }
 
+.card-body-md {
+	height: 320px;
+	padding-left: 20px;
+	display: flex;
+	flex-direction: column;
+	align-content: center;
+}
+
 .card-body-wide {
 	height: 100%;
 	padding: 1px;
-	padding-left: 25px;
+	padding-left: 35px;
 	display: flex;
 	flex-direction: column;
 	align-content: center;
@@ -242,7 +285,24 @@
 	align-content: center;
 }
 
+.card-body-wide-2 {
+	height: 100%;
+	padding: 1px;
+	padding-left: 20px;
+	display: flex;
+	flex-direction: column;
+	align-content: center;
+}
+
 .card-title {
+	width: 310px;
+	height: 25px;
+	background-color: rgba(255, 255, 255, 0.3);
+}
+
+.card-title-0 {
+	margin-left: 15px;
+	padding-left: 10px;
 	width: 310px;
 	height: 25px;
 	background-color: rgba(255, 255, 255, 0.3);
@@ -251,6 +311,14 @@
 .card-title-1 {
 	/* padding: 0px; */
 	width: 460px;
+	height: 25px;
+	background-color: rgba(255, 255, 255, 0.3);
+}
+
+.card-title-2 {
+	padding-left: 10px;
+	margin-left: 10px;
+	width: 490px;
 	height: 25px;
 	background-color: rgba(255, 255, 255, 0.3);
 }
@@ -302,6 +370,26 @@
 	size: "lg";
 }
 
+.container-fluid {
+	display: flex;
+	flex-direction: column;
+	min-width: 780px;
+	display: flex;
+	flex-wrap: wrap;
+	flex-flow: row wrap;
+	justify-content: space-between;
+	align-content: space-around;
+}
+
+.container-fluid-1 {
+	min-width: 880px;
+	display: flex;
+	flex-wrap: wrap;
+	flex-flow: row wrap;
+	justify-content: space-between;
+	align-content: space-around;
+}
+
 .cred-card {
 	border: 2px solid white;
 	padding: 15px;
@@ -314,21 +402,60 @@
 	background-color: rgba(55, 12, 94, 0.6);
 }
 
+.custom-btn {
+	background: #b029a0;
+	border-color: #b029a0;
+	color: #fff;
+}
+
+.custom-btn:hover {
+	background: #ac3d9f;
+	border-color: #ac3d9f;
+	color: #fff;
+}
+
 .d-block {
 	display: block;
 	text-align: center;
 }
 
-.flex-justify-end {
-	/* padding-right: 15px; */
+.first-line {
 	display: flex;
 	flex-direction: row;
-	justify-content: right;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.line {
+	border-bottom: 1px solid #fff;
+	display: block;
 }
 
 .ln-ht {
 	/* font-size: 1.2em; */
 	line-height: 0.8;
+}
+
+.ln-ht-2 {
+	/* font-size: 1.2em; */
+	line-height: 0.6;
+}
+
+.logo {
+	margin: auto;
+	display: block;
+	max-width: 45%;
+}
+
+.logo-icon {
+	display: block;
+	padding-bottom: 3px;
+	max-width: 35px;
+}
+
+.navbar-nav > li {
+	padding-left: 25px;
+	padding-right: 25px;
 }
 
 .scrollable {
@@ -338,8 +465,24 @@
 	max-height: 300px;
 }
 
+.scrollable-1 {
+	padding: 20px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	max-height: 345px;
+}
+
+.text-pink {
+	color: #e551d7;
+}
+
 .text-indent {
 	padding: 20px;
+}
+
+.txn-data {
+	padding-left: 12px;
+	padding-right: 12px;
 }
 
 a {

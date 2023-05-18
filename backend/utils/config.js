@@ -1,6 +1,4 @@
 const CryptoUtils = require("./cryptoUtils");
-const Transaction = require("../transaction");
-const Block = require("../block");
 
 const initialDifficulty = 5;
 const genesisDate = new Date(new Date().setDate(new Date().getDate() - 15));
@@ -10,8 +8,9 @@ const genesisTimestamp = new Date(
 const blockReward = 5;
 const host = "http://localhost";
 const port = process.argv[2];
-const currentNodeURL = `${host}:${port}`;
-const genesisNodeURL = "http://localhost:3555";
+// const currentNodeURL = `${host}:${port}`;
+const currentNodeURL = process.argv[3];
+const genesisNodeURL = "http://localhost:5555";
 
 // Genesis Data
 const genesisData =
@@ -38,55 +37,28 @@ const minerPrivKey =
 const minerPubKey = CryptoUtils.privKeyToPubKey(faucetPrivKey);
 const minerAddress = CryptoUtils.pubKeyToAddress(faucetPubKey);
 
-const genesisFaucetTransaction = new Transaction(
-	nullAddress, // from address
-	faucetAddress, // to Address
-	1000000000000, // value of transfer
-	5, // fee for mining
-	genesisDate, // dateCreated
-	genesisData, // data (payload)
-	nullPubKey, // senderPubKey
-	undefined, // transactionDataHash
-	nullSignature, // senderSignature
-	0, // minedInBlockIndex
-	true // transferSuccessful
-);
-
-const genesisBlock = new Block(
-	0, // block index
-	[genesisFaucetTransaction], // transactions array
-	0, // currentDifficulty
-	undefined, // previous block hash
-	minerAddress, // mined by (address)
-	undefined, // block data hash
-	0, // nonce
-	genesisDate, // date created
-	undefined, // block hash
-	0 // mining reward
-);
-
-const blockchainId = genesisBlock.blockHash;
+// const blockchainId = genesisBlock.blockHash;
 
 // generate unique id using datetime and random number
 const generateUniqueId = () => {
-	const date = new Date();
-	const random = Math.random().toString(36).substring(2, 15);
-	return `${date.getTime()}-${random}`;
+	return (
+		new Date().getTime().toString(16) + Math.random().toString(16).substring(2)
+	);
 };
 
 const nodeId = generateUniqueId();
 
 module.exports = {
-	blockchainId,
+	// blockchainId,
 	blockReward,
 	currentNodeURL,
 	defaultServerHost: "localhost",
-	defaultServerPort: 5555,
+	defaultServerPort: port,
 	faucetAddress,
 	faucetPrivKey,
 	faucetPubKey,
 	generateUniqueId,
-	genesisBlock,
+	// genesisBlock,
 	genesisDate,
 	genesisData,
 	genesisTimestamp,

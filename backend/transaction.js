@@ -65,5 +65,22 @@ Transaction.prototype.verifySignature = function () {
 	);
 };
 
+// Initial Seed Faucet Transaction
+Transaction.initialFaucetTransaction = function () {
+	return new Transaction(
+		Config.nullAddress, // from Address
+		Config.faucetAddress, // to Address
+		1000000000000, // Faucet value
+		5, // mining reward
+		Config.genesisDate, // date created
+		Config.genesisData, // data
+		Config.nullPubKey, // senderPubKey
+		undefined, // transactionDataHash
+		Config.nullSignature, // senderSignature
+		0, // minedInBlockIndex
+		true // transferSuccessful
+	);
+};
+
 module.exports = Transaction;
 // export default Transaction;

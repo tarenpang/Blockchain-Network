@@ -24,36 +24,6 @@ function Mine() {
 
 	const handleMineClick = async (nodeToMine) => {
 		// Check if pending transactions exist
-		// const allTransactions = await axios.get(`${nodeToMine}/transactions/all`);
-		// const pendingTransactions = allTransactions.data.filter(
-		// 	(transaction) => transaction.transferSuccessful !== true
-		// ).length;
-
-		// if (pendingTransactions === 0) {
-		// 	toast.error("There are no pending transactions to mine.", {
-		// 		position: "bottom-right",
-		// 		theme: "colored",
-		// 	});
-		// 	return;
-		// }
-
-		// Ensure that user has a wallet address
-		// if (!walletAddress) {
-		//   toast.error("Require your mining address. Unlock your wallet.", {
-		//     position: "bottom-right",
-		//     theme: "colored",
-		//   });
-		//   return;
-		// }
-
-		// update the node list to show that the node is mining
-		// let updateNodeList = allNodes.map((node) => {
-		// 	if (node.url === nodeToMine) {
-		// 		node.isMining = true;
-		// 	}
-		// 	return node;
-		// });
-		// setAllNodes(updateNodeList);
 
 		// Send the request to the node to start mining
 		const config = {
@@ -76,26 +46,11 @@ function Mine() {
 		const result = miningResult.data.message;
 
 		if (miningResult) {
-			// let updateNodeList = allNodes.map((node) => {
-			// 	if (node.url === nodeToMine) {
-			// 		node.isMining = false;
-			// 	}
-			// 	return node;
-			// });
 			toast.success(result, {
 				position: "top-right",
 				theme: "light",
 			});
-
-			// Update the node list
-			// setAllNodes(updateNodeList);
 		}
-		// else {
-		// 	toast.error("Unable to mine block.", {
-		// 		position: "bottom-right",
-		// 		theme: "colored",
-		// 	});
-		// }
 	};
 
 	return (
@@ -160,7 +115,7 @@ function Mine() {
 					variant="primary"
 					size="lg"
 				>
-					Mine
+					Prepare Block for Mining
 				</Button>
 			</div>
 		</div>
