@@ -217,7 +217,7 @@ function Faucet() {
 			</div>
 			<br />
 			<div className="bg-glass-1 center-text">
-				<h3>Available Balance: {balance.currentBalance}</h3>
+				<h3>Available Balance: {balance.confirmedBalance}</h3>
 			</div>
 			<br />
 			<div className="container-fluid">

@@ -8,19 +8,39 @@ import "react-toastify/dist/ReactToastify.min.css";
 import { ToastContainer, toast } from "react-toastify";
 import secureLocalStorage from "react-secure-storage";
 
-function Sync() {
-	const [peerInfo, setPeerInfo] = useState({});
+function SyncAdjacentPeers() {
+	// const [peerInfo, setPeerInfo] = useState({});
 
-	useEffect(() => {
-		(async function loadData() {
-			const peerInfo = await axios.get(`http://localhost:5555/info`);
-			setPeerInfo(peerInfo.data);
-		})();
-	}, []);
+	// useEffect(() => {
+	// 	(async function loadData() {
+	// 		const peerInfo = await axios.get(`http://localhost:5555/info`);
+	// 		setPeerInfo(peerInfo.data);
+	// 	})();
+	// }, []);
 
 	// const nodeToMine = `http://localhost:5555`;
 
-	const handleSync1 = async (nodeToSync) => {
+	const handleSyncClick = async (port) => {
+		let nextPort;
+		let prevPort;
+
+		if (port === 5555) {
+			nextPort = 5556;
+			prevPort = 5559;
+		} else if (port === 5556) {
+			nextPort = 5557;
+			prevPort = 5555;
+		} else if (port === 5557) {
+			nextPort = 5558;
+			prevPort = 5556;
+		} else if (port === 5558) {
+			nextPort = 5559;
+			prevPort = 5557;
+		} else if (port === 5559) {
+			nextPort = 5555;
+			prevPort = 5558;
+		}
+
 		// Sync with Next Node
 		const config = {
 			headers: {
@@ -29,16 +49,16 @@ function Sync() {
 		};
 
 		const bodyNext = {
-			peerUrl: "http://localhost:5556",
+			peerUrl: `http://localhost:${nextPort}`,
 		};
 
 		const syncResultNext = await axios.post(
-			`http://localhost:5555/peers/connect`,
+			`http://localhost:${port}/peers/connect`,
 			bodyNext,
 			config
 		);
 
-		const resultNext = syncResult.data.message;
+		const resultNext = syncResultNext.data.message;
 
 		if (syncResultNext) {
 			toast.success(resultNext, {
@@ -48,24 +68,24 @@ function Sync() {
 		}
 
 		// Sync with Previous Node
-		// const bodyPrev = {
-		// 	peerUrl: "http://localhost:5559",
-		// };
+		const bodyPrev = {
+			peerUrl: `http://localhost:${prevPort}`,
+		};
 
-		// const syncResultPrev = await axios.post(
-		// 	`http://localhost:5555/peers/connect`,
-		// 	bodyPrev,
-		// 	config
-		// );
+		const syncResultPrev = await axios.post(
+			`http://localhost:${port}/peers/connect`,
+			bodyPrev,
+			config
+		);
 
-		// const resultPre4v = syncResult.data.message;
+		const resultPrev = syncResultPrev.data.message;
 
-		// if (syncResultPrev) {
-		// 	toast.success(resultPrev, {
-		// 		position: "top-right",
-		// 		theme: "light",
-		// 	});
-		// }
+		if (syncResultPrev) {
+			toast.success(resultPrev, {
+				position: "top-right",
+				theme: "light",
+			});
+		}
 	};
 
 	return (
@@ -112,7 +132,7 @@ function Sync() {
 										size="md"
 										type="button"
 										value="Submit"
-										onClick={handleSync1}
+										onClick={() => handleSyncClick(5555)} // Pass the port associated with the button
 									>
 										Sync Node 1
 									</Button>
@@ -139,7 +159,7 @@ function Sync() {
 										size="md"
 										type="button"
 										value="Submit"
-										// onClick={handleSyncClick}
+										onClick={() => handleSyncClick(5556)} // Pass the port associated with the button
 									>
 										Sync Node 2
 									</Button>
@@ -166,7 +186,7 @@ function Sync() {
 										size="md"
 										type="button"
 										value="Submit"
-										// onClick={handleSyncClick}
+										onClick={() => handleSyncClick(5557)} // Pass the port associated with the button
 									>
 										Sync Node 3
 									</Button>
@@ -193,7 +213,7 @@ function Sync() {
 										size="md"
 										type="button"
 										value="Submit"
-										// onClick={handleSyncClick}
+										onClick={() => handleSyncClick(5558)} // Pass the port associated with the button
 									>
 										Sync Node 4
 									</Button>
@@ -220,7 +240,7 @@ function Sync() {
 										size="md"
 										type="button"
 										value="Submit"
-										// onClick={handleSyncClick}
+										onClick={() => handleSyncClick(5559)} // Pass the port associated with the button
 									>
 										Sync Node 5
 									</Button>
@@ -235,4 +255,4 @@ function Sync() {
 	);
 }
 
-export default Sync;
+export default SyncAdjacentPeers;

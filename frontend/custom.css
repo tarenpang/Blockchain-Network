@@ -426,6 +426,12 @@
 	align-items: center;
 }
 
+.flex-justify-end {
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-end;
+}
+
 .line {
 	border-bottom: 1px solid #fff;
 	display: block;

@@ -159,6 +159,29 @@ app.get("/transactions/:txnHash", (req, res) => {
 			.json({ errorMsg: "Invalid transaction hash" });
 });
 
+// Add Transaction to Pending Transactions
+app.post("/addToPendingTransactions", (req, res) => {
+	const transactionObject = req.body;
+	const pendingTransactions = blockchain.getPendingTransactions();
+	let duplicateTransactionCount = 0;
+
+	pendingTransactions.forEach((transaction) => {
+		if (
+			transaction.transactionDataHash === transactionObject.transactionDataHash
+		) {
+			duplicateTransactionCount += 1;
+		}
+	});
+
+	if (duplicateTransactionCount === 0) {
+		// Add transaction to transaction pool and receive next block's index
+		const nextBlock =
+			blockchain.addNewTransactionToPendingTransactions(transactionObject);
+
+		res.json({ message: `Transaction will be added to block ${nextBlock}` });
+	}
+});
+
 // List All Account Balances
 app.get("/balances", (req, res) => {
 	let confirmedBalances = blockchain.calcAllConfirmedBalances();
