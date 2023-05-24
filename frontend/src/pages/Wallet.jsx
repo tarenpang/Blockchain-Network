@@ -13,7 +13,8 @@ var elliptic = EC.ec;
 var secp256k1 = new elliptic("secp256k1");
 
 const generateWallet = (keyPair) => {
-	const privateKey = keyPair.getPrivate().toString(16);
+	secureLocalStorage.clear();
+	const privateKey = keyPair.getPrivate().toString(16); 
 	const publicKey =
 		keyPair.getPublic().getX().toString(16) +
 		(keyPair.getPublic().getY().isOdd() ? "1" : "0");
@@ -246,7 +247,7 @@ function Wallet() {
 			);
 			setBalance(balance.data);
 		})();
-	}, []);
+	}, [handleGeneration, handleRecover]);
 
 	return (
 		<div>
