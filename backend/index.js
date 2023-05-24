@@ -24,7 +24,8 @@ const blockchain = new Blockchain();
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-// app.use(cors());
+
+// process.on("warning", (e) => console.warn(e.stack));
 
 // Add Access Control Allow Origin Headers
 app.use(function (req, res, next) {
