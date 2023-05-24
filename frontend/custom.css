@@ -14,7 +14,7 @@
 	-webkit-text-size-adjust: 100%;
 }
 
-.arrow-bright {
+.arrow-glow {
 	/* color: #17c6fc; */
 	color: #fff;
 	text-shadow: 0 0 5px #fff, 0 0 8px #fff, 0 0 19px #fff,
@@ -105,13 +105,13 @@
 	flex-direction: column;
 }
 
-.box-adj {
+.node-box-dull {
 	border: 3px solid #2864f5;
 	border-radius: 3px;
 	padding: 5px;
 }
 
-.box-adj-glow {
+.node-box-bright {
 	border: 3px solid #2864f5;
 	border-radius: 3px;
 	padding: 5px;
@@ -119,13 +119,13 @@
 		0 0 6px 3px #ff1493;
 }
 
-.box-target {
+.current-box-dull {
 	border: 3px solid #e551d7;
 	border-radius: 3px;
 	padding: 5px;
 }
 
-.box-target-glow {
+.current-box-bright {
 	border: 3px solid #e551d7;
 	border-radius: 3px;
 	padding: 5px;

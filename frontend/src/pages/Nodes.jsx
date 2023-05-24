@@ -9,82 +9,341 @@ import { ToastContainer, toast } from "react-toastify";
 import secureLocalStorage from "react-secure-storage";
 
 function SyncAdjacentPeers() {
-	// const [peerInfo, setPeerInfo] = useState({});
+	// const [peerMap, setPeerMap] = useState({});
+
+	const [arrow1To5Class, setArrow1To5Class] = useState("arrow-dull");
+	const [arrow1To2Class, setArrow1To2Class] = useState("arrow-dull");
+
+	const [arrow2To1Class, setArrow2To1Class] = useState("arrow-dull");
+	const [arrow2To3Class, setArrow2To3Class] = useState("arrow-dull");
+
+	const [arrow3To2Class, setArrow3To2Class] = useState("arrow-dull");
+	const [arrow3To4Class, setArrow3To4Class] = useState("arrow-dull");
+
+	const [arrow4To3Class, setArrow4To3Class] = useState("arrow-dull");
+	const [arrow4To5Class, setArrow4To5Class] = useState("arrow-dull");
+
+	const [arrow5To4Class, setArrow5To4Class] = useState("arrow-dull");
+	const [arrow5To1Class, setArrow5To1Class] = useState("arrow-dull");
+
+	const [node1BoxClass, setNode1BoxClass] = useState("current-box-dull");
+	const [node2BoxClass, setNode2BoxClass] = useState("current-box-dull");
+	const [node3BoxClass, setNode3BoxClass] = useState("current-box-dull");
+	const [node4BoxClass, setNode4BoxClass] = useState("current-box-dull");
+	const [node5BoxClass, setNode5BoxClass] = useState("current-box-dull");
+
+	const [adjNode2To1BoxClass, setAdjNode2To1BoxClass] =
+		useState("node-box-dull");
+	const [adjNode5To1BoxClass, setAdjNode5To1BoxClass] =
+		useState("node-box-dull");
+	const [adjNode3To2BoxClass, setAdjNode3To2BoxClass] =
+		useState("node-box-dull");
+	const [adjNode1To2BoxClass, setAdjNode1To2BoxClass] =
+		useState("node-box-dull");
+	const [adjNode4To3BoxClass, setAdjNode4To3BoxClass] =
+		useState("node-box-dull");
+	const [adjNode2To3BoxClass, setAdjNode2To3BoxClass] =
+		useState("node-box-dull");
+	const [adjNode5To4BoxClass, setAdjNode5To4BoxClass] =
+		useState("node-box-dull");
+	const [adjNode3To4BoxClass, setAdjNode3To4BoxClass] =
+		useState("node-box-dull");
+	const [adjNode1To5BoxClass, setAdjNode1To5BoxClass] =
+		useState("node-box-dull");
+	const [adjNode4To5BoxClass, setAdjNode4To5BoxClass] =
+		useState("node-box-dull");
 
 	// useEffect(() => {
 	// 	(async function loadData() {
-	// 		const peerInfo = await axios.get(`http://localhost:5555/info`);
-	// 		setPeerInfo(peerInfo.data);
+	// 		const peerInfo = await axios.get(
+	// 			`http://localhost:${port}/info`
+	// 		);
+	// 		setPeerMap(peerInfo.data.peersMap);
 	// 	})();
 	// }, []);
-
-	// const nodeToMine = `http://localhost:5555`;
+	let counter = 0;
+	let portsConsumed = [];
 
 	const handleSyncClick = async (port) => {
-		let nextPort;
-		let prevPort;
-
-		if (port === 5555) {
-			nextPort = 5556;
-			prevPort = 5559;
-		} else if (port === 5556) {
-			nextPort = 5557;
-			prevPort = 5555;
-		} else if (port === 5557) {
-			nextPort = 5558;
-			prevPort = 5556;
-		} else if (port === 5558) {
-			nextPort = 5559;
-			prevPort = 5557;
-		} else if (port === 5559) {
-			nextPort = 5555;
-			prevPort = 5558;
-		}
-
-		// Sync with Next Node
 		const config = {
 			headers: {
 				"Content-Type": "application/json",
 			},
 		};
+		let nextPort;
+		let prevPort;
+		let bodyNext;
+		let bodyPrev;
+		let portPlus2;
+		let portPlus3;
 
-		const bodyNext = {
-			peerUrl: `http://localhost:${nextPort}`,
-		};
+		if (port === 5555) {
+			nextPort = 5556;
+			prevPort = 5559;
+			portPlus2 = 5557;
+			portPlus3 = 5558;
+		} else if (port === 5556) {
+			nextPort = 5557;
+			prevPort = 5555;
+			portPlus2 = 5558;
+			portPlus3 = 5559;
+		} else if (port === 5557) {
+			nextPort = 5558;
+			prevPort = 5556;
+			portPlus2 = 5559;
+			portPlus3 = 5555;
+		} else if (port === 5558) {
+			nextPort = 5559;
+			prevPort = 5557;
+			portPlus2 = 5555;
+			portPlus3 = 5556;
+		} else if (port === 5559) {
+			nextPort = 5555;
+			prevPort = 5558;
+			portPlus2 = 5556;
+			portPlus3 = 5557;
+		}
 
-		const syncResultNext = await axios.post(
-			`http://localhost:${port}/peers/connect`,
-			bodyNext,
-			config
-		);
-
-		const resultNext = syncResultNext.data.message;
-
-		if (syncResultNext) {
-			toast.success(resultNext, {
+		// Track Ports Consumed
+		if (!portsConsumed.includes(port)) {
+			portsConsumed.push(port);
+			counter = counter + 1;
+		} else if (portsConsumed.includes(port)) {
+			toast.warning("This node is already synced.", {
 				position: "top-right",
 				theme: "light",
 			});
 		}
 
-		// Sync with Previous Node
-		const bodyPrev = {
-			peerUrl: `http://localhost:${prevPort}`,
-		};
+		// Sync Current Node with Next Node
+		try {
+			bodyNext = {
+				peerUrl: `http://localhost:${nextPort}`,
+			};
 
-		const syncResultPrev = await axios.post(
-			`http://localhost:${port}/peers/connect`,
-			bodyPrev,
-			config
-		);
+			const syncResultNext = await axios.post(
+				`http://localhost:${port}/peers/connect`,
+				bodyNext,
+				config
+			);
 
-		const resultPrev = syncResultPrev.data.message;
+			const resultNext = syncResultNext.data.message;
 
-		if (syncResultPrev) {
+			toast.success(resultNext, {
+				position: "top-right",
+				theme: "light",
+			});
+		} catch (error) {
+			// const errorNext = syncResultNext.data.errorMsg;
+			const errorNext =
+				error.response?.data?.errorMsg || "Unknown error occurred.";
+			toast.warning(errorNext, {
+				position: "top-right",
+				theme: "light",
+			});
+			console.error(error);
+		}
+
+		// Sync Current Node with Previous Node
+		try {
+			bodyPrev = {
+				peerUrl: `http://localhost:${prevPort}`,
+			};
+
+			const syncResultPrev = await axios.post(
+				`http://localhost:${port}/peers/connect`,
+				bodyPrev,
+				config
+			);
+
+			const resultPrev = syncResultPrev.data.message;
+			// setClasses(port);
+
 			toast.success(resultPrev, {
 				position: "top-right",
 				theme: "light",
 			});
+		} catch (error) {
+			const errorPrev =
+				error.response?.data?.errorMsg || "Unknown error occurred.";
+			toast.warning(errorPrev, {
+				position: "top-right",
+				theme: "light",
+			});
+		}
+
+		// Sync Prev Node with Next Node
+		try {
+			let bodyNext2 = {
+				peerUrl: `http://localhost:${nextPort}`,
+			};
+
+			const syncResultPrevToNext = await axios.post(
+				`http://localhost:${prevPort}/peers/connect`,
+				bodyNext2,
+				config
+			);
+
+			const resultPrevToNext = syncResultPrevToNext.data.message;
+			toast.success(resultPrevToNext, {
+				position: "top-right",
+				theme: "light",
+			});
+		} catch (error) {
+			const errorPrevToNext =
+				error.response?.data?.errorMsg || "Unknown error occurred.";
+
+			toast.warning(errorPrevToNext, {
+				position: "top-right",
+				theme: "light",
+			});
+		}
+
+		// Sync Current Node with Next Node Again
+		try {
+			bodyNext = {
+				peerUrl: `http://localhost:${nextPort}`,
+			};
+
+			const syncResultNext = await axios.post(
+				`http://localhost:${port}/peers/connect`,
+				bodyNext,
+				config
+			);
+
+			const resultNext = syncResultNext.data.message;
+
+			toast.success(resultNext, {
+				position: "top-right",
+				theme: "light",
+			});
+		} catch (error) {
+			// const errorNext = syncResultNext.data.errorMsg;
+			const errorNext =
+				error.response?.data?.errorMsg || "Unknown error occurred.";
+			toast.warning(errorNext, {
+				position: "top-right",
+				theme: "light",
+			});
+			console.error(error);
+		}
+
+		// closeCircle(port);
+		setClasses(port);
+	};
+
+	// const closeCircle = async (port) => {
+	// 	const config = {
+	// 		headers: {
+	// 			"Content-Type": "application/json",
+	// 		},
+	// 	};
+	// 	let nextPort;
+	// 	let prevPort;
+	// 	let bodyNext;
+	// 	let bodyPrev;
+	// 	let portPlus2;
+	// 	let portPlus3;
+
+	// 	if (port === 5555) {
+	// 		nextPort = 5556;
+	// 		prevPort = 5559;
+	// 		portPlus2 = 5557;
+	// 		portPlus3 = 5558;
+	// 	} else if (port === 5556) {
+	// 		nextPort = 5557;
+	// 		prevPort = 5555;
+	// 		portPlus2 = 5558;
+	// 		portPlus3 = 5559;
+	// 	} else if (port === 5557) {
+	// 		nextPort = 5558;
+	// 		prevPort = 5556;
+	// 		portPlus2 = 5559;
+	// 		portPlus3 = 5555;
+	// 	} else if (port === 5558) {
+	// 		nextPort = 5559;
+	// 		prevPort = 5557;
+	// 		portPlus2 = 5555;
+	// 		portPlus3 = 5556;
+	// 	} else if (port === 5559) {
+	// 		nextPort = 5555;
+	// 		prevPort = 5558;
+	// 		portPlus2 = 5556;
+	// 		portPlus3 = 5557;
+	// 	}
+
+	// 	// Track Ports Consumed
+	// 	if (!portsConsumed.includes(port)) {
+	// 		portsConsumed.push(port);
+	// 		counter = counter + 1;
+	// 	} else if (portsConsumed.includes(port)) {
+	// 		toast.warning("This node is already synced.", {
+	// 			position: "top-right",
+	// 			theme: "light",
+	// 		});
+	// 	}
+
+	// 	// 	// Closing the Circle1 - sync Previous Node with portPlus2
+	// 	if ((counter = 5 && port === 5555)) {
+	// 		try {
+	// 			let bodyPortPlus2 = {
+	// 				peerUrl: `http://localhost:${portPlus2}}`,
+	// 			};
+
+	// 			const syncLast = await axios.post(
+	// 				`http://localhost:${prevPort}/peers/connect`,
+	// 				bodyPortPlus2,
+	// 				config
+	// 			);
+
+	// 			const resultLast = syncLast.data.message;
+	// 			toast.success(resultLast, {
+	// 				position: "top-right",
+	// 				theme: "light",
+	// 			});
+	// 		} catch (error) {
+	// 			const errorLast =
+	// 				error.response?.data?.errorMsg || "Unknown error occurred.";
+
+	// 			toast.error(errorLast, {
+	// 				position: "top-right",
+	// 				theme: "light",
+	// 			});
+	// 		}
+	// 	}
+	// };
+
+	const setClasses = (port) => {
+		if (port === 5555) {
+			setNode1BoxClass("current-box-bright");
+			setAdjNode2To1BoxClass("node-box-bright");
+			setAdjNode5To1BoxClass("node-box-bright");
+			setArrow1To2Class("arrow-bright");
+			setArrow1To5Class("arrow-bright");
+		} else if (port === 5556) {
+			setNode2BoxClass("current-box-bright");
+			setAdjNode3To2BoxClass("node-box-bright");
+			setAdjNode1To2BoxClass("node-box-bright");
+			setArrow2To3Class("arrow-bright");
+			setArrow2To1Class("arrow-bright");
+		} else if (port === 5557) {
+			setNode3BoxClass("current-box-bright");
+			setAdjNode4To3BoxClass("node-box-bright");
+			setAdjNode2To3BoxClass("node-box-bright");
+			setArrow3To4Class("arrow-bright");
+			setArrow3To2Class("arrow-bright");
+		} else if (port === 5558) {
+			setNode4BoxClass("current-box-bright");
+			setAdjNode5To4BoxClass("node-box-bright");
+			setAdjNode3To4BoxClass("node-box-bright");
+			setArrow4To5Class("arrow-bright");
+			setArrow4To3Class("arrow-bright");
+		} else if (port === 5559) {
+			setNode5BoxClass("current-box-bright");
+			setAdjNode1To5BoxClass("node-box-bright");
+			setAdjNode4To5BoxClass("node-box-bright");
+			setArrow5To1Class("arrow-bright");
+			setArrow5To4Class("arrow-bright");
 		}
 	};
 
@@ -113,17 +372,17 @@ function SyncAdjacentPeers() {
 						<h4 className="card-title-2">Syncing the Network Nodes</h4>
 						<div className="scrollable">
 							<div>
-								<span className="box-adj-glow">Node 5</span>
-								<span className="arrow-bright">
+								<span className={adjNode5To1BoxClass}>Node 5</span>
+								<span className={arrow1To5Class}>
 									{" "}
 									<b>&lt;&lt;&lt;&lt;&gt;&gt;&gt;&gt;</b>{" "}
 								</span>
-								<span className="box-target-glow">Node 1</span>
-								<span className="arrow-bright">
+								<span className={node1BoxClass}>Node 1</span>
+								<span className={arrow1To2Class}>
 									{" "}
 									<b>&lt;&lt;&lt;&lt;&gt;&gt;&gt;&gt;</b>{" "}
 								</span>
-								<span className="box-adj-glow">Node 2</span>
+								<span className={adjNode2To1BoxClass}>Node 2</span>
 								<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
 
 								<div className="btn-justify-end">
@@ -132,7 +391,7 @@ function SyncAdjacentPeers() {
 										size="md"
 										type="button"
 										value="Submit"
-										onClick={() => handleSyncClick(5555)} // Pass the port associated with the button
+										onClick={() => handleSyncClick(5555)} // Pass the port associated with Node 1
 									>
 										Sync Node 1
 									</Button>
@@ -140,17 +399,17 @@ function SyncAdjacentPeers() {
 							</div>
 							<br />
 							<div>
-								<span className="box-adj">Node 1</span>
-								<span className="arrow-dull">
+								<span className={adjNode1To2BoxClass}>Node 1</span>
+								<span className={arrow2To1Class}>
 									{" "}
 									<b>&lt;&lt;&lt;&lt;&gt;&gt;&gt;&gt;</b>{" "}
 								</span>
-								<span className="box-target">Node 2</span>
-								<span className="arrow-dull">
+								<span className={node2BoxClass}>Node 2</span>
+								<span className={arrow2To3Class}>
 									{" "}
 									<b>&lt;&lt;&lt;&lt;&gt;&gt;&gt;&gt;</b>{" "}
 								</span>
-								<span className="box-adj">Node 3</span>
+								<span className={adjNode3To2BoxClass}>Node 3</span>
 								<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
 
 								<div className="btn-justify-end">
@@ -159,7 +418,7 @@ function SyncAdjacentPeers() {
 										size="md"
 										type="button"
 										value="Submit"
-										onClick={() => handleSyncClick(5556)} // Pass the port associated with the button
+										onClick={() => handleSyncClick(5556)} // Pass the port associated with Node 2
 									>
 										Sync Node 2
 									</Button>
@@ -167,17 +426,17 @@ function SyncAdjacentPeers() {
 							</div>
 							<br />
 							<div>
-								<span className="box-adj">Node 2</span>
-								<span className="arrow-dull">
+								<span className={adjNode2To3BoxClass}>Node 2</span>
+								<span className={arrow3To2Class}>
 									{" "}
 									<b>&lt;&lt;&lt;&lt;&gt;&gt;&gt;&gt;</b>{" "}
 								</span>
-								<span className="box-target">Node 3</span>
-								<span className="arrow-dull">
+								<span className={node3BoxClass}>Node 3</span>
+								<span className={arrow3To4Class}>
 									{" "}
 									<b>&lt;&lt;&lt;&lt;&gt;&gt;&gt;&gt;</b>{" "}
 								</span>
-								<span className="box-adj">Node 4</span>
+								<span className={adjNode4To3BoxClass}>Node 4</span>
 								<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
 
 								<div className="btn-justify-end">
@@ -186,7 +445,7 @@ function SyncAdjacentPeers() {
 										size="md"
 										type="button"
 										value="Submit"
-										onClick={() => handleSyncClick(5557)} // Pass the port associated with the button
+										onClick={() => handleSyncClick(5557)} // Pass the port associated with Node 3
 									>
 										Sync Node 3
 									</Button>
@@ -194,17 +453,17 @@ function SyncAdjacentPeers() {
 							</div>
 							<br />
 							<div>
-								<span className="box-adj">Node 3</span>
-								<span className="arrow-dull">
+								<span className={adjNode3To4BoxClass}>Node 3</span>
+								<span className={arrow4To3Class}>
 									{" "}
 									<b>&lt;&lt;&lt;&lt;&gt;&gt;&gt;&gt;</b>{" "}
 								</span>
-								<span className="box-target">Node 4</span>
-								<span className="arrow-dull">
+								<span className={node4BoxClass}>Node 4</span>
+								<span className={arrow4To5Class}>
 									{" "}
 									<b>&lt;&lt;&lt;&lt;&gt;&gt;&gt;&gt;</b>{" "}
 								</span>
-								<span className="box-adj">Node 5</span>
+								<span className={adjNode5To4BoxClass}>Node 5</span>
 								<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
 
 								<div className="btn-justify-end">
@@ -213,7 +472,7 @@ function SyncAdjacentPeers() {
 										size="md"
 										type="button"
 										value="Submit"
-										onClick={() => handleSyncClick(5558)} // Pass the port associated with the button
+										onClick={() => handleSyncClick(5558)} // Pass the port associated with Node 4
 									>
 										Sync Node 4
 									</Button>
@@ -221,17 +480,17 @@ function SyncAdjacentPeers() {
 							</div>
 							<br />
 							<div>
-								<span className="box-adj">Node 4</span>
-								<span className="arrow-dull">
+								<span className={adjNode4To5BoxClass}>Node 4</span>
+								<span className={arrow5To4Class}>
 									{" "}
 									<b>&lt;&lt;&lt;&lt;&gt;&gt;&gt;&gt;</b>{" "}
 								</span>
-								<span className="box-target">Node 5</span>
-								<span className="arrow-dull">
+								<span className={node5BoxClass}>Node 5</span>
+								<span className={arrow5To1Class}>
 									{" "}
 									<b>&lt;&lt;&lt;&lt;&gt;&gt;&gt;&gt;</b>{" "}
 								</span>
-								<span className="box-adj">Node 1</span>
+								<span className={adjNode1To5BoxClass}>Node 1</span>
 								<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
 
 								<div className="btn-justify-end">
@@ -240,7 +499,7 @@ function SyncAdjacentPeers() {
 										size="md"
 										type="button"
 										value="Submit"
-										onClick={() => handleSyncClick(5559)} // Pass the port associated with the button
+										onClick={() => handleSyncClick(5559)} // Pass the port associated with Node 5
 									>
 										Sync Node 5
 									</Button>

@@ -12,6 +12,7 @@ var elliptic = EC.ec;
 var secp256k1 = new elliptic("secp256k1");
 
 function Faucet() {
+	//const faucetBalance = 1000000000000; // Initial faucet balance
 	const transactionTimeout = 90; // Timeout in seconds
 	const [recipient, setRecipient] = useState("");
 	const [value, setValue] = useState("");
@@ -22,18 +23,17 @@ function Faucet() {
 	// const [donationAmount, setDonationAmount] = useState(0);
 	const [signedTx, setSignedTx] = useState("");
 	const [isSigned, setIsSigned] = useState(false);
-
-	// useEffect(() => {
-	// 	let interval;
-	// 	if (!canTransact) {
-	// 		interval = setInterval(() => {
-	// 			setTimeoutSeconds((prevSeconds) => prevSeconds - 1);
-	// 		}, 1000);
-	// 	}
-	// 	return () => {
-	// 		clearInterval(interval);
-	// 	};
-	// }, [canTransact]);
+	useEffect(() => {
+		let interval;
+		if (!canTransact) {
+			interval = setInterval(() => {
+				setTimeoutSeconds((prevSeconds) => prevSeconds - 1);
+			}, 1000);
+		}
+		return () => {
+			clearInterval(interval);
+		};
+	}, [canTransact]);
 	/*const handleChange = (event) => {
     const { name, value } = event.target;
     if (name === "address") {
@@ -66,10 +66,9 @@ function Faucet() {
 		setTimeoutSeconds(transactionTimeout);
 	};
 	//Enable transactions after the timeout duration
-	// setTimeout(() => {
-	// 	setCanTransact(true);
-	// }, transactionTimeout * 1000);
-
+	setTimeout(() => {
+		setCanTransact(true);
+	}, transactionTimeout * 1000);
 	/*  const sendTransaction = () => {
     // Replace this with actual transaction logic
     const currentTransaction = {
@@ -122,21 +121,16 @@ function Faucet() {
 			});
 			return;
 		}
-
-		let faucetFrom = "dcf964b76eaa2cf6fedae5e71b4fa8c79e7a936f";
-		let faucetPubKey =
-			"8d6df948d3de9226a08556df1ddede4f045f2e4a962b8cb9d98f228748675a01";
-		let faucetPrivKey =
-			"3313b06752cd6276f9deb4fefef6f17e904b194808ea9dcf61f1125528b7f74a";
 		let transaction = {
-			from: faucetFrom,
+			from: "dcf964b76eaa2cf6fedae5e71b4fa8c79e7a936f",
 			to: recipient,
 			value: Number(value),
 			fee: 1,
 			// dateCreated: new Date().toISOString(),
 			dateCreated: new Date(),
-			data: "foo",
-			senderPubKey: faucetPubKey,
+			data: "foo data",
+			senderPubKey:
+				"8d6df948d3de9226a08556df1ddede4f045f2e4a962b8cb9d98f228748675a01",
 		};
 		if (!transaction.data) delete transaction.data;
 
@@ -146,12 +140,11 @@ function Faucet() {
 
 		transaction.senderSignature = signData(
 			transaction.transactionDataHash,
-			faucetPrivKey
+			secureLocalStorage.getItem("privKey")
 		);
 
 		let signedTransaction = JSON.stringify(transaction);
 		setSignedTx(signedTransaction);
-		console.log(signedTransaction);
 		setIsSigned(true);
 		toast.success("Transaction signed", {
 			position: "top-right",
@@ -159,7 +152,7 @@ function Faucet() {
 		});
 	};
 	const sendTransaction = async () => {
-		// () => signTransaction();
+		signTransaction();
 		try {
 			const config = {
 				headers: {
@@ -189,7 +182,20 @@ function Faucet() {
 			console.log("error2" + error);
 		}
 	};
-
+	/*const handleDonate = () => {
+    // Replace this with donation logic
+    const donationAmount = 1000000000000; // Donation Amount
+    // Send the donation transaction to the recipient wallet
+    sendTransaction(balance - donationAmount);
+    //<h3 className="center-text">Balance: {balance.confirmedBalance}</h3>;
+    // Update the donation recipient and amount
+   // setDonationRecipient();
+    setDonationAmount(donationAmount);
+    // Reset the address and amount fields
+    setAddress("");
+    setAmount("");
+  };
+*/
 	/* Disable transactions for the timeout duration
   setCanTransact(false);
   setTimeoutSeconds(transactionTimeout);
@@ -228,6 +234,17 @@ function Faucet() {
 								withdrawals.
 							</p>
 							<br />
+							<div className="flex-justify-end">
+								<Button
+									className="custom-btn"
+									style={{ width: "10rem", marginBottom: 5 }}
+									variant="success"
+									type="button"
+									value="Submit"
+								>
+									Donate
+								</Button>
+							</div>
 						</div>
 						<InputGroup className="mb-3">
 							<InputGroup.Text id="basic-addon1">
@@ -263,50 +280,26 @@ function Faucet() {
 							/>
 						</InputGroup>
 						<br />
-						<Button variant="primary" onClick={signTransaction}>
-							Sign Transaction
-						</Button>
 						<Button
 							type="button"
 							onClick={sendTransaction}
-							// disabled={!canTransact}
+							disabled={!canTransact}
 						>
 							Get Coins
 						</Button>
-						{/* {!canTransact && (
+						{!canTransact && (
 							<p>Next transaction available in {timeoutSeconds} seconds.</p>
-						)} */}
-					</div>
-				</div>
-				<div className="card-md-1">
-					<div className="card-body-md-1">
-						<p>Please return any unused IndiGold you no longer need</p>
-						<div>
-							<Card.Text></Card.Text>
-						</div>
-						<InputGroup className="mb-3">
-							<InputGroup.Text id="basic-addon1">Amount</InputGroup.Text>
-							<Form.Control
-								type="value"
-								id="value"
-								name="value"
-								value={value}
-								onChange={(e) => {
-									setValue(e.target.value);
-									console.log(e.target.value);
-								}}
-								placeholder="IndiGOLD Amount"
-							/>
-						</InputGroup>
-						<br />
-						<Button
-							type="button"
-							onClick={sendTransaction}
-							// disabled={!canTransact}
-							className="custom-btn"
-						>
-							Donate
-						</Button>
+						)}
+						{/* Donation Details */}
+						{/* {donationRecipient && (
+              <div className="container-fluid">
+                <div className="card-md-5 center" onChange={sendTransaction}>
+                  <h3>Transaction Details</h3>
+                  <p>Recipient: {donationRecipient}</p>
+                  <p>Amount: {donationAmount}</p>
+                </div>
+              </div>
+         )} */}
 					</div>
 				</div>
 			</div>

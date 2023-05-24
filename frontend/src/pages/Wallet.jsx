@@ -246,7 +246,7 @@ function Wallet() {
 			);
 			setBalance(balance.data);
 		})();
-	}, []);
+	}, [handleGeneration, handleRecover]);
 
 	return (
 		<div>

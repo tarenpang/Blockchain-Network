@@ -27,7 +27,7 @@ const nullSignature = [
 
 // Faucet Private Key, Public Key, and Address
 const faucetPrivKey =
-	"3313b06752cd6276f9deb4fefef6f17e904b194808ea9dcf61f1125528b7f74a";
+	"6e4edb05c3f086f8aa1bf848a12c82f25c51610f42543e794570bbbb8326f603";
 const faucetPubKey = CryptoUtils.privKeyToPubKey(faucetPrivKey);
 const faucetAddress = CryptoUtils.pubKeyToAddress(faucetPubKey);
 
@@ -40,13 +40,16 @@ const minerAddress = CryptoUtils.pubKeyToAddress(faucetPubKey);
 // const blockchainId = genesisBlock.blockHash;
 
 // generate unique id using datetime and random number
-const generateUniqueId = () => {
-	return (
-		new Date().getTime().toString(16) + Math.random().toString(16).substring(2)
-	);
-};
+const nodeId =
+	new Date().getTime().toString(16) + Math.random().toString(16).substring(2);
 
-const nodeId = generateUniqueId();
+// const generateUniqueId = () => {
+// 	return (
+// 		new Date().getTime().toString(16) + Math.random().toString(16).substring(2)
+// 	);
+// };
+
+// const nodeId = generateUniqueId();
 
 module.exports = {
 	// blockchainId,
@@ -57,7 +60,7 @@ module.exports = {
 	faucetAddress,
 	faucetPrivKey,
 	faucetPubKey,
-	generateUniqueId,
+	// generateUniqueId,
 	// genesisBlock,
 	genesisDate,
 	genesisData,
@@ -69,6 +72,7 @@ module.exports = {
 	minerAddress,
 	minTransactionFee: 1,
 	maxTransactionFee: 1000000,
+	minTransactionFee: 1,
 	maxTransferValue: 10000000000000,
 	nodeId,
 	nullAddress,
