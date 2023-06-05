@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
 import {
 	createBrowserRouter,
@@ -7,6 +7,7 @@ import {
 	Outlet,
 	createRoutesFromElements,
 } from "react-router-dom";
+import { NetworkContext } from "./context/NetworkContext";
 import "../custom.css";
 import Faucet from "./pages/Faucet";
 import Navbar from "./navigation/Navbar";
@@ -20,11 +21,15 @@ import BlockDetails from "./pages/BlockDetails";
 import AddressDetails from "./pages/AddressDetails";
 
 const Layout = () => {
+	const [activePorts, setActivePorts] = useState([]);
+
 	return (
-		<div>
-			<Navbar />
-			<Outlet />
-		</div>
+		<NetworkContext.Provider value={{ activePorts, setActivePorts }}>
+			<div>
+				<Navbar />
+				<Outlet />
+			</div>
+		</NetworkContext.Provider>
 	);
 };
 

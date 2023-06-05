@@ -2,9 +2,9 @@ import "../../custom.css";
 import React from "react";
 import axios from "axios";
 import { useState, useEffect } from "react";
+// import Row from "react-bootstrap/Row";
 import { Button, Row } from "react-bootstrap";
 import SearchBar from "../navigation/SearchBar";
-import { redirect } from "react-router-dom";
 // import ReactTooltip from "react-tooltip";
 // import { 'document-duplicate' } from "@heroicons/react";
 
@@ -30,8 +30,6 @@ function Explorer() {
 			setAllPendingTransactions(
 				pendingTransactions.data.reverse().slice(0, 10)
 			);
-			console.log("confirmed: " + confirmedTransactions.data);
-			console.log("pending: " + pendingTransactions.data);
 		})();
 	}, []);
 
@@ -65,17 +63,9 @@ function Explorer() {
 		}
 	};
 
-	const handleRender = () => {
-		if (renderPending) {
-			setRenderPending(false);
-		} else {
-			setRenderPending(true);
-		}
-	};
-
 	return (
 		<div>
-			{/* <br /> */}
+			<br />
 			<h1>IndiGold Explorer</h1>
 			<br></br>
 			<SearchBar></SearchBar>
@@ -83,7 +73,10 @@ function Explorer() {
 			<div className="container-fluid">
 				<div className="card">
 					<div className="card-body">
-						<h4 className="card-title-0">Latest Blocks</h4>
+						<h4 className="card-title-0">
+							{/* Confirmed Blocks: {allConfirmedBlocks.length} */}
+							Latest Blocks
+						</h4>
 						<div className="scrollable">
 							{allConfirmedBlocks.length > 0 &&
 								allConfirmedBlocks.map((d, index) => (
@@ -120,24 +113,16 @@ function Explorer() {
 					<div className="card">
 						<div className="card-body">
 							<div>
-								<h4 className="card-title-4">
-									Confirmed Transactions
-									<a>
-										<div className="float-right">
-											<Button
-												style={{
-													width: "10rem",
-													height: "2rem",
-													paddingTop: "0",
-												}}
-												variant="primary"
-												size="sm"
-												onClick={handleRender}
-											>
-												Show Pending
-											</Button>
-										</div>
-									</a>
+								<h4 className="card-title-3">
+									{/* Confirmed Transactions: {allConfirmedTransactions.length} */}
+									Latest Transactions
+									<Button
+										variant="primary"
+										size="sm"
+										onClick={setRenderPending(true)}
+									>
+										Show Pending
+									</Button>
 								</h4>
 							</div>
 							<div className="scrollable">
@@ -183,25 +168,19 @@ function Explorer() {
 				{renderPending && (
 					<div className="card">
 						<div className="card-body">
-							{/* <div className="clearfix"> */}
-							<h4 className="card-title-4 ">
-								Pending Transactions
-								<div className="float-right">
+							<div>
+								<h4 className="card-title-3">
+									{/* Confirmed Transactions: {allConfirmedTransactions.length} */}
+									Pending Transactions
 									<Button
-										style={{
-											width: "11rem",
-											height: "2rem",
-											paddingTop: "0",
-										}}
 										variant="primary"
 										size="sm"
-										onClick={handleRender}
+										onClick={setRenderPending(false)}
 									>
-										Show Confirmed
+										Show Latest
 									</Button>
-								</div>
-							</h4>
-							{/* </div> */}
+								</h4>
+							</div>
 							<div className="scrollable">
 								{allPendingTransactions.length > 0 &&
 									allPendingTransactions.map((d, index) => (

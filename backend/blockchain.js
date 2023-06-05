@@ -62,6 +62,15 @@ Blockchain.prototype.getLastBlock = function () {
 	return this.blocks[this.blocks.length - 1];
 };
 
+// Add Transaction to the Array of Pending Transactions
+Blockchain.prototype.addTransactionToPendingTransactions = function (
+	transactionObj
+) {
+	console.log("transactionObj", transactionObj);
+	this.pendingTransactions.push(transactionObj);
+	return this.getLastBlock()["index"] + 1;
+};
+
 // Add New Transaction & Push to Pending Txn Pool Given the Txn Data
 Blockchain.prototype.addNewTransaction = function (txnData) {
 	// Validate the transaction data
@@ -74,22 +83,22 @@ Blockchain.prototype.addNewTransaction = function (txnData) {
 		return { errorMsg: "Invalid recipient address: " + txnData.to };
 	if (!ValidationUtils.isValidPublicKey(txnData.senderPubKey))
 		return { errorMsg: "Invalid public key: " + txnData.senderPubKey };
-	let senderAddr = CryptoUtils.publicKeyToAddress(txnData.senderPubKey);
+	let senderAddr = CryptoUtils.pubKeyToAddress(txnData.senderPubKey);
 	if (senderAddr !== txnData.from)
 		return { errorMsg: "The public key should match the sender address" };
 	if (!ValidationUtils.isValidTransferValue(txnData.value))
 		return { errorMsg: "Invalid transfer value: " + txnnData.value };
-	if (!ValidationUtils.isValidFee(txnData.fee))
+	if (!ValidationUtils.isValidTransferFee(txnData.fee))
 		return { errorMsg: "Invalid transaction fee: " + txnData.fee };
 	if (!ValidationUtils.isValidDate(txnData.dateCreated))
 		return { errorMsg: "Invalid date: " + txnData.dateCreated };
-	if (!ValidationUtils.isValidSignatureFormat(txnData.senderSignature))
+	if (!ValidationUtils.isValidSignature(txnData.senderSignature))
 		return {
 			errorMsg:
 				'Invalid or missing signature. Expected signature format: ["hexnum", "hexnum"]',
 		};
 
-	let newTransaction = new Transaction(
+	let newTrans = new Transaction(
 		txnData.from,
 		txnData.to,
 		txnData.value,
@@ -102,20 +111,27 @@ Blockchain.prototype.addNewTransaction = function (txnData) {
 	);
 
 	// Check for Duplicate Transactions
-	if (this.getTransactionByDataHash(txn.transactionDataHash))
-		return { errorMsg: "Duplicated transaction: " + txn.transactionDataHash };
+	if (this.getTransactionByDataHash(newTrans.transactionDataHash))
+		return {
+			errorMsg: "Duplicated transaction: " + newTrans.transactionDataHash,
+		};
 
-	if (!txn.verifySignature())
+	if (!newTrans.verifySignature())
 		return { errorMsg: "Invalid signature: " + txnData.senderSignature };
 
 	// Check for Sufficient Sender Balance
-	let balances = this.getAccountBalance(txn.from);
-	if (balances.confirmedBalance < txn.value + txn.fee)
-		return { errorMsg: "Unsufficient sender balance at address: " + txn.from };
+	let balances = this.getAccountBalance(newTrans.from);
+	if (
+		Number(balances.confirmedBalance) <
+		Number(newTrans.value) + Number(newTrans.fee)
+	)
+		return {
+			errorMsg: "Unsufficient sender balance.",
+		};
 
-	this.pendingTransactions.push(newTransaction);
+	this.pendingTransactions.push(newTrans);
 
-	return newTransaction;
+	return newTrans;
 };
 
 // Get Transaction Given the Transaction Data Hash
@@ -148,6 +164,15 @@ Blockchain.prototype.getConfirmedTransactions = function () {
 		transactions.push.apply(transactions, block.transactions);
 	}
 	return transactions;
+};
+
+// Add New Transaction to the Array of Pending Transactions
+Blockchain.prototype.addNewTransactionToPendingTransactions = function (
+	transactionObject
+) {
+	this.pendingTransactions.push(transactionObject); // Add to pending transactions pool
+
+	return this.getLastBlockOnChain().index + 1; // Return index of the next block on blockchain
 };
 
 // Get All Pending Transactions
@@ -210,14 +235,6 @@ Blockchain.prototype.getTransactionByTxnHash = function (transactionHash) {
 	} else {
 		return { transaction: targetTransaction, block: targetBlock };
 	}
-};
-
-// Add Transaction to the Array of Pending Transactions
-Blockchain.prototype.addTransactionToPendingTransactions = function (
-	transactionObj
-) {
-	this.pendingTransactions.push(transactionObj);
-	return this.getLastBlock()["index"] + 1;
 };
 
 // Validate Transaction
@@ -650,6 +667,38 @@ Blockchain.prototype.broadcastNewPeerToNetwork = async function (
 };
 
 // Register All Nodes to Peer
+// Alternate Method - Attempt to Fix Async Loop (Not Working)
+// Blockchain.prototype.registerAllNodesToPeer = async function (allPeers) {
+// 	for (const peerUrl of allPeers) {
+// 		try {
+// 			const response = await axios.get(peerUrl + "/info");
+// 			const peerInfo = response.data;
+// 			const peers = peerInfo.peersMap;
+
+// 			for (const id in peers) {
+// 				const url = peers[id];
+// 				const peerNotPreExisting = !this.peersMap.has(id);
+// 				const notCurrentNode = this.currentNodeURL !== url;
+
+// 				if (peerNotPreExisting && notCurrentNode) {
+// 					await axios.post(this.currentNodeURL + "/peers/connect", {
+// 						peerUrl: peerInfo.nodeUrl,
+// 					});
+// 					return {
+// 						message: "Successfully registered network nodes to new peer",
+// 					};
+// 				}
+// 			}
+// 		} catch (error) {
+// 			console.log("ERROR:", error);
+// 			return { errorMsg: "Error registering network to new peer node." };
+// 		}
+// 	}
+// };
+
+// Register All Nodes to Peer - 2
+// Original Method - !!! Flawed Async Loop?
+// Issue: axios.get request not completing before moving to next iteration
 Blockchain.prototype.registerAllNodesToPeer = async function (allPeers) {
 	allPeers.forEach((peerUrl) => {
 		axios
@@ -765,23 +814,22 @@ Blockchain.prototype.validateChain = function (peerChainBlocks) {
 	return true;
 };
 
-// Sync Pending Transactions from Peer Chain
 Blockchain.prototype.syncPendingTransactionsFromPeerChain = async function (
-	peerChainData
+	peerChainInfo
 ) {
 	try {
-		if (peerChainData.pendingTransactions > 0) {
+		if (peerChainInfo.pendingTransactions > 0) {
 			console.log(
-				`Pending transactions sync started. Peer: ${peerChainData.nodeUrl}`
+				`Pending transactions sync started. Peer: ${peerChainInfo.nodeUrl}`
 			);
 			let transactions = (
-				await axios.get(peerChainData.nodeUrl + "/transactions/pending")
+				await axios.get(peerChainInfo.nodeUrl + "/transactions/pending")
 			).data;
 			for (let tran of transactions) {
-				let newTransaction = blockchain.addNewTransaction(tran);
-				if (newTransaction.transactionDataHash) {
+				let addedTran = this.chain.addNewTransaction(tran);
+				if (addedTran.transactionDataHash) {
 					// Added a new pending tx --> broadcast it to all known peers
-					broadcastTransactionToPeers(newTransaction);
+					this.broadcastTransactionToPeers(addedTran);
 				}
 			}
 		}

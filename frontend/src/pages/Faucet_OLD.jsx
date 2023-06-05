@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useContext } from "react";
-import { NetworkContext } from "../context/NetworkContext";
 import Card from "react-bootstrap/Card";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import axios from "axios";
 import EC from "elliptic";
 import CryptoJS from "crypto-js";
 import secureLocalStorage from "react-secure-storage";
+import { NetworkContext } from "../context/NetworkContext";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -29,7 +29,9 @@ function Faucet() {
 		secureLocalStorage.getItem("loggedIn")
 	);
 
+	// let activePorts = new Set([5555, 5556, 5557, 5558, 5559]);
 	const { activePorts, setActivePorts } = useContext(NetworkContext);
+	// let activePorts = [5555, 5556, 5557, 5558, 5559];
 
 	// useEffect(() => {
 	// 	let interval;
@@ -205,30 +207,10 @@ function Faucet() {
 					console.log("success");
 				}
 			}
-
-			// const error = result.data.error;
-			// if (error) {
-			// 	console.log("error" + error);
-			// } else {
-			// 	toast.success("Transaction sent", {
-			// 		position: "top-right",
-			// 		theme: "light",
-			// 	});
-			// 	setIsSigned(false);
-			// 	setRecipient("");
-			// 	setValue("");
-			// 	// setData("");
-			// 	console.log("success");
-			// }
 		} catch (error) {
 			console.log("error2" + error);
 		}
 	};
-
-	async function transactionHandle() {
-		signTransaction();
-		await sendTransaction();
-	}
 
 	const signDonationTransaction = () => {
 		const validValue = /^\d*\.?\d*$/.test(donationValue);
@@ -305,49 +287,25 @@ function Faucet() {
 					"Content-Type": "application/json",
 				},
 			};
-			// let result = await axios.post(
-			// 	`http://localhost:5555/transaction`,
-			// 	signedDonoTran,
-			// 	config
-			// );
+			let result = await axios.post(
+				`http://localhost:5555/transaction`,
+				signedDonoTran,
+				config
+			);
+			const error = result.data.error;
+			if (error) {
+				console.log("error" + error);
+			} else {
+				toast.success("Transaction sent", {
+					position: "top-right",
+					theme: "light",
+				});
+				setIsSignedDonation(false);
 
-			// Iterate through activePorts and Send Pending Donation TX to Each Port
-			for (let i = 0; i < activePorts.length; i++) {
-				console.log("activePorts[i]: ", activePorts[i]);
-				let result = await axios.post(
-					`http://localhost:${activePorts[i]}/transactions/send`,
-					signedTx,
-					config
-				);
-				const error = result.data.error;
-				if (error) {
-					console.log("error" + error);
-				} else {
-					toast.success("Transaction sent", {
-						position: "top-right",
-						theme: "light",
-					});
-					setIsSignedDonation(false);
-					setDonationValue("");
-					// setData("");
-					console.log("success");
-				}
+				setDonationValue("");
+				// setData("");
+				console.log("success");
 			}
-
-			// const error = result.data.error;
-			// if (error) {
-			// 	console.log("error" + error);
-			// } else {
-			// 	toast.success("Transaction sent", {
-			// 		position: "top-right",
-			// 		theme: "light",
-			// 	});
-			// 	setIsSignedDonation(false);
-
-			// 	setDonationValue("");
-			// 	// setData("");
-			// 	console.log("success");
-			// }
 		} catch (error) {
 			console.log("error2" + error);
 		}
@@ -370,7 +328,7 @@ function Faucet() {
 				pauseOnHover
 				theme="light"
 			/>
-			{/* <br /> */}
+			<br />
 			<h1>IndiGOLD Faucet</h1>
 			<div className="center-img">
 				<img

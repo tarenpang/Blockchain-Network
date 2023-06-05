@@ -16,13 +16,17 @@ function Mine() {
 			const pendingTransactions = await axios.get(
 				`http://localhost:5555/transactions/pending`
 			);
+			console.log(pendingTransactions.data);
 			setPendingTransactions(pendingTransactions.data.reverse().slice(0, 10));
+
+			// if (pendingTransactions.data) {
+			// }
 		})();
 	}, []);
 
 	const nodeToMine = `http://localhost:5555`;
 
-	const handleMineClick = async (nodeToMine) => {
+	const handleMineClick = async nodeToMine => {
 		// Check if pending transactions exist
 
 		// Send the request to the node to start mining
@@ -62,7 +66,7 @@ function Mine() {
 				pauseOnHover
 				theme="light"
 			/>
-			<br />
+			{/* <br /> */}
 			<h1>Mine</h1>
 			<div className="center-img">
 				<img

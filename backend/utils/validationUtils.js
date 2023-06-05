@@ -1,4 +1,4 @@
-const config = require("./config");
+const Config = require("./config");
 
 const dateRegEx =
 	/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{2,6}Z$/;
@@ -62,7 +62,7 @@ function isValidTransferValue(value) {
 function isValidTransferFee(fee) {
 	if (typeof fee !== "number") return false;
 	if (!Number.isInteger(fee)) return false;
-	return fee >= Config.minimumTransactionFee;
+	return fee >= Config.minTransactionFee;
 }
 
 function isMissingFields(dataObject) {
