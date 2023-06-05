@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"description": "Implementation of a fully functional blockchain network consisting of nodes, miners, wallet app, faucet app and blockchain explorer.",
 	"scripts": {
-		"start": "concurrently \"npm run node_1\" \"npm run client\" \"npm run node_2\" \"npm run node_3\" \"npm run node_4\" \"npm run node_5\"",
+		"start": "concurrently --raw \"npm run node_1\" \"npm run client\" \"npm run node_2\" \"npm run node_3\" \"npm run node_4\" \"npm run node_5\"",
 		"node_1": "cd backend && nodemon --watch dev -e js index.js 5555 http://localhost:5555",
 		"client": "cd frontend && npm run dev",
 		"node_2": "cd backend && nodemon --watch dev -e js index.js 5556 http://localhost:5556",

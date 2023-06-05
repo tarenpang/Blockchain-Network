@@ -1,14 +1,15 @@
 import "../../custom.css";
 import React from "react";
 import axios from "axios";
-import { useState, useEffect, useRef } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
+import { NetworkContext } from "../context/NetworkContext";
 import { Row } from "react-bootstrap";
 import { Button } from "react-bootstrap";
 import "react-toastify/dist/ReactToastify.min.css";
 import { ToastContainer, toast } from "react-toastify";
 import secureLocalStorage from "react-secure-storage";
 
-function SyncAdjacentPeers() {
+export function SyncAdjacentPeers() {
 	// const [peerMap, setPeerMap] = useState({});
 
 	const [arrow1To5Class, setArrow1To5Class] = useState("arrow-dull");
@@ -53,18 +54,9 @@ function SyncAdjacentPeers() {
 	const [adjNode4To5BoxClass, setAdjNode4To5BoxClass] =
 		useState("node-box-dull");
 
-	// useEffect(() => {
-	// 	(async function loadData() {
-	// 		const peerInfo = await axios.get(
-	// 			`http://localhost:${port}/info`
-	// 		);
-	// 		setPeerMap(peerInfo.data.peersMap);
-	// 	})();
-	// }, []);
-	let counter = 0;
-	let portsConsumed = [];
+	const { activePorts, setActivePorts } = useContext(NetworkContext);
 
-	const handleSyncClick = async (port) => {
+	const handleSyncClick = async port => {
 		const config = {
 			headers: {
 				"Content-Type": "application/json",
@@ -104,17 +96,6 @@ function SyncAdjacentPeers() {
 			portPlus3 = 5557;
 		}
 
-		// Track Ports Consumed
-		if (!portsConsumed.includes(port)) {
-			portsConsumed.push(port);
-			counter = counter + 1;
-		} else if (portsConsumed.includes(port)) {
-			toast.warning("This node is already synced.", {
-				position: "top-right",
-				theme: "light",
-			});
-		}
-
 		// Sync Current Node with Next Node
 		try {
 			bodyNext = {
@@ -136,8 +117,10 @@ function SyncAdjacentPeers() {
 		} catch (error) {
 			// const errorNext = syncResultNext.data.errorMsg;
 			const errorNext =
-				error.response?.data?.errorMsg || "Unknown error occurred.";
-			toast.warning(errorNext, {
+				`Connecting ${port} to ${nextPort}` ||
+				error.response?.data?.errorMsg ||
+				"Unknown error occurred.";
+			toast.success(errorNext, {
 				position: "top-right",
 				theme: "light",
 			});
@@ -165,8 +148,10 @@ function SyncAdjacentPeers() {
 			});
 		} catch (error) {
 			const errorPrev =
-				error.response?.data?.errorMsg || "Unknown error occurred.";
-			toast.warning(errorPrev, {
+				`Connecting ${port} to ${prevPort}` ||
+				error.response?.data?.errorMsg ||
+				"Unknown error occurred.";
+			toast.success(errorPrev, {
 				position: "top-right",
 				theme: "light",
 			});
@@ -191,129 +176,33 @@ function SyncAdjacentPeers() {
 			});
 		} catch (error) {
 			const errorPrevToNext =
-				error.response?.data?.errorMsg || "Unknown error occurred.";
+				`Connecting ${prevPort} to ${nextPort}` ||
+				error.response?.data?.errorMsg ||
+				"Unknown error occurred.";
 
-			toast.warning(errorPrevToNext, {
+			toast.success(errorPrevToNext, {
 				position: "top-right",
 				theme: "light",
 			});
 		}
-
-		// Sync Current Node with Next Node Again
-		try {
-			bodyNext = {
-				peerUrl: `http://localhost:${nextPort}`,
-			};
-
-			const syncResultNext = await axios.post(
-				`http://localhost:${port}/peers/connect`,
-				bodyNext,
-				config
-			);
-
-			const resultNext = syncResultNext.data.message;
-
-			toast.success(resultNext, {
-				position: "top-right",
-				theme: "light",
-			});
-		} catch (error) {
-			// const errorNext = syncResultNext.data.errorMsg;
-			const errorNext =
-				error.response?.data?.errorMsg || "Unknown error occurred.";
-			toast.warning(errorNext, {
-				position: "top-right",
-				theme: "light",
-			});
-			console.error(error);
-		}
-
-		// closeCircle(port);
 		setClasses(port);
+
+		// Update activePorts Array
+		if (!activePorts.includes(port)) {
+			activePorts.push(port);
+		}
+		if (!activePorts.includes(nextPort)) {
+			activePorts.push(nextPort);
+		}
+		if (!activePorts.includes(prevPort)) {
+			activePorts.push(prevPort);
+		}
+		console.log("activePorts", activePorts);
+		activePorts.sort();
+		setActivePorts(activePorts);
 	};
 
-	// const closeCircle = async (port) => {
-	// 	const config = {
-	// 		headers: {
-	// 			"Content-Type": "application/json",
-	// 		},
-	// 	};
-	// 	let nextPort;
-	// 	let prevPort;
-	// 	let bodyNext;
-	// 	let bodyPrev;
-	// 	let portPlus2;
-	// 	let portPlus3;
-
-	// 	if (port === 5555) {
-	// 		nextPort = 5556;
-	// 		prevPort = 5559;
-	// 		portPlus2 = 5557;
-	// 		portPlus3 = 5558;
-	// 	} else if (port === 5556) {
-	// 		nextPort = 5557;
-	// 		prevPort = 5555;
-	// 		portPlus2 = 5558;
-	// 		portPlus3 = 5559;
-	// 	} else if (port === 5557) {
-	// 		nextPort = 5558;
-	// 		prevPort = 5556;
-	// 		portPlus2 = 5559;
-	// 		portPlus3 = 5555;
-	// 	} else if (port === 5558) {
-	// 		nextPort = 5559;
-	// 		prevPort = 5557;
-	// 		portPlus2 = 5555;
-	// 		portPlus3 = 5556;
-	// 	} else if (port === 5559) {
-	// 		nextPort = 5555;
-	// 		prevPort = 5558;
-	// 		portPlus2 = 5556;
-	// 		portPlus3 = 5557;
-	// 	}
-
-	// 	// Track Ports Consumed
-	// 	if (!portsConsumed.includes(port)) {
-	// 		portsConsumed.push(port);
-	// 		counter = counter + 1;
-	// 	} else if (portsConsumed.includes(port)) {
-	// 		toast.warning("This node is already synced.", {
-	// 			position: "top-right",
-	// 			theme: "light",
-	// 		});
-	// 	}
-
-	// 	// 	// Closing the Circle1 - sync Previous Node with portPlus2
-	// 	if ((counter = 5 && port === 5555)) {
-	// 		try {
-	// 			let bodyPortPlus2 = {
-	// 				peerUrl: `http://localhost:${portPlus2}}`,
-	// 			};
-
-	// 			const syncLast = await axios.post(
-	// 				`http://localhost:${prevPort}/peers/connect`,
-	// 				bodyPortPlus2,
-	// 				config
-	// 			);
-
-	// 			const resultLast = syncLast.data.message;
-	// 			toast.success(resultLast, {
-	// 				position: "top-right",
-	// 				theme: "light",
-	// 			});
-	// 		} catch (error) {
-	// 			const errorLast =
-	// 				error.response?.data?.errorMsg || "Unknown error occurred.";
-
-	// 			toast.error(errorLast, {
-	// 				position: "top-right",
-	// 				theme: "light",
-	// 			});
-	// 		}
-	// 	}
-	// };
-
-	const setClasses = (port) => {
+	const setClasses = port => {
 		if (port === 5555) {
 			setNode1BoxClass("current-box-bright");
 			setAdjNode2To1BoxClass("node-box-bright");
@@ -356,8 +245,13 @@ function SyncAdjacentPeers() {
 				pauseOnHover
 				theme="light"
 			/>
-			<br />
+			{/* <br /> */}
 			<h1>Network Nodes</h1>
+			{activePorts.length > 0 ? (
+				<h3 className="center-text">Active Ports: {activePorts.join(", ")}</h3>
+			) : (
+				<h3 className="center-text">Active Ports: None</h3>
+			)}
 			<div className="center-img">
 				<img
 					style={{ width: 225, height: 200 }}
@@ -369,7 +263,7 @@ function SyncAdjacentPeers() {
 			<div className="container-fluid">
 				<div className="card-md-2">
 					<div className="card-body-md-0">
-						<h4 className="card-title-2">Syncing the Network Nodes</h4>
+						<h4 className="card-title-2">Syncing Adjacent Network Nodes</h4>
 						<div className="scrollable">
 							<div>
 								<span className={adjNode5To1BoxClass}>Node 5</span>

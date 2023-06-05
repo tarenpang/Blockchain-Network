@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import Card from "react-bootstrap/Card";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import axios from "axios";
 import EC from "elliptic";
 import CryptoJS from "crypto-js";
 import secureLocalStorage from "react-secure-storage";
+import { NetworkContext } from "../context/NetworkContext";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -12,28 +13,37 @@ var elliptic = EC.ec;
 var secp256k1 = new elliptic("secp256k1");
 
 function Faucet() {
-	//const faucetBalance = 1000000000000; // Initial faucet balance
 	const transactionTimeout = 90; // Timeout in seconds
 	const [recipient, setRecipient] = useState("");
 	const [value, setValue] = useState("");
 	const [balance, setBalance] = useState("");
+	const [walletBalance, setWalletBalance] = useState("");
 	const [canTransact, setCanTransact] = useState(true);
 	const [timeoutSeconds, setTimeoutSeconds] = useState(transactionTimeout);
-	// const [donationRecipient, setDonationRecipient] = useState("");
-	// const [donationAmount, setDonationAmount] = useState(0);
+	const [donationValue, setDonationValue] = useState("");
 	const [signedTx, setSignedTx] = useState("");
 	const [isSigned, setIsSigned] = useState(false);
-	useEffect(() => {
-		let interval;
-		if (!canTransact) {
-			interval = setInterval(() => {
-				setTimeoutSeconds((prevSeconds) => prevSeconds - 1);
-			}, 1000);
-		}
-		return () => {
-			clearInterval(interval);
-		};
-	}, [canTransact]);
+	const [signedDonationTx, setSignedDonationTx] = useState("");
+	const [isSignedDonation, setIsSignedDonation] = useState(false);
+	const [isLoggedIn, setIsLoggedIn] = useState(
+		secureLocalStorage.getItem("loggedIn")
+	);
+
+	// let activePorts = new Set([5555, 5556, 5557, 5558, 5559]);
+	const { activePorts, setActivePorts } = useContext(NetworkContext);
+	// let activePorts = [5555, 5556, 5557, 5558, 5559];
+
+	// useEffect(() => {
+	// 	let interval;
+	// 	if (!canTransact) {
+	// 		interval = setInterval(() => {
+	// 			setTimeoutSeconds((prevSeconds) => prevSeconds - 1);
+	// 		}, 1000);
+	// 	}
+	// 	return () => {
+	// 		clearInterval(interval);
+	// 	};
+	// }, [canTransact]);
 	/*const handleChange = (event) => {
     const { name, value } = event.target;
     if (name === "address") {
@@ -45,42 +55,27 @@ function Faucet() {
     }
   };
 */
+	useEffect(() => {}, []);
+
 	useEffect(() => {
 		(async function loadData() {
 			const balance = await axios.get(
-				`http://localhost:5555/address/dcf964b76eaa2cf6fedae5e71b4fa8c79e7a936f/balance`
+				`http://localhost:5555/address/732ad3cf41bd1d99a346af99501015b5fa2c256d/balance`
 			);
 			setBalance(balance.data);
+			const walletBalance = await axios.get(
+				`http://localhost:5555/address/${secureLocalStorage.getItem(
+					"address"
+				)}/balance`
+			);
+			setWalletBalance(walletBalance.data);
 		})();
 	}, []);
-	const handleTransaction = () => {
-		// Deduct the specified amount from the faucet balance
-		//  const updatedFaucetBalance = parseInt(faucetBalance) - parseInt(amount, 10);
-		// Send the transaction to the recipient wallet
-		sendTransaction(balance);
-		// Reset the address and amount fields
-		setAddress("");
-		setAmount("");
-		// Disable transactions for the timeout duration
-		setCanTransact(false);
-		setTimeoutSeconds(transactionTimeout);
-	};
 	//Enable transactions after the timeout duration
-	setTimeout(() => {
-		setCanTransact(true);
-	}, transactionTimeout * 1000);
-	/*  const sendTransaction = () => {
-    // Replace this with actual transaction logic
-    const currentTransaction = {
-      sender: "dcf964b76eaa2cf6fedae5e71b4fa8c79e7a936f",
-      recipient: address,
-      amount: amount,
-    };
-    console.log("Transaction sent to:", currentTransaction.data);
-    // Update the faucet balance
-    //   setBalance(balance);
-  };
-*/
+	// setTimeout(() => {
+	// 	setCanTransact(true);
+	// }, transactionTimeout * 1000);
+
 	function signData(data, privKey) {
 		const secp256k1 = new elliptic("secp256k1");
 		let keyPair = secp256k1.keyFromPrivate(privKey);
@@ -121,16 +116,145 @@ function Faucet() {
 			});
 			return;
 		}
+		if (value < 1000) {
+			toast.error("Withdrawal minimum is 1000!", {
+				position: "top-right",
+				theme: "light",
+			});
+			return;
+		}
+
+		if (value > 5000) {
+			toast.error("Exceeded withdrawal limit of 5000!", {
+				position: "top-right",
+				theme: "light",
+			});
+			return;
+		}
+
+		let faucetFrom = "732ad3cf41bd1d99a346af99501015b5fa2c256d";
+		let faucetPubKey =
+			"f35c1ba73028d161274b0988bb1b855866b051f8456819cbf1cc9a3bae6923ef0";
+		let faucetPrivKey =
+			"6e4edb05c3f086f8aa1bf848a12c82f25c51610f42543e794570bbbb8326f603";
+
 		let transaction = {
-			from: "dcf964b76eaa2cf6fedae5e71b4fa8c79e7a936f",
+			from: faucetFrom,
 			to: recipient,
 			value: Number(value),
 			fee: 1,
 			// dateCreated: new Date().toISOString(),
 			dateCreated: new Date(),
-			data: "foo data",
-			senderPubKey:
-				"8d6df948d3de9226a08556df1ddede4f045f2e4a962b8cb9d98f228748675a01",
+			data: "foo",
+			senderPubKey: faucetPubKey,
+		};
+		if (!transaction.data) delete transaction.data;
+
+		let transactionJSON = JSON.stringify(transaction);
+		transaction.transactionDataHash =
+			CryptoJS.SHA256(transactionJSON).toString();
+
+		transaction.senderSignature = signData(
+			transaction.transactionDataHash,
+			faucetPrivKey
+		);
+
+		let signedTransaction = JSON.stringify(transaction);
+		setSignedTx(signedTransaction);
+		console.log(signedTransaction);
+		setIsSigned(true);
+		toast.success("Transaction signed", {
+			position: "top-right",
+			theme: "light",
+		});
+		let tranSend = signedTransaction;
+		sendTransaction(tranSend);
+	};
+	const sendTransaction = async signedTx => {
+		// () => signTransaction();
+		try {
+			const config = {
+				headers: {
+					"Content-Type": "application/json",
+				},
+			};
+			// let result = await axios.post(
+			// 	`http://localhost:5555/transaction`,
+			// 	signedTx,
+			// 	config
+			// );
+
+			// Iterate through activePorts and Send Pending Transaction to Each Node
+			for (let i = 0; i < activePorts.length; i++) {
+				console.log("activePorts[i]: ", activePorts[i]);
+				let result = await axios.post(
+					`http://localhost:${activePorts[i]}/transactions/send`,
+					signedTx,
+					config
+				);
+				const error = result.data.error;
+				if (error) {
+					console.log("error" + error);
+				} else {
+					toast.success("Transaction sent", {
+						position: "top-right",
+						theme: "light",
+					});
+					setIsSigned(false);
+					setRecipient("");
+					setValue("");
+					// setData("");
+					console.log("success");
+				}
+			}
+		} catch (error) {
+			console.log("error2" + error);
+		}
+	};
+
+	const signDonationTransaction = () => {
+		const validValue = /^\d*\.?\d*$/.test(donationValue);
+
+		if (!validValue) {
+			toast.error("Invalid Value!", {
+				position: "top-right",
+				theme: "light",
+			});
+			return;
+		}
+		if (
+			donationValue > walletBalance.confirmedBalance ||
+			walletBalance.confirmedBalance - value < 0
+		) {
+			toast.error("Invalid Funds!", {
+				position: "top-right",
+				theme: "light",
+			});
+			return;
+		}
+		if (donationValue === 0) {
+			toast.error("Donation value can't be zero!", {
+				position: "top-right",
+				theme: "light",
+			});
+			return;
+		}
+
+		let faucetFrom = "732ad3cf41bd1d99a346af99501015b5fa2c256d";
+		let faucetPubKey =
+			"f35c1ba73028d161274b0988bb1b855866b051f8456819cbf1cc9a3bae6923ef0";
+		let faucetPrivKey =
+			"6e4edb05c3f086f8aa1bf848a12c82f25c51610f42543e794570bbbb8326f603";
+
+		let transaction = {
+			from: secureLocalStorage.getItem("address"),
+			to: faucetFrom,
+			value: Number(donationValue),
+			fee: 1,
+			// dateCreated: new Date().toISOString(),
+			dateCreated: new Date(),
+			data: "foo",
+			senderPubKey: secureLocalStorage.getItem("pubKey"),
 		};
 		if (!transaction.data) delete transaction.data;
 
@@ -144,15 +268,19 @@ function Faucet() {
 		);
 
 		let signedTransaction = JSON.stringify(transaction);
-		setSignedTx(signedTransaction);
-		setIsSigned(true);
+		setSignedDonationTx(signedTransaction);
+		console.log(signedTransaction);
+		setIsSignedDonation(true);
 		toast.success("Transaction signed", {
 			position: "top-right",
 			theme: "light",
 		});
+		let donoTran = signedTransaction;
+		sendDonationTransaction(donoTran);
 	};
-	const sendTransaction = async () => {
-		signTransaction();
+
+	const sendDonationTransaction = async signedDonoTran => {
+		// () => signTransaction();
 		try {
 			const config = {
 				headers: {
@@ -161,7 +289,7 @@ function Faucet() {
 			};
 			let result = await axios.post(
 				`http://localhost:5555/transaction`,
-				signedTx,
+				signedDonoTran,
 				config
 			);
 			const error = result.data.error;
@@ -172,9 +300,9 @@ function Faucet() {
 					position: "top-right",
 					theme: "light",
 				});
-				setIsSigned(false);
-				setRecipient("");
-				setValue("");
+				setIsSignedDonation(false);
+
+				setDonationValue("");
 				// setData("");
 				console.log("success");
 			}
@@ -182,20 +310,7 @@ function Faucet() {
 			console.log("error2" + error);
 		}
 	};
-	/*const handleDonate = () => {
-    // Replace this with donation logic
-    const donationAmount = 1000000000000; // Donation Amount
-    // Send the donation transaction to the recipient wallet
-    sendTransaction(balance - donationAmount);
-    //<h3 className="center-text">Balance: {balance.confirmedBalance}</h3>;
-    // Update the donation recipient and amount
-   // setDonationRecipient();
-    setDonationAmount(donationAmount);
-    // Reset the address and amount fields
-    setAddress("");
-    setAmount("");
-  };
-*/
+
 	/* Disable transactions for the timeout duration
   setCanTransact(false);
   setTimeoutSeconds(transactionTimeout);
@@ -206,6 +321,13 @@ function Faucet() {
   */
 	return (
 		<div>
+			<ToastContainer
+				position="top-right"
+				closeOnClick
+				draggable
+				pauseOnHover
+				theme="light"
+			/>
 			<br />
 			<h1>IndiGOLD Faucet</h1>
 			<div className="center-img">
@@ -233,18 +355,10 @@ function Faucet() {
 								&#8226;&nbsp;A 90 second waiting period is required between
 								withdrawals.
 							</p>
+							<p className="ln-ht">
+								&#8226;&nbsp;Withdrawal must be between 1000-5000 coins.
+							</p>
 							<br />
-							<div className="flex-justify-end">
-								<Button
-									className="custom-btn"
-									style={{ width: "10rem", marginBottom: 5 }}
-									variant="success"
-									type="button"
-									value="Submit"
-								>
-									Donate
-								</Button>
-							</div>
 						</div>
 						<InputGroup className="mb-3">
 							<InputGroup.Text id="basic-addon1">
@@ -255,7 +369,7 @@ function Faucet() {
 								id="recipient"
 								name="recipient"
 								value={recipient}
-								onChange={(e) => {
+								onChange={e => {
 									setRecipient(e.target.value);
 									console.log(e.target.value);
 								}}
@@ -272,8 +386,45 @@ function Faucet() {
 								id="value"
 								name="value"
 								value={value}
-								onChange={(e) => {
+								onChange={e => {
 									setValue(e.target.value);
+									console.log(e.target.value);
+								}}
+								placeholder="IndiGOLD Amount"
+							/>
+						</InputGroup>
+						<br />
+						<Button variant="primary" onClick={signTransaction}>
+							Withdraw IndiGold
+						</Button>
+						{/* <Button
+							type="button"
+							onClick={sendTransaction}
+							// disabled={!canTransact}
+						>
+							Get Coins
+						</Button> */}
+						{/* {!canTransact && (
+							<p>Next transaction available in {timeoutSeconds} seconds.</p>
+						)} */}
+					</div>
+				</div>
+				<div className="card-md-1">
+					<div className="card-body-md-1">
+						<p>Please return any unused IndiGold you no longer need</p>
+						<p>Wallet must be active to donate funds</p>
+						<div>
+							<Card.Text></Card.Text>
+						</div>
+						<InputGroup className="mb-3">
+							<InputGroup.Text id="basic-addon1">Amount</InputGroup.Text>
+							<Form.Control
+								type="donationValue"
+								id="donationValue"
+								name="donationValue"
+								value={donationValue}
+								onChange={e => {
+									setDonationValue(e.target.value);
 									console.log(e.target.value);
 								}}
 								placeholder="IndiGOLD Amount"
@@ -282,24 +433,20 @@ function Faucet() {
 						<br />
 						<Button
 							type="button"
-							onClick={sendTransaction}
-							disabled={!canTransact}
+							onClick={signDonationTransaction}
+							disabled={!isLoggedIn ? "disabled" : ""}
+							className="custom-btn"
 						>
-							Get Coins
+							Donate IndiGold
 						</Button>
-						{!canTransact && (
-							<p>Next transaction available in {timeoutSeconds} seconds.</p>
-						)}
-						{/* Donation Details */}
-						{/* {donationRecipient && (
-              <div className="container-fluid">
-                <div className="card-md-5 center" onChange={sendTransaction}>
-                  <h3>Transaction Details</h3>
-                  <p>Recipient: {donationRecipient}</p>
-                  <p>Amount: {donationAmount}</p>
-                </div>
-              </div>
-         )} */}
+						{/* <Button
+							type="button"
+							onClick={sendDonationTransaction} 
+							disabled={!isLoggedIn ? "disabled" : ""}
+							className="custom-btn"
+						>
+							Donate
+						</Button> */}
 					</div>
 				</div>
 			</div>

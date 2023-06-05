@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import { NetworkContext } from "../context/NetworkContext";
 import Card from "react-bootstrap/Card";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import axios from "axios";
@@ -27,6 +28,8 @@ function Faucet() {
 	const [isLoggedIn, setIsLoggedIn] = useState(
 		secureLocalStorage.getItem("loggedIn")
 	);
+
+	const { activePorts, setActivePorts } = useContext(NetworkContext);
 
 	// useEffect(() => {
 	// 	let interval;
@@ -111,8 +114,16 @@ function Faucet() {
 			});
 			return;
 		}
-		if (value === 0) {
-			toast.error("Faucet value can't be zero!", {
+		if (value < 1000) {
+			toast.error("Withdrawal minimum is 1000!", {
+				position: "top-right",
+				theme: "light",
+			});
+			return;
+		}
+
+		if (value > 5000) {
+			toast.error("Exceeded withdrawal limit of 5000!", {
 				position: "top-right",
 				theme: "light",
 			});
@@ -154,8 +165,10 @@ function Faucet() {
 			position: "top-right",
 			theme: "light",
 		});
+		let tranSend = signedTransaction;
+		sendTransaction(tranSend);
 	};
-	const sendTransaction = async () => {
+	const sendTransaction = async signedTx => {
 		// () => signTransaction();
 		try {
 			const config = {
@@ -163,25 +176,50 @@ function Faucet() {
 					"Content-Type": "application/json",
 				},
 			};
-			let result = await axios.post(
-				`http://localhost:5555/transaction`,
-				signedTx,
-				config
-			);
-			const error = result.data.error;
-			if (error) {
-				console.log("error" + error);
-			} else {
-				toast.success("Transaction sent", {
-					position: "top-right",
-					theme: "light",
-				});
-				setIsSigned(false);
-				setRecipient("");
-				setValue("");
-				// setData("");
-				console.log("success");
+			// let result = await axios.post(
+			// 	`http://localhost:5555/transaction`,
+			// 	signedTx,
+			// 	config
+			// );
+
+			// Iterate through activePorts and Send Pending Transaction to Each Node
+			for (let i = 0; i < activePorts.length; i++) {
+				console.log("activePorts[i]: ", activePorts[i]);
+				let result = await axios.post(
+					`http://localhost:${activePorts[i]}/transactions/send`,
+					signedTx,
+					config
+				);
+				const error = result.data.error;
+				if (error) {
+					console.log("error" + error);
+				} else {
+					toast.success("Transaction sent", {
+						position: "top-right",
+						theme: "light",
+					});
+					setIsSigned(false);
+					setRecipient("");
+					setValue("");
+					// setData("");
+					console.log("success");
+				}
 			}
+
+			// const error = result.data.error;
+			// if (error) {
+			// 	console.log("error" + error);
+			// } else {
+			// 	toast.success("Transaction sent", {
+			// 		position: "top-right",
+			// 		theme: "light",
+			// 	});
+			// 	setIsSigned(false);
+			// 	setRecipient("");
+			// 	setValue("");
+			// 	// setData("");
+			// 	console.log("success");
+			// }
 		} catch (error) {
 			console.log("error2" + error);
 		}
@@ -255,9 +293,11 @@ function Faucet() {
 			position: "top-right",
 			theme: "light",
 		});
+		let donoTran = signedTransaction;
+		sendDonationTransaction(donoTran);
 	};
 
-	const sendDonationTransaction = async () => {
+	const sendDonationTransaction = async signedDonoTran => {
 		// () => signTransaction();
 		try {
 			const config = {
@@ -265,25 +305,49 @@ function Faucet() {
 					"Content-Type": "application/json",
 				},
 			};
-			let result = await axios.post(
-				`http://localhost:5555/transaction`,
-				signedDonationTx,
-				config
-			);
-			const error = result.data.error;
-			if (error) {
-				console.log("error" + error);
-			} else {
-				toast.success("Transaction sent", {
-					position: "top-right",
-					theme: "light",
-				});
-				setIsSignedDonation(false);
+			// let result = await axios.post(
+			// 	`http://localhost:5555/transaction`,
+			// 	signedDonoTran,
+			// 	config
+			// );
 
-				setDonationValue("");
-				// setData("");
-				console.log("success");
+			// Iterate through activePorts and Send Pending Donation TX to Each Port
+			for (let i = 0; i < activePorts.length; i++) {
+				console.log("activePorts[i]: ", activePorts[i]);
+				let result = await axios.post(
+					`http://localhost:${activePorts[i]}/transactions/send`,
+					signedTx,
+					config
+				);
+				const error = result.data.error;
+				if (error) {
+					console.log("error" + error);
+				} else {
+					toast.success("Transaction sent", {
+						position: "top-right",
+						theme: "light",
+					});
+					setIsSignedDonation(false);
+					setDonationValue("");
+					// setData("");
+					console.log("success");
+				}
 			}
+
+			// const error = result.data.error;
+			// if (error) {
+			// 	console.log("error" + error);
+			// } else {
+			// 	toast.success("Transaction sent", {
+			// 		position: "top-right",
+			// 		theme: "light",
+			// 	});
+			// 	setIsSignedDonation(false);
+
+			// 	setDonationValue("");
+			// 	// setData("");
+			// 	console.log("success");
+			// }
 		} catch (error) {
 			console.log("error2" + error);
 		}
@@ -306,9 +370,9 @@ function Faucet() {
 				pauseOnHover
 				theme="light"
 			/>
-			<br />
+			{/* <br /> */}
 			<h1>IndiGOLD Faucet</h1>
-			<div className="center-img-2">
+			<div className="center-img">
 				<img
 					style={{ width: 225, height: 200 }}
 					src="../src/assets/faucet-85.png"
@@ -333,6 +397,9 @@ function Faucet() {
 								&#8226;&nbsp;A 90 second waiting period is required between
 								withdrawals.
 							</p>
+							<p className="ln-ht">
+								&#8226;&nbsp;Withdrawal must be between 1000-5000 coins.
+							</p>
 							<br />
 						</div>
 						<InputGroup className="mb-3">
@@ -344,7 +411,7 @@ function Faucet() {
 								id="recipient"
 								name="recipient"
 								value={recipient}
-								onChange={(e) => {
+								onChange={e => {
 									setRecipient(e.target.value);
 									console.log(e.target.value);
 								}}
@@ -361,7 +428,7 @@ function Faucet() {
 								id="value"
 								name="value"
 								value={value}
-								onChange={(e) => {
+								onChange={e => {
 									setValue(e.target.value);
 									console.log(e.target.value);
 								}}
@@ -370,15 +437,15 @@ function Faucet() {
 						</InputGroup>
 						<br />
 						<Button variant="primary" onClick={signTransaction}>
-							Sign Transaction
+							Withdraw IndiGold
 						</Button>
-						<Button
+						{/* <Button
 							type="button"
 							onClick={sendTransaction}
 							// disabled={!canTransact}
 						>
 							Get Coins
-						</Button>
+						</Button> */}
 						{/* {!canTransact && (
 							<p>Next transaction available in {timeoutSeconds} seconds.</p>
 						)} */}
@@ -398,7 +465,7 @@ function Faucet() {
 								id="donationValue"
 								name="donationValue"
 								value={donationValue}
-								onChange={(e) => {
+								onChange={e => {
 									setDonationValue(e.target.value);
 									console.log(e.target.value);
 								}}
@@ -412,16 +479,16 @@ function Faucet() {
 							disabled={!isLoggedIn ? "disabled" : ""}
 							className="custom-btn"
 						>
-							Sign Donation
+							Donate IndiGold
 						</Button>
-						<Button
+						{/* <Button
 							type="button"
-							onClick={sendDonationTransaction}
+							onClick={sendDonationTransaction} 
 							disabled={!isLoggedIn ? "disabled" : ""}
 							className="custom-btn"
 						>
 							Donate
-						</Button>
+						</Button> */}
 					</div>
 				</div>
 			</div>

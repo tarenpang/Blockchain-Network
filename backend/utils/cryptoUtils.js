@@ -107,11 +107,25 @@ function calcBlockDataHash(
 	return sha256(blockDataJSON).toString();
 }
 
-const verifySignature = ({ publicKey, data, signature }) => {
-	const keyFromPublic = secp256k1.keyFromPublic(publicKey, "hex");
+// const verifySignature = ({ publicKey, data, signature }) => {
+// 	const keyFromPublic = secp256k1.keyFromPublic(publicKey, "hex");
 
-	return keyFromPublic.verify(cryptoHash(data), signature);
-};
+// 	return keyFromPublic.verify(cryptoHash(data), signature);
+// };
+
+function decompressPublicKey(pubKeyCompressed) {
+	let pubKeyX = pubKeyCompressed.substring(0, 64);
+	let pubKeyYOdd = parseInt(pubKeyCompressed.substring(64));
+	let pubKeyPoint = secp256k1.curve.pointFromX(pubKeyX, pubKeyYOdd);
+	return pubKeyPoint;
+}
+
+function verifySignature(data, publicKey, signature) {
+	let pubKeyPoint = decompressPublicKey(publicKey);
+	let keyPair = secp256k1.keyPair({ pub: pubKeyPoint });
+	let valid = keyPair.verify(data, { r: signature[0], s: signature[1] });
+	return valid;
+}
 
 module.exports = {
 	calcBlockDataHash,
