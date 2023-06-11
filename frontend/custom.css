@@ -28,9 +28,7 @@
 }
 
 .bg-glass {
-	/* border: 2px solid white; */
 	padding: 1px;
-	/* padding-bottom: -10px; */
 	width: 580px;
 	height: 100px;
 	margin: 0 auto;
@@ -39,10 +37,18 @@
 	background-color: rgba(55, 12, 94, 0.6);
 }
 
-.bg-glass-1 {
-	/* border: 2px solid white; */
+.bg-glass-0 {
 	padding: 1px;
-	/* padding-bottom: -10px; */
+	width: 580px;
+	height: 40px;
+	margin: 0 auto;
+	border-radius: 5px;
+	backdrop-filter: blur(5px);
+	background-color: rgba(55, 12, 94, 0.6);
+}
+
+.bg-glass-1 {
+	padding: 1px;
 	width: 500px;
 	height: 60px;
 	margin: 0 auto;
@@ -53,9 +59,7 @@
 }
 
 .bg-glass-2 {
-	/* border: 2px solid white; */
 	padding: 1px;
-	/* padding-bottom: -10px; */
 	width: 520px;
 	height: 80px;
 	margin: 0 auto;
@@ -66,9 +70,7 @@
 }
 
 .bg-glass-3 {
-	/* border: 2px solid white; */
 	padding: 8px;
-	/* padding-bottom: -10px; */
 	width: 800px;
 	height: 60px;
 	margin: 0 auto;
@@ -79,11 +81,39 @@
 }
 
 .bg-glass-4 {
-	/* border: 2px solid white; */
-	/* padding: 1px; */
-	/* padding-bottom: -10px; */
 	width: 480px;
 	height: 120px;
+	margin: 0 auto;
+	border-radius: 5px;
+	backdrop-filter: blur(5px);
+	background-color: rgba(55, 12, 94, 0.6);
+}
+
+/* .bg-glass-5 {
+	height: 40px;
+	margin: 0 auto;
+	border-radius: 5px;
+	backdrop-filter: blur(5px);
+	background-color: rgba(55, 12, 94, 0.6);
+} */
+
+.bg-glass-5 {
+	padding: 1px;
+	width: 500px;
+	height: 60px;
+	margin: 0 auto;
+	margin-left: 120px;
+	border-radius: 5px;
+	backdrop-filter: blur(5px);
+	background-color: rgba(55, 12, 94, 0.6);
+}
+
+.bg-glass-6 {
+	/* border: 2px solid white; */
+	padding: 1px;
+	/* padding-bottom: -10px; */
+	width: 260px;
+	height: 110px;
 	margin: 0 auto;
 	border-radius: 5px;
 	backdrop-filter: blur(5px);
@@ -192,6 +222,45 @@
 	height: 350px;
 	margin: 0 auto;
 	margin-right: 100px;
+	border-radius: 5px;
+	backdrop-filter: blur(5px);
+	background-color: rgba(55, 12, 94, 0.6);
+}
+
+.card-md-3 {
+	display: flex;
+	flex-direction: column;
+	border: 2px solid white;
+	width: 420px;
+	height: 300px;
+	margin: 0 auto;
+	margin-right: 40px;
+	border-radius: 5px;
+	backdrop-filter: blur(5px);
+	background-color: rgba(55, 12, 94, 0.6);
+}
+
+.card-md-4 {
+	display: flex;
+	flex-direction: column;
+	border: 2px solid white;
+	width: 420px;
+	height: 200px;
+	margin: 0 auto;
+	margin-right: 30px;
+	border-radius: 5px;
+	backdrop-filter: blur(5px);
+	background-color: rgba(55, 12, 94, 0.6);
+}
+
+.card-md-5 {
+	display: flex;
+	flex-direction: column;
+	border: 2px solid white;
+	width: 500px;
+	height: 320px;
+	margin: 0 auto;
+	margin-right: 125px;
 	border-radius: 5px;
 	backdrop-filter: blur(5px);
 	background-color: rgba(55, 12, 94, 0.6);
@@ -342,6 +411,14 @@
 	background-color: rgba(255, 255, 255, 0.3);
 }
 
+.card-title-5 {
+	padding-left: 8px;
+	margin-left: 5px;
+	width: 460px;
+	height: 25px;
+	background-color: rgba(255, 255, 255, 0.3);
+}
+
 .center {
 	margin: auto;
 	width: 95%;
@@ -362,6 +439,14 @@
 	margin: auto;
 	width: 50%;
 	padding-left: 95px;
+	/* margin-top: 20px; */
+	/* margin-bottom: 40px; */
+}
+
+.center-img-3 {
+	margin: auto;
+	width: 50%;
+	padding-left: 90px;
 	/* margin-top: 20px; */
 	/* margin-bottom: 40px; */
 }
@@ -412,6 +497,18 @@
 	flex-flow: row wrap;
 	justify-content: space-between;
 	align-content: space-around;
+}
+
+.container-fluid-2 {
+	display: flex;
+	flex-direction: column;
+	min-width: 780px;
+	display: flex;
+	flex-wrap: wrap;
+	flex-flow: row wrap;
+	justify-content: space-between;
+	align-content: space-around;
+	/* margin-left: 70px; */
 }
 
 .cred-card {
@@ -513,12 +610,25 @@
 	max-height: 345px;
 }
 
+.scrollable-2 {
+	padding: 20px;
+	padding-top: 19px;
+	overflow-x: hidden;
+	overflow-y: hidden;
+	max-height: 345px;
+}
+
 .text-pink {
 	color: #e551d7;
 }
 
 .text-indent {
 	padding: 20px;
+}
+
+.text-status {
+	display: inline-block;
+	width: 22px;
 }
 
 .txn-data {
@@ -572,6 +682,11 @@ button:hover {
 button:focus,
 button:focus-visible {
 	outline: 4px auto -webkit-focus-ring-color;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+	opacity: 0.5;
 }
 
 @media (prefers-color-scheme: light) {

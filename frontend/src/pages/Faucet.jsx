@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
-import { NetworkContext } from "../context/NetworkContext";
+import React, { useState, useEffect } from "react";
 import Card from "react-bootstrap/Card";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import axios from "axios";
@@ -29,8 +28,6 @@ function Faucet() {
 		secureLocalStorage.getItem("loggedIn")
 	);
 
-	const { activePorts, setActivePorts } = useContext(NetworkContext);
-
 	// useEffect(() => {
 	// 	let interval;
 	// 	if (!canTransact) {
@@ -42,18 +39,6 @@ function Faucet() {
 	// 		clearInterval(interval);
 	// 	};
 	// }, [canTransact]);
-	/*const handleChange = (event) => {
-    const { name, value } = event.target;
-    if (name === "address") {
-      setAddress(address);
-      console.log("address: ", address);
-    } else if (name === "amount") {
-      setValue(value);
-      console.log("value: ", value);
-    }
-  };
-*/
-	useEffect(() => {}, []);
 
 	useEffect(() => {
 		(async function loadData() {
@@ -114,16 +99,24 @@ function Faucet() {
 			});
 			return;
 		}
-		if (value < 1000) {
-			toast.error("Withdrawal minimum is 1000!", {
+		if (value < 100) {
+			toast.error("Withdrawal minimum is 100!", {
 				position: "top-right",
 				theme: "light",
 			});
 			return;
 		}
 
-		if (value > 5000) {
-			toast.error("Exceeded withdrawal limit of 5000!", {
+		if (value > 1000) {
+			toast.error("Exceeded withdrawal limit of 1000!", {
+				position: "top-right",
+				theme: "light",
+			});
+			return;
+		}
+
+		if (!canTransact) {
+			toast.error("Must wait 90 seconds between faucet withdraws!", {
 				position: "top-right",
 				theme: "light",
 			});
@@ -167,68 +160,41 @@ function Faucet() {
 		});
 		let tranSend = signedTransaction;
 		sendTransaction(tranSend);
+		setCanTransact(false);
+		setTimeout(() => {
+			setCanTransact(true);
+		}, transactionTimeout * 1000);
 	};
 	const sendTransaction = async signedTx => {
-		// () => signTransaction();
 		try {
 			const config = {
 				headers: {
 					"Content-Type": "application/json",
 				},
 			};
-			// let result = await axios.post(
-			// 	`http://localhost:5555/transaction`,
-			// 	signedTx,
-			// 	config
-			// );
-
-			// Iterate through activePorts and Send Pending Transaction to Each Node
-			for (let i = 0; i < activePorts.length; i++) {
-				console.log("activePorts[i]: ", activePorts[i]);
-				let result = await axios.post(
-					`http://localhost:${activePorts[i]}/transactions/send`,
-					signedTx,
-					config
-				);
-				const error = result.data.error;
-				if (error) {
-					console.log("error" + error);
-				} else {
-					toast.success("Transaction sent", {
-						position: "top-right",
-						theme: "light",
-					});
-					setIsSigned(false);
-					setRecipient("");
-					setValue("");
-					// setData("");
-					console.log("success");
-				}
+			let result = await axios.post(
+				`http://localhost:5555/transaction`,
+				signedTx,
+				config
+			);
+			const error = result.data.error;
+			if (error) {
+				console.log("error" + error);
+			} else {
+				toast.success("Transaction sent", {
+					position: "top-right",
+					theme: "light",
+				});
+				setIsSigned(false);
+				setRecipient("");
+				setValue("");
+				// setData("");
+				console.log("success");
 			}
-
-			// const error = result.data.error;
-			// if (error) {
-			// 	console.log("error" + error);
-			// } else {
-			// 	toast.success("Transaction sent", {
-			// 		position: "top-right",
-			// 		theme: "light",
-			// 	});
-			// 	setIsSigned(false);
-			// 	setRecipient("");
-			// 	setValue("");
-			// 	// setData("");
-			// 	console.log("success");
-			// }
 		} catch (error) {
 			console.log("error2" + error);
 		}
 	};
-
-	async function transactionHandle() {
-		signTransaction();
-		await sendTransaction();
-	}
 
 	const signDonationTransaction = () => {
 		const validValue = /^\d*\.?\d*$/.test(donationValue);
@@ -305,49 +271,25 @@ function Faucet() {
 					"Content-Type": "application/json",
 				},
 			};
-			// let result = await axios.post(
-			// 	`http://localhost:5555/transaction`,
-			// 	signedDonoTran,
-			// 	config
-			// );
+			let result = await axios.post(
+				`http://localhost:5555/transaction`,
+				signedDonoTran,
+				config
+			);
+			const error = result.data.error;
+			if (error) {
+				console.log("error" + error);
+			} else {
+				toast.success("Transaction sent", {
+					position: "top-right",
+					theme: "light",
+				});
+				setIsSignedDonation(false);
 
-			// Iterate through activePorts and Send Pending Donation TX to Each Port
-			for (let i = 0; i < activePorts.length; i++) {
-				console.log("activePorts[i]: ", activePorts[i]);
-				let result = await axios.post(
-					`http://localhost:${activePorts[i]}/transactions/send`,
-					signedTx,
-					config
-				);
-				const error = result.data.error;
-				if (error) {
-					console.log("error" + error);
-				} else {
-					toast.success("Transaction sent", {
-						position: "top-right",
-						theme: "light",
-					});
-					setIsSignedDonation(false);
-					setDonationValue("");
-					// setData("");
-					console.log("success");
-				}
+				setDonationValue("");
+				// setData("");
+				console.log("success");
 			}
-
-			// const error = result.data.error;
-			// if (error) {
-			// 	console.log("error" + error);
-			// } else {
-			// 	toast.success("Transaction sent", {
-			// 		position: "top-right",
-			// 		theme: "light",
-			// 	});
-			// 	setIsSignedDonation(false);
-
-			// 	setDonationValue("");
-			// 	// setData("");
-			// 	console.log("success");
-			// }
 		} catch (error) {
 			console.log("error2" + error);
 		}
@@ -370,9 +312,9 @@ function Faucet() {
 				pauseOnHover
 				theme="light"
 			/>
-			{/* <br /> */}
+			<br />
 			<h1>IndiGOLD Faucet</h1>
-			<div className="center-img">
+			<div className="center-img-3">
 				<img
 					style={{ width: 225, height: 200 }}
 					src="../src/assets/faucet-85.png"
@@ -381,11 +323,11 @@ function Faucet() {
 			</div>
 			<br />
 			<div className="bg-glass-1 center-text">
-				<h3>Available Balance: {balance.confirmedBalance}</h3>
+				<h3>Faucet Balance: {balance.confirmedBalance}</h3>
 			</div>
 			<br />
-			<div className="container-fluid">
-				<div className="card-md-1">
+			<div className="container-fluid-2">
+				<div className="card-md-3">
 					<div className="card-body-md-1">
 						<div>
 							<p />
@@ -394,11 +336,10 @@ function Faucet() {
 								Tokens.
 							</p>
 							<p className="ln-ht">
-								&#8226;&nbsp;A 90 second waiting period is required between
-								withdrawals.
+								&#8226;&nbsp;User must wait 90 seconds between withdrawals.
 							</p>
 							<p className="ln-ht">
-								&#8226;&nbsp;Withdrawal must be between 1000-5000 coins.
+								&#8226;&nbsp;Withdrawal must be between 100-1000 coins.
 							</p>
 							<br />
 						</div>
@@ -439,19 +380,9 @@ function Faucet() {
 						<Button variant="primary" onClick={signTransaction}>
 							Withdraw IndiGold
 						</Button>
-						{/* <Button
-							type="button"
-							onClick={sendTransaction}
-							// disabled={!canTransact}
-						>
-							Get Coins
-						</Button> */}
-						{/* {!canTransact && (
-							<p>Next transaction available in {timeoutSeconds} seconds.</p>
-						)} */}
 					</div>
 				</div>
-				<div className="card-md-1">
+				<div className="card-md-4">
 					<div className="card-body-md-1">
 						<p>Please return any unused IndiGold you no longer need</p>
 						<p>Wallet must be active to donate funds</p>
@@ -481,14 +412,6 @@ function Faucet() {
 						>
 							Donate IndiGold
 						</Button>
-						{/* <Button
-							type="button"
-							onClick={sendDonationTransaction} 
-							disabled={!isLoggedIn ? "disabled" : ""}
-							className="custom-btn"
-						>
-							Donate
-						</Button> */}
 					</div>
 				</div>
 			</div>

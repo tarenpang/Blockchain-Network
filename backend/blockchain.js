@@ -38,7 +38,7 @@ Blockchain.prototype.addBlock = function (transactionData) {
 // Get Block Given the Block Hash
 Blockchain.prototype.getBlock = function (blockHash) {
 	let targetBlock = null;
-	this.blocks.forEach((block) => {
+	this.blocks.forEach(block => {
 		if (block.blockHash === blockHash) {
 			targetBlock = block;
 		}
@@ -49,7 +49,7 @@ Blockchain.prototype.getBlock = function (blockHash) {
 // Get Block Given the Block Index
 Blockchain.prototype.getBlockByIndex = function (blockIndex) {
 	let targetBlock = null;
-	this.blocks.forEach((block) => {
+	this.blocks.forEach(block => {
 		if (block.blockIndex === blockIndex) {
 			targetBlock = block;
 		}
@@ -138,7 +138,7 @@ Blockchain.prototype.addNewTransaction = function (txnData) {
 Blockchain.prototype.getTransactionByDataHash = function (txnHash) {
 	const allTransactions = this.getAllTransactions();
 	let targetTransaction = allTransactions.filter(
-		(transaction) => transaction.transactionDataHash === txnHash
+		transaction => transaction.transactionDataHash === txnHash
 	);
 
 	return targetTransaction[0];
@@ -187,7 +187,7 @@ Blockchain.prototype.getTransactionHistory = function (address) {
 
 	const transactions = this.getAllTransactions();
 	let transactionsByAddress = transactions.filter(
-		(transaction) => transaction.from === address || transaction.to === address
+		transaction => transaction.from === address || transaction.to === address
 	);
 	// // Sort the transactions by date
 	// transactionsByAddress.sort((a, b) =>
@@ -200,7 +200,7 @@ Blockchain.prototype.getTransactionHistory = function (address) {
 // Get a Block's Transactions Given the Block Hash
 Blockchain.prototype.getBlockTransactions = function (blockHash) {
 	let targteBlockTxns = null;
-	this.blocks.forEach((block) => {
+	this.blocks.forEach(block => {
 		if (block.blockHash === blockHash) {
 			targetBlockTxns = block.transactions;
 		}
@@ -214,8 +214,8 @@ Blockchain.prototype.getTransactionByTxnHash = function (transactionHash) {
 	let targetBlock = null;
 
 	// confirmed transactions
-	this.blocks.forEach((block) => {
-		block.transactions.forEach((transaction) => {
+	this.blocks.forEach(block => {
+		block.transactions.forEach(transaction => {
 			if (transaction.transactionDataHash === transactionHash) {
 				targetTransaction = transaction;
 				targetBlock = block;
@@ -224,7 +224,7 @@ Blockchain.prototype.getTransactionByTxnHash = function (transactionHash) {
 	});
 
 	// pending transactions
-	this.pendingTransactions.forEach((transaction) => {
+	this.pendingTransactions.forEach(transaction => {
 		if (transaction.transactionDataHash === transactionHash) {
 			targetTransaction = transaction;
 		}
@@ -310,7 +310,7 @@ Blockchain.prototype.removePendingTransactions = function (txnsToRemove) {
 	for (let t of transactionHashesToRemove)
 		txnHashesToRemove.add(t.transactionDataHash);
 	this.pendingTransactions = this.pendingTransactions.filter(
-		(t) => !transactionHashesToRemove.has(t.transactionDataHash)
+		t => !transactionHashesToRemove.has(t.transactionDataHash)
 	);
 };
 
@@ -428,7 +428,7 @@ Blockchain.prototype.getMiningJob = function (minerAddress) {
 			// The transaction cannot be mined due to insufficient
 			// balance to pay the transaction fee -> drop it
 			this.removePendingTransactions([tran]);
-			transactions = transactions.filter((t) => t !== tran);
+			transactions = transactions.filter(t => t !== tran);
 		}
 	}
 
@@ -593,8 +593,8 @@ Blockchain.prototype.getAccountBalance = function (address) {
 // Get All Addresses with Transactions within the Blockchain
 Blockchain.prototype.getAllAddresses = function () {
 	let addresses = new Set();
-	this.blocks.forEach((block) => {
-		block.transactions.forEach((transaction) => {
+	this.blocks.forEach(block => {
+		block.transactions.forEach(transaction => {
 			// Add the transaction to the list if it is from the given address
 			addresses.add(transaction.to);
 			addresses.add(transaction.from);
@@ -656,9 +656,7 @@ Blockchain.prototype.broadcastNewPeerToNetwork = async function (
 	peerNodeUrl
 ) {
 	await Promise.all(
-		endpoints.map((endpoint) =>
-			axios.post(endpoint, { peerNodeId, peerNodeUrl })
-		)
+		endpoints.map(endpoint => axios.post(endpoint, { peerNodeId, peerNodeUrl }))
 	)
 		.then(function () {})
 		.catch(function (error) {
@@ -700,10 +698,10 @@ Blockchain.prototype.broadcastNewPeerToNetwork = async function (
 // Original Method - !!! Flawed Async Loop?
 // Issue: axios.get request not completing before moving to next iteration
 Blockchain.prototype.registerAllNodesToPeer = async function (allPeers) {
-	allPeers.forEach((peerUrl) => {
+	allPeers.forEach(peerUrl => {
 		axios
 			.get(peerUrl + "/info")
-			.then((data) => {
+			.then(data => {
 				const peerInfo = data.data;
 				const peers = peerInfo.peersMap;
 
@@ -727,7 +725,7 @@ Blockchain.prototype.registerAllNodesToPeer = async function (allPeers) {
 					}
 				}
 			})
-			.catch((error) => {
+			.catch(error => {
 				console.log("ERROR:", error);
 
 				return { errorMsg: "Error registering network to new peer node." };
@@ -743,7 +741,7 @@ Blockchain.prototype.broadcastNewBlockToPeers = function () {
 		nodeUrl: this.currentNodeURL,
 	};
 
-	this.peersMap.forEach((peerUrl) => {
+	this.peersMap.forEach(peerUrl => {
 		axios
 			.post(peerUrl + "/peers/notify-new-block", notification)
 			.then(function () {})
@@ -843,12 +841,12 @@ Blockchain.prototype.broadcastTransactionToPeers = async function (
 	transaction
 ) {
 	let endpoints = [];
-	this.peersMap.forEach((peerUrl) => {
+	this.peersMap.forEach(peerUrl => {
 		endpoints.push(peerUrl + "/addToPendingTransactions");
 	});
 
 	await Promise.all(
-		endpoints.map((endpoint) => axios.post(endpoint, transaction))
+		endpoints.map(endpoint => axios.post(endpoint, transaction))
 	)
 		.then(function () {})
 		.catch(function (error) {

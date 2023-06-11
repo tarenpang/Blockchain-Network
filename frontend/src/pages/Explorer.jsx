@@ -75,7 +75,6 @@ function Explorer() {
 
 	return (
 		<div>
-			{/* <br /> */}
 			<h1>IndiGold Explorer</h1>
 			<br></br>
 			<SearchBar></SearchBar>

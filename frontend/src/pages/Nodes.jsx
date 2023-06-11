@@ -245,19 +245,28 @@ export function SyncAdjacentPeers() {
 				pauseOnHover
 				theme="light"
 			/>
-			{/* <br /> */}
 			<h1>Network Nodes</h1>
-			{activePorts.length > 0 ? (
+			{/* {activePorts.length > 0 ? (
 				<h3 className="center-text">Active Ports: {activePorts.join(", ")}</h3>
 			) : (
 				<h3 className="center-text">Active Ports: None</h3>
-			)}
+			)} */}
 			<div className="center-img">
 				<img
 					style={{ width: 225, height: 200 }}
 					src="../src/assets/nodes-85.png"
 					alt="Pickaxe Image"
 				></img>
+			</div>
+			<br />
+			<div className="bg-glass-1">
+				{activePorts.length > 0 ? (
+					<h3 className="center-text">
+						Active Ports: {activePorts.join(", ")}
+					</h3>
+				) : (
+					<h3 className="center-text">Active Ports: None</h3>
+				)}
 			</div>
 			<br />
 			<div className="container-fluid">
