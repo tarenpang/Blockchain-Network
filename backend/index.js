@@ -5,6 +5,9 @@ const express = require("express");
 const { StatusCodes } = require("http-status-codes");
 const Blockchain = require("./blockchain");
 const Config = require("./utils/config");
+const { WebSocket, WebSocketServer } = require("ws");
+const http = require("http");
+const uuidv4 = require("uuid").v4;
 
 // const nodeId =
 // 	new Date().getTime().toString(16) + Math.random().toString(16).substring(2);
@@ -42,7 +45,7 @@ app.get("/", (req, res) => {
 		let endpoints = ExpressListEndpoints(app);
 		let listEndpoints = endpoints
 			.map(
-				(endpoint) =>
+				endpoint =>
 					`<li>${endpoint.methods} <a href="${endpoint.path}">${endpoint.path}</a></li>`
 			)
 			.join("");
@@ -152,7 +155,7 @@ app.post("/transactions/send", (req, res) => {
 				// BROADCAST TRANSACTION TO PEERS
 				blockchain.broadcastTransactionToPeers(newTransaction);
 			})
-			.catch((error) => console.log("Error::", error));
+			.catch(error => console.log("Error::", error));
 
 		res.status(StatusCodes.CREATED).json({
 			message: "Transaction created/broadcast successfully.",
@@ -200,7 +203,7 @@ app.post("/addToPendingTransactions", (req, res) => {
 	const pendingTransactions = blockchain.getPendingTransactions();
 	let duplicateTransactionCount = 0;
 
-	pendingTransactions.forEach((transaction) => {
+	pendingTransactions.forEach(transaction => {
 		if (
 			transaction.transactionDataHash === transactionObject.transactionDataHash
 		) {
@@ -249,6 +252,15 @@ app.post("/mine", function (req, res) {
 	const { minerAddress, difficulty } = req.body;
 	const newBlock = blockchain.mineNextBlock(minerAddress, difficulty);
 	console.log("newBlock: ", newBlock);
+
+	// broadcast the new block to other nodes using WebSocket
+	wsServer.clients.forEach(function each(client) {
+		if (client.readyState === WebSocket.OPEN) {
+			client.send(JSON.stringify({ nonce: newBlock.nonce }));
+			client.send(JSON.stringify({ isValid: newBlock.isValid }));
+		}
+	});
+
 	// broadcast the new block to other nodes
 	const axiosPromises = [];
 	blockchain.peersMap.forEach((url, nodeId) => {
@@ -269,7 +281,7 @@ app.post("/mine", function (req, res) {
 				block: newBlock,
 			});
 		})
-		.catch((err) => res.status(400).json({ error: err.message }));
+		.catch(err => res.status(400).json({ error: err.message }));
 });
 
 app.post("/blockchain/add-block", function (req, res) {
@@ -411,13 +423,13 @@ app.post("/peers/connect", async (req, res) => {
 
 	function pushNodesToPeer(nodesMap) {
 		const endpoints = [];
-		nodesMap.forEach((peerUrl) => {
+		nodesMap.forEach(peerUrl => {
 			endpoints.push(peerUrl + "/register-broadcast-peer");
 		});
 
 		// Broadcast and register peer to all network nodes
 		return Promise.all(
-			endpoints.map((endpoint) =>
+			endpoints.map(endpoint =>
 				axios.post(endpoint, { peerNodeId, peerNodeUrl })
 			)
 		).catch(function (error) {
@@ -433,17 +445,6 @@ app.post("/peers/notify-new-block", (req, res) => {
 });
 
 // Register a New Peer
-// app.post("/register-peer", function (req, res) {
-// 	const newNodeUrl = req.body.newNodeUrl;
-// 	const nodeNotAlreadyPresent = blockchain.peersMap.indexOf(newNodeUrl) == -1;
-// 	const notCurrentNode = blockchain.currentNodeUrl !== newNodeUrl;
-// 	if (nodeNotAlreadyPresent && notCurrentNode)
-// 		blockchain.peersMap.push(newNodeUrl);
-// 	res.json({
-// 		message: "New node registered successfully",
-// 	});
-// });
-
 app.post("/register-peer", function (req, res) {
 	const nodeUrl = `http://localhost:${process.argv[2]}`;
 	// console.log("nodeUrl: ", nodeUrl);
@@ -499,7 +500,7 @@ app.get("/consensus", function (req, res) {
 	const requestPromises = [];
 
 	// get all network nodes and make a request to each one
-	blockchain.peersMap.forEach((peerNodeUrl) => {
+	blockchain.peersMap.forEach(peerNodeUrl => {
 		const requestOptions = {
 			url: peerNodeUrl + "/blockchain",
 			method: "GET",
@@ -510,8 +511,8 @@ app.get("/consensus", function (req, res) {
 	});
 
 	Promise.all(requestPromises)
-		.then((responses) => {
-			const blockchains = responses.map((response) => response.data);
+		.then(responses => {
+			const blockchains = responses.map(response => response.data);
 
 			// check if the length of the blockchains is greater than our current node blockchain
 			const currentChainLength = blockchain.blocks.length;
@@ -519,7 +520,7 @@ app.get("/consensus", function (req, res) {
 			let newLongestChain = null;
 			let newPendingTransactions = null;
 
-			blockchains.forEach((blockchain) => {
+			blockchains.forEach(blockchain => {
 				if (blockchain.blocks.length > maxChainLength) {
 					maxChainLength = blockchain.blocks.length;
 					newLongestChain = blockchain.blocks;
@@ -541,32 +542,106 @@ app.get("/consensus", function (req, res) {
 				});
 			}
 		})
-		.catch((err) => res.status(400).json({ error: err.message }));
+		.catch(err => res.status(400).json({ error: err.message }));
 });
 
-// // >>>>>>>>>> Register the New Node <<<<<<<<<<
-const nodeUrl = `http://localhost:${port}`;
+// Register the New Node
+// const nodeUrl = `http://localhost:${port}`;
 
-// axios
-// 	.post(`${nodeUrl}/register-peer`, { nodeUrl })
-// 	.then((res) => {
-// 		console.log(res.data);
-// 	})
-// 	.catch((err) => {
-// 		console.error(`Error registering node: ${err.message}`);
-// 	});
+// app.listen(Config.defaultServerPort, async function () {
+// 	if (blockchain.currentNodeURL !== Config.genesisNodeURL) {
+// 		// New nodes receive genesis block
+// 		await axios
+// 			.get(Config.genesisNodeURL + "/blocks")
+// 			.then(genesisChain => {
+// 				genesisChain = genesisChain.data;
+// 				blockchain.blocks = [genesisChain[0]];
+// 			})
+// 			.catch(error => console.error("ERROR: ", error));
+// 	}
 
-app.listen(Config.defaultServerPort, async function () {
+// 	console.log(`Listening on port ${process.argv[2]}...`);
+// });
+
+// Instantiate the HTTP Server and the WebSocket Server Object
+const server = http.createServer(app);
+const wsServer = new WebSocketServer({ server });
+server.listen(port, async function () {
 	if (blockchain.currentNodeURL !== Config.genesisNodeURL) {
 		// New nodes receive genesis block
 		await axios
 			.get(Config.genesisNodeURL + "/blocks")
-			.then((genesisChain) => {
+			.then(genesisChain => {
 				genesisChain = genesisChain.data;
 				blockchain.blocks = [genesisChain[0]];
 			})
-			.catch((error) => console.error("ERROR: ", error));
+			.catch(error => console.error("ERROR: ", error));
 	}
 
 	console.log(`Listening on port ${process.argv[2]}...`);
+});
+
+// Maintain All Active Connections in This Object
+const clients = {};
+// Maintain All Active Connections in This Object
+const users = {};
+// Maintain the Current Editor Content
+let editorContent = null;
+// Create Array for User Activity History
+let userActivity = [];
+
+// Event Types
+const typesDef = {
+	USER_EVENT: "userevent",
+	CONTENT_CHANGE: "contentchange",
+};
+
+function broadcastMessage(json) {
+	// Send the Current Data to All Connected Clients
+	const data = JSON.stringify(json);
+	for (let userId in clients) {
+		let client = clients[userId];
+		if (client.readyState === WebSocket.OPEN) {
+			client.send(data);
+		}
+	}
+}
+
+function handleMessage(message, userId) {
+	const dataFromClient = JSON.parse(message.toString());
+	const json = { type: dataFromClient.type };
+	if (dataFromClient.type === typesDef.USER_EVENT) {
+		users[userId] = dataFromClient;
+		userActivity.push(`${dataFromClient.username} joined to edit the document`);
+		json.data = { users, userActivity };
+	} else if (dataFromClient.type === typesDef.CONTENT_CHANGE) {
+		editorContent = dataFromClient.content;
+		json.data = { editorContent, userActivity };
+	}
+	broadcastMessage(json);
+}
+
+function handleDisconnect(userId) {
+	console.log(`${userId} disconnected.`);
+	const json = { type: typesDef.USER_EVENT };
+	const username = users[userId]?.username || userId;
+	userActivity.push(`${username} left the document`);
+	json.data = { users, userActivity };
+	delete clients[userId];
+	delete users[userId];
+	broadcastMessage(json);
+}
+
+// A new client connection request received
+wsServer.on("connection", function (connection) {
+	// Generate a unique code for every user
+	const userId = uuidv4();
+	console.log("Received a new connection");
+
+	// Store the new connection and handle messages
+	clients[userId] = connection;
+	console.log(`${userId} connected.`);
+	connection.on("message", message => handleMessage(message, userId));
+	// User disconnected
+	connection.on("close", () => handleDisconnect(userId));
 });

@@ -1,11 +1,11 @@
 const CryptoUtils = require("./cryptoUtils");
 
-const initialDifficulty = 5;
+const initialDifficulty = 4;
 const genesisDate = new Date(new Date().setDate(new Date().getDate() - 15));
 const genesisTimestamp = new Date(
 	new Date().setDate(new Date().getDate() - 15)
 ).getTime();
-const blockReward = 5;
+const blockReward = 5000;
 const host = "http://localhost";
 const port = process.argv[2];
 // const currentNodeURL = `${host}:${port}`;

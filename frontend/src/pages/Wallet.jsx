@@ -1,8 +1,7 @@
 import "../../custom.css";
 import React from "react";
 import axios from "axios";
-import { useState, useEffect, useContext, useRef } from "react";
-import { NetworkContext } from "../context/NetworkContext";
+import { useState, useEffect, useRef } from "react";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import secureLocalStorage from "react-secure-storage";
 import EC from "elliptic";
@@ -57,8 +56,6 @@ function Wallet() {
 	const [signedTx, setSignedTx] = useState("");
 	const [isSigned, setIsSigned] = useState(false);
 	const formRef = useRef(null);
-
-	const { activePorts, setActivePorts } = useContext(NetworkContext);
 
 	useEffect(() => {
 		if (loggedIn) {
@@ -222,45 +219,20 @@ function Wallet() {
 				signedTx,
 				config
 			);
-
-			// Iterate through activePorts and Send Pending Transaction to Each Node
-			for (let i = 0; i < activePorts.length; i++) {
-				console.log("activePorts[i]: ", activePorts[i]);
-				let result = await axios.post(
-					`http://localhost:${activePorts[i]}/transactions/send`,
-					signedTx,
-					config
-				);
-				const error = result.data.error;
-				if (error) {
-					console.log("error" + error);
-				} else {
-					toast.success("Transaction sent", {
-						position: "top-right",
-						theme: "light",
-					});
-					setIsSigned(false);
-					setRecipient("");
-					setValue("");
-					setData("");
-					console.log("success");
-				}
+			const error = result.data.error;
+			if (error) {
+				console.log("error" + error);
+			} else {
+				toast.success("Transaction sent", {
+					position: "top-right",
+					theme: "light",
+				});
+				setIsSigned(false);
+				setRecipient("");
+				setValue("");
+				setData("");
+				console.log("success");
 			}
-
-			// const error = result.data.error;
-			// if (error) {
-			// 	console.log("error" + error);
-			// } else {
-			// 	toast.success("Transaction sent", {
-			// 		position: "top-right",
-			// 		theme: "light",
-			// 	});
-			// 	setIsSigned(false);
-			// 	setRecipient("");
-			// 	setValue("");
-			// 	setData("");
-			// 	console.log("success");
-			// }
 		} catch (error) {
 			console.log("error2" + error);
 		}

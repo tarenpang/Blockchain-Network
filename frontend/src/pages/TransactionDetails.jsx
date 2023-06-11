@@ -32,6 +32,7 @@ function TransactionDetails() {
 								<p>From: {`${currentTransaction.from}`}</p>
 								<p>To: {`${currentTransaction.to}`}</p>
 								<p>Amount: {`${currentTransaction.value}`}</p>
+								<p>Fee: {`${currentTransaction.fee}`}</p>
 								<p>Date: {`${currentTransaction.dateCreated}`}</p>
 							</Row>
 							{/* </Container> */}
