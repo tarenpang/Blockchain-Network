@@ -454,7 +454,11 @@ Blockchain.prototype.getMiningJob = function (minerAddress) {
 };
 
 // Prepare, Mine & Submit the Next Block
-Blockchain.prototype.mineNextBlock = function (minerAddress, difficulty) {
+Blockchain.prototype.mineNextBlock = function (
+	minerAddress,
+	difficulty,
+	wsServer
+) {
 	// Prepare the next block for mining
 	let oldDifficulty = this.currentDifficulty;
 	this.currentDifficulty = difficulty;
@@ -464,12 +468,35 @@ Blockchain.prototype.mineNextBlock = function (minerAddress, difficulty) {
 	// Mine the next block
 	nextBlock.dateCreated = new Date().toISOString();
 	nextBlock.nonce = 0;
+	let startTime = Date.now(); // Start time of the mining process
+	let hashRate = 0; // Hash rate per second
+
 	do {
 		nextBlock.nonce++;
 		nextBlock.calculateBlockHash();
+		wsServer.clients.forEach(client => {
+			client.send(JSON.stringify({ nonce: nextBlock.nonce }));
+			// client.send(JSON.stringify({ isValid: newBlock.isValid }));
+		});
 		console.log("nonce: ", nextBlock.nonce);
 		console.log("blockHash: ", nextBlock.blockHash);
+
+		// Calculate hash rate
+		let currentTime = Date.now();
+		let elapsedTime = (currentTime - startTime) / 1000; // Elapsed time in seconds
+		hashRate = nextBlock.nonce / elapsedTime;
+
+		// Send hash rate over WebSocket server
+		wsServer.clients.forEach(client => {
+			client.send(JSON.stringify({ hashRate: hashRate.toFixed(2) }));
+		});
 	} while (!ValidationUtils.isValidDifficulty(nextBlock.blockHash, difficulty));
+
+	nextBlock.dateEnded = new Date().toISOString();
+	wsServer.clients.forEach(client => {
+		client.send(JSON.stringify({ dateEnded: nextBlock.dateEnded }));
+		client.send(JSON.stringify({ hashRate: hashRate.toFixed(2) }));
+	});
 
 	// Submit the mined block
 	let newBlock = this.submitMinedBlock(
@@ -664,39 +691,7 @@ Blockchain.prototype.broadcastNewPeerToNetwork = async function (
 		});
 };
 
-// Register All Nodes to Peer
-// Alternate Method - Attempt to Fix Async Loop (Not Working)
-// Blockchain.prototype.registerAllNodesToPeer = async function (allPeers) {
-// 	for (const peerUrl of allPeers) {
-// 		try {
-// 			const response = await axios.get(peerUrl + "/info");
-// 			const peerInfo = response.data;
-// 			const peers = peerInfo.peersMap;
-
-// 			for (const id in peers) {
-// 				const url = peers[id];
-// 				const peerNotPreExisting = !this.peersMap.has(id);
-// 				const notCurrentNode = this.currentNodeURL !== url;
-
-// 				if (peerNotPreExisting && notCurrentNode) {
-// 					await axios.post(this.currentNodeURL + "/peers/connect", {
-// 						peerUrl: peerInfo.nodeUrl,
-// 					});
-// 					return {
-// 						message: "Successfully registered network nodes to new peer",
-// 					};
-// 				}
-// 			}
-// 		} catch (error) {
-// 			console.log("ERROR:", error);
-// 			return { errorMsg: "Error registering network to new peer node." };
-// 		}
-// 	}
-// };
-
-// Register All Nodes to Peer - 2
-// Original Method - !!! Flawed Async Loop?
-// Issue: axios.get request not completing before moving to next iteration
+// Register All Nodes to Peer Node
 Blockchain.prototype.registerAllNodesToPeer = async function (allPeers) {
 	allPeers.forEach(peerUrl => {
 		axios

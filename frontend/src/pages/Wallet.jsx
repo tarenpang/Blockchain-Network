@@ -1,7 +1,8 @@
 import "../../custom.css";
 import React from "react";
 import axios from "axios";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
+import { NetworkContext } from "../context/NetworkContext";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import secureLocalStorage from "react-secure-storage";
 import EC from "elliptic";
@@ -56,6 +57,8 @@ function Wallet() {
 	const [signedTx, setSignedTx] = useState("");
 	const [isSigned, setIsSigned] = useState(false);
 	const formRef = useRef(null);
+
+	const { activePorts, setActivePorts } = useContext(NetworkContext);
 
 	useEffect(() => {
 		if (loggedIn) {
@@ -214,11 +217,17 @@ function Wallet() {
 					"Content-Type": "application/json",
 				},
 			};
-			let result = await axios.post(
-				`http://localhost:5555/transaction`,
-				signedTx,
-				config
-			);
+
+			// let result = await axios.post(
+			// 	`http://localhost:5555/transaction`,
+			// 	signedTx,
+			// 	config
+			// );
+
+			activePorts.forEach(port => {
+				axios.post(`http://localhost:${port}/transaction`, signedTx, config);
+			});
+
 			const error = result.data.error;
 			if (error) {
 				console.log("error" + error);
@@ -274,28 +283,39 @@ function Wallet() {
 					<br />
 					<div className="container-fluid">
 						<div className="card">
-							<div className="card-body">
+							<div className="card-body-1">
 								<h4 className="card-title">Looking to create a new wallet?</h4>
-								<br></br>
-								<p>
-									Click the button below to create a new wallet. Each wallet is
-									generated with a new address used to send and store your
-									IndiGold. You can recover your wallet at anytime with the
-									generated privateKey. Don't forget to save your wallet
-									credentials!{" "}
+								<p />
+								<p className="ln-ht">
+									&#8226;&nbsp;Click the button below to create a new wallet.
+								</p>
+								<p className="ln-ht-1">
+									&#8226;&nbsp;Each wallet is generated with a new address
+									&nbsp;&nbsp;&nbsp;used to send and store your IndiGold.
+								</p>
+								<p className="ln-ht-1">
+									&#8226;&nbsp;You can recover your wallet at anytime with the
+									&nbsp;&nbsp;&nbsp;generated privateKey.
+								</p>
+								<p className="ln-ht">
+									&#8226;&nbsp;Don't forget to save your wallet credentials!{" "}
 								</p>
 								<br></br>
-								<Button onClick={handleGeneration} type="submit">
+								<Button
+									style={{ width: 310 }}
+									onClick={handleGeneration}
+									type="submit"
+								>
 									Create
 								</Button>
 							</div>
 						</div>
 
 						<div className="card">
-							<div className="card-body">
+							<div className="card-body-1">
 								<h4 className="card-title">Already have an existing wallet?</h4>
-								<br></br>
-								<p>
+								<p />
+								<p className="ln-ht-1">
 									Input the private key that was generated with the creation of
 									your wallet into the field below to gain access to your
 									wallet.{" "}
@@ -303,6 +323,7 @@ function Wallet() {
 								<br></br>
 								<InputGroup className="mb-3">
 									<Form.Control
+										style={{ width: 310 }}
 										placeholder="Private key"
 										aria-label="Private key"
 										aria-describedby="basic-addon2"
