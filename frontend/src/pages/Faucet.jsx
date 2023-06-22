@@ -322,7 +322,7 @@ function Faucet() {
 				></img>
 			</div>
 			<br />
-			<div className="bg-glass-1 center-text">
+			<div className="bg-glass-1a center-text">
 				<h3>Faucet Balance: {balance.confirmedBalance}</h3>
 			</div>
 			<br />
@@ -335,9 +335,9 @@ function Faucet() {
 								&#8226;&nbsp;IndiGOLD Faucet is a Free Service for Crypto
 								Tokens.
 							</p>
-							<p className="ln-ht">
+							{/* <p className="ln-ht">
 								&#8226;&nbsp;User must wait 90 seconds between withdrawals.
-							</p>
+							</p> */}
 							<p className="ln-ht">
 								&#8226;&nbsp;Withdrawal must be between 100-1000 coins.
 							</p>
@@ -383,9 +383,13 @@ function Faucet() {
 					</div>
 				</div>
 				<div className="card-md-4">
-					<div className="card-body-md-1">
-						<p>Please return any unused IndiGold you no longer need</p>
-						<p>Wallet must be active to donate funds</p>
+					<div className="card-body-md-1a">
+						<p className="ln-ht">
+							&#8226;&nbsp;Please return any unused IndiGold you no longer need
+						</p>
+						<p className="ln-ht">
+							&#8226;&nbsp;Wallet must be active to donate funds
+						</p>
 						<div>
 							<Card.Text></Card.Text>
 						</div>

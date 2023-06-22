@@ -5,8 +5,8 @@ const express = require("express");
 const { StatusCodes } = require("http-status-codes");
 const Blockchain = require("./blockchain");
 const Config = require("./utils/config");
-const { WebSocket, WebSocketServer } = require("ws");
 const http = require("http");
+const { WebSocket, WebSocketServer } = require("ws");
 const uuidv4 = require("uuid").v4;
 
 // const nodeId =
@@ -248,18 +248,10 @@ app.get("/address/:address/balance", (req, res) => {
 });
 
 // Mine the Pending Transactions
-app.post("/mine", function (req, res) {
+/*app.post("/mine", function (req, res) {
 	const { minerAddress, difficulty } = req.body;
-	const newBlock = blockchain.mineNextBlock(minerAddress, difficulty);
+	const newBlock = blockchain.mineNextBlock(minerAddress, difficulty, wsServer);
 	console.log("newBlock: ", newBlock);
-
-	// broadcast the new block to other nodes using WebSocket
-	wsServer.clients.forEach(function each(client) {
-		if (client.readyState === WebSocket.OPEN) {
-			client.send(JSON.stringify({ nonce: newBlock.nonce }));
-			client.send(JSON.stringify({ isValid: newBlock.isValid }));
-		}
-	});
 
 	// broadcast the new block to other nodes
 	const axiosPromises = [];
@@ -282,8 +274,50 @@ app.post("/mine", function (req, res) {
 			});
 		})
 		.catch(err => res.status(400).json({ error: err.message }));
+});*/
+
+// Mine the Pending Transactions
+// Only Successful Node will Add Pending TXs to Blockchain + Receive Reward + TX Fee
+app.post("/mine", function (req, res) {
+	const { minerAddress, difficulty } = req.body;
+
+	// Flag to track successful mining
+	let mined = false;
+
+	const newBlock = blockchain.mineNextBlock(minerAddress, difficulty, wsServer);
+	console.log("newBlock: ", newBlock);
+
+	// broadcast the new block to other nodes
+	const axiosPromises = [];
+	blockchain.peersMap.forEach((url, nodeId) => {
+		const requestOptions = {
+			url: `${url}/blockchain/add-block`,
+			method: "POST",
+			data: { newBlock },
+			headers: { "Content-Type": "application/json" },
+		};
+
+		// Check if already mined, skip broadcasting to other nodes
+		if (!mined && nodeId === Object.keys(blockchain.peersMap)[0]) {
+			axiosPromises.push(axios(requestOptions));
+			mined = true; // Set the mined flag to true
+		} else {
+			axiosPromises.push(Promise.resolve()); // Push an empty resolved promise
+		}
+	});
+	console.log("axiosPromises: ", axiosPromises);
+
+	Promise.all(axiosPromises)
+		.then(() => {
+			res.json({
+				message: "New block mined and broadcasted successfully",
+				block: newBlock,
+			});
+		})
+		.catch(err => res.status(400).json({ error: err.message }));
 });
 
+// Add Block to Blockchain
 app.post("/blockchain/add-block", function (req, res) {
 	const block = blockchain.extendChain(req.body.newBlock);
 	if (!block.errorMsg) {
@@ -545,24 +579,6 @@ app.get("/consensus", function (req, res) {
 		.catch(err => res.status(400).json({ error: err.message }));
 });
 
-// Register the New Node
-// const nodeUrl = `http://localhost:${port}`;
-
-// app.listen(Config.defaultServerPort, async function () {
-// 	if (blockchain.currentNodeURL !== Config.genesisNodeURL) {
-// 		// New nodes receive genesis block
-// 		await axios
-// 			.get(Config.genesisNodeURL + "/blocks")
-// 			.then(genesisChain => {
-// 				genesisChain = genesisChain.data;
-// 				blockchain.blocks = [genesisChain[0]];
-// 			})
-// 			.catch(error => console.error("ERROR: ", error));
-// 	}
-
-// 	console.log(`Listening on port ${process.argv[2]}...`);
-// });
-
 // Instantiate the HTTP Server and the WebSocket Server Object
 const server = http.createServer(app);
 const wsServer = new WebSocketServer({ server });
@@ -642,6 +658,7 @@ wsServer.on("connection", function (connection) {
 	clients[userId] = connection;
 	console.log(`${userId} connected.`);
 	connection.on("message", message => handleMessage(message, userId));
+
 	// User disconnected
 	connection.on("close", () => handleDisconnect(userId));
 });

@@ -1,13 +1,16 @@
 import "../../custom.css";
 import React from "react";
-import useWebSocket, { ReadyState } from "react-use-websocket";
+import { useState, useEffect, useContext, useRef } from "react";
+import WebSocket, { w3cwebsocket as W3CWebSocket } from "websocket";
+// import useWebSocket, { ReadyState } from "react-use-websocket";
 // import WebSocketService from "../WebSocketService";
 import axios from "axios";
-import { useState, useEffect, useRef } from "react";
+import { NetworkContext } from "../context/NetworkContext";
 import { Button } from "react-bootstrap";
 import "react-toastify/dist/ReactToastify.min.css";
 import { ToastContainer, toast } from "react-toastify";
 import secureLocalStorage from "react-secure-storage";
+// import NonceDisplay from "../websocket/NonceDisplay";
 
 const WS_URL = "ws://localhost:5555";
 
@@ -18,28 +21,33 @@ function Mine() {
 	const [node4Running, setNode4Running] = useState(false);
 	const [node5Running, setNode5Running] = useState(false);
 	const [pendingTransactions, setPendingTransactions] = useState([]);
-	const [messages, setMessages] = useState([]);
-	const [nonce, setNonce] = useState(0);
-	// const [isValid, setIsValid] = useState(false);
+	// const [messages, setMessages] = useState([]);
+	const [currentDifficulty, setCurrentDifficulty] = useState(3);
+	const [activeMinerPorts, setActiveMinerPorts] = useState(new Map());
+	const [node1Workers, setNode1Workers] = useState(1);
+	const [node2Workers, setNode2Workers] = useState(1);
+	const [node3Workers, setNode3Workers] = useState(1);
+	const [node4Workers, setNode4Workers] = useState(1);
+	const [node5Workers, setNode5Workers] = useState(1);
 
-	// const startTime = Date.now();
-	// let nonceCount = 0;
+	const [nonce, setNonce] = useState("None");
+	const [hashRate, setHashRate] = useState("");
+	const [receivedHashRate, setReceivedHashRate] = useState("0000.00");
+	// const [intervalId, setIntervalId] = useState(null);
 
-	// useWebSocket(WS_URL, {
-	// 	onOpen: () => {
-	// 		console.log("WebSocket connection established.");
-	// 	},
-	// });
+	const { activePorts, setActivePorts } = useContext(NetworkContext);
 
-	const socket = new WebSocket(WS_URL); // Replace with your server URL
+	const wsRef = useRef();
 
-	/*socket.onmessage = function (event) {
-		const data = JSON.parse(event.data);
-		const nonce = data.nonce;
+	useEffect(() => {
+		const intervalId = setInterval(() => {
+			setHashRate(receivedHashRate);
+		}, 3000);
 
-		setNonce(nonce);
-		// Process the received nonce as needed
-	};*/
+		return () => {
+			clearInterval(intervalId);
+		};
+	}, []);
 
 	useEffect(() => {
 		(async function loadData() {
@@ -53,6 +61,43 @@ function Mine() {
 
 	const nodeToMine = `http://localhost:5555`;
 
+	const connectWebSocket = () => {
+		if (wsRef.current) return; // Prevent connecting multiple times
+
+		wsRef.current = new W3CWebSocket(WS_URL);
+
+		wsRef.current.onerror = () => {
+			console.log("Connection Error");
+		};
+
+		wsRef.current.onopen = () => {
+			console.log("WebSocket connection established.");
+		};
+
+		wsRef.current.onclose = () => {
+			console.log("WebSocket connection closed.");
+			wsRef.current = null;
+			clearInterval(intervalId);
+			setIntervalId(null);
+		};
+
+		wsRef.current.onmessage = event => {
+			const data = JSON.parse(event.data);
+			// const receivedNonce = data.nonce;
+			const receivedDateEnded = data.dateEnded;
+			const receivedHashRate = data.hashRate;
+
+			// setNonce(receivedNonce);
+			setReceivedHashRate(receivedHashRate);
+		};
+	};
+
+	const disconnectWebSocket = () => {
+		if (wsRef.current) {
+			wsRef.current.close();
+		}
+	};
+
 	const handleMineClick = async nodeToMine => {
 		// Check if pending transactions exist
 		if (pendingTransactions.length === 0) {
@@ -62,6 +107,9 @@ function Mine() {
 			});
 			return;
 		} else {
+			// Connect to WebSocket
+			connectWebSocket();
+
 			// Send the request to the node to start mining
 			const config = {
 				headers: {
@@ -71,24 +119,15 @@ function Mine() {
 
 			const body = {
 				minerAddress: secureLocalStorage.getItem("address"),
-				difficulty: 3,
+				difficulty: currentDifficulty,
 			};
 
+			// Start Mining
 			const miningResult = await axios.post(
 				`http://localhost:5555/mine`,
 				body,
 				config
 			);
-
-			socket.onmessage = function (event) {
-				const data = JSON.parse(event.data);
-				const nonce = data.nonce;
-
-				console.log("nonce: ", nonce);
-
-				setNonce(nonce);
-				// Process the received nonce as needed
-			};
 
 			setPendingTransactions([]);
 			const result = miningResult.data.message;
@@ -103,42 +142,131 @@ function Mine() {
 	};
 
 	const handleNode1 = () => {
-		if (!node1Running) {
-			setNode1Running(true);
+		if (activePorts.includes(5555)) {
+			if (!node1Running) {
+				setNode1Running(true);
+				console.log("workers: ", node1Workers);
+				setActiveMinerPorts(prevMap =>
+					new Map(prevMap).set(5555, node1Workers)
+				);
+				// console.log([...activeMinerPorts.entries()]);
+			} else {
+				setNode1Running(false);
+				setActiveMinerPorts(prevMap => {
+					const newMap = new Map(prevMap);
+					newMap.delete(5555);
+					console.log("delete");
+					return newMap;
+				});
+				// console.log([...activeMinerPorts.entries()]);
+			}
 		} else {
-			setNode1Running(false);
+			toast.error("Node 1 is not an Active Port!", {
+				position: "top-right",
+				theme: "light",
+			});
 		}
 	};
 
 	const handleNode2 = () => {
-		if (!node2Running) {
-			setNode2Running(true);
+		if (activePorts.includes(5556)) {
+			if (!node2Running) {
+				setNode2Running(true);
+				setActiveMinerPorts(prevMap =>
+					new Map(prevMap).set(5556, node2Workers)
+				);
+			} else {
+				setNode2Running(false);
+				setActiveMinerPorts(prevMap => {
+					const newMap = new Map(prevMap);
+					newMap.delete(5556);
+					console.log("delete");
+					return newMap;
+				});
+				// console.log([...activeMinerPorts.entries()]);
+			}
 		} else {
-			setNode2Running(false);
+			toast.error("Node 2 is not an Active Port!", {
+				position: "top-right",
+				theme: "light",
+			});
 		}
 	};
 
 	const handleNode3 = () => {
-		if (!node3Running) {
-			setNode3Running(true);
+		if (activePorts.includes(5557)) {
+			if (!node3Running) {
+				setNode3Running(true);
+				setActiveMinerPorts(prevMap =>
+					new Map(prevMap).set(5557, node3Workers)
+				);
+				console.log("Test:" + activeMinerPorts);
+				console.log([...activeMinerPorts.entries()]);
+			} else {
+				setNode3Running(false);
+				setActiveMinerPorts(prevMap => {
+					const newMap = new Map(prevMap);
+					newMap.delete(5557);
+					console.log("delete");
+					return newMap;
+				});
+				// console.log([...activeMinerPorts.entries()]);
+			}
 		} else {
-			setNode3Running(false);
+			toast.error("Node 3 is not an Active Port!", {
+				position: "top-right",
+				theme: "light",
+			});
 		}
 	};
 
 	const handleNode4 = () => {
-		if (!node4Running) {
-			setNode4Running(true);
+		if (activePorts.includes(5558)) {
+			if (!node4Running) {
+				setNode4Running(true);
+				setActiveMinerPorts(prevMap =>
+					new Map(prevMap).set(5558, node4Workers)
+				);
+			} else {
+				setNode4Running(false);
+				setActiveMinerPorts(prevMap => {
+					const newMap = new Map(prevMap);
+					newMap.delete(5558);
+					console.log("delete");
+					return newMap;
+				});
+				// console.log([...activeMinerPorts.entries()]);
+			}
 		} else {
-			setNode4Running(false);
+			toast.error("Node 4 is not an Active Port!", {
+				position: "top-right",
+				theme: "light",
+			});
 		}
 	};
 
 	const handleNode5 = () => {
-		if (!node5Running) {
-			setNode5Running(true);
+		if (activePorts.includes(5559)) {
+			if (!node5Running) {
+				setNode5Running(true);
+				setActiveMinerPorts(prevMap =>
+					new Map(prevMap).set(5559, node5Workers)
+				);
+			} else {
+				setNode5Running(false);
+				setActiveMinerPorts(prevMap => {
+					const newMap = new Map(prevMap);
+					newMap.delete(5559);
+					console.log("delete");
+					return newMap;
+				});
+				// console.log([...activeMinerPorts.entries()]);
+			}
 		} else {
-			setNode5Running(false);
+			toast.error("Node 5 is not an Active Port!", {
+				position: "top-right",
+				theme: "light",
+			});
 		}
 	};
 
@@ -153,11 +281,6 @@ function Mine() {
 			/>
 			<h1>Mine</h1>
 
-			{/* {activePorts.length > 0 ? (
-        <h3 className="center-text">Active Ports: {activePorts.join(", ")}</h3>
-      ) : (
-        <h3 className="center-text">Active Ports: None</h3>
-      )} */}
 			<div className="center-img">
 				<img
 					style={{ width: 225, height: 200 }}
@@ -177,29 +300,27 @@ function Mine() {
 					</span>
 				</h5>
 				<h5 className="center-text">
-					Current Difficulty:<span style={{ fontSize: 16 }}> 3</span>
+					<span>Set Current Difficulty: </span>
+					<input
+						type="number"
+						defaultValue="3"
+						min="1"
+						max="6"
+						style={{
+							width: 40,
+							height: 24,
+							backdropFilter: blur(5),
+							// show 1px border
+							border: "2px solid rgba(255, 255, 255, 0.18)",
+							backgroundColor: "transparent",
+						}}
+						onChange={e => setCurrentDifficulty(e.target.value)}
+					/>
 				</h5>
-				<h5 className="center-text">
-					Winning Miner:<span style={{ fontSize: 16 }}> TBD</span>
-				</h5>
-			</div>
-			<br />
 
-			<div className="bg-glass-0">
-				<div>
-					{/* <ul>
-					{messages.map((message, index) => (
-						<li key={index}>
-							test
-							<strong>{message.source}: </strong>
-							{message.data}
-						</li>
-					))}
-				</ul> */}
-					<h5 className="center-text">
-						Test:<span style={{ fontSize: 16 }}>{nonce}</span>
-					</h5>
-				</div>
+				<h5 className="center-text">
+					Successful Miner: <span style={{ fontSize: 16 }}>{null}</span>
+				</h5>
 			</div>
 			<br />
 
@@ -260,14 +381,18 @@ function Mine() {
 									style={{
 										width: 40,
 										backdropFilter: blur(5),
-										border: "none",
+										border: "1.6px solid rgba(255, 255, 255, 0.18)",
 										backgroundColor: "transparent",
 									}}
+									onChange={e => setNode1Workers(e.target.value)}
+									disabled={node1Running ? "disabled" : ""}
 								/>
 								<span>
 									&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 								</span>
-								<span>{node1Running ? "268.75 H/s" : "000.00 H/s"}</span>
+								{/* <span>{node1Running ? "268.75 H/s" : "000.00 H/s"}</span> */}
+								<span className="text-hash">{receivedHashRate}</span>
+								<span className="text-hs">&nbsp;&nbsp;H/s</span>
 								<span>
 									&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 								</span>
@@ -309,14 +434,22 @@ function Mine() {
 									style={{
 										width: 40,
 										backdropFilter: blur(5),
-										border: "none",
+										border: "1.6px solid rgba(255, 255, 255, 0.18)",
 										backgroundColor: "transparent",
 									}}
+									onChange={e => setNode2Workers(e.target.value)}
+									disabled={node2Running ? "disabled" : ""}
 								/>
 								<span>
 									&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 								</span>
-								<span>{node2Running ? "333.33 H/s" : "000.00 H/s"}</span>
+
+								<span className="text-hash">
+									{node2Running ? { receivedHashRate } : "0000.00"}
+								</span>
+								{/* <span className="text-hash">{receivedHashRate}</span> */}
+								<span className="text-hs">&nbsp;&nbsp;H/s</span>
+
 								<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
 								<div className="btn-justify-end">
 									<Button
@@ -356,9 +489,11 @@ function Mine() {
 									style={{
 										width: 40,
 										backdropFilter: blur(5),
-										border: "none",
+										border: "1.6px solid rgba(255, 255, 255, 0.18)",
 										backgroundColor: "transparent",
 									}}
+									onChange={e => setNode3Workers(e.target.value)}
+									disabled={node3Running ? "disabled" : ""}
 								/>
 								<span>
 									&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -403,9 +538,11 @@ function Mine() {
 									style={{
 										width: 40,
 										backdropFilter: blur(5),
-										border: "none",
+										border: "1.6px solid rgba(255, 255, 255, 0.18)",
 										backgroundColor: "transparent",
 									}}
+									onChange={e => setNode4Workers(e.target.value)}
+									disabled={node4Running ? "disabled" : ""}
 								/>
 								<span>
 									&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -450,9 +587,11 @@ function Mine() {
 									style={{
 										width: 40,
 										backdropFilter: blur(5),
-										border: "none",
+										border: "1.6px solid rgba(255, 255, 255, 0.18)",
 										backgroundColor: "transparent",
 									}}
+									onChange={e => setNode5Workers(e.target.value)}
+									disabled={node5Running ? "disabled" : ""}
 								/>
 								<span>
 									&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -487,9 +626,15 @@ function Mine() {
 			<br />
 			<div className="center-btn">
 				<Button
-					style={{ marginLeft: 20 }}
+					style={{
+						height: 36,
+						paddingTop: 5,
+						textAlign: "center",
+						marginLeft: 20,
+					}}
 					key="uniqueKey2"
 					onClick={handleMineClick}
+					// onClick={() => console.log(activeMinerPorts)}
 					type="submit"
 					variant="primary"
 					size="lg"

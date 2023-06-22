@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
+import { disableReactDevTools } from "@fvilers/disable-react-devtools";
 import {
 	createBrowserRouter,
 	RouterProvider,
@@ -19,6 +20,8 @@ import Nodes from "./pages/Nodes";
 import TransactionDetails from "./pages/TransactionDetails";
 import BlockDetails from "./pages/BlockDetails";
 import AddressDetails from "./pages/AddressDetails";
+
+disableReactDevTools();
 
 const Layout = () => {
 	const [activePorts, setActivePorts] = useState([]);
