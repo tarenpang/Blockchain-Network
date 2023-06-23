@@ -30,6 +30,7 @@ function Mine() {
 	const [node4Workers, setNode4Workers] = useState(1);
 	const [node5Workers, setNode5Workers] = useState(1);
 
+	const [numberOfThreads, setNumberOfThreads] = useState(0);
 	const [nonce, setNonce] = useState("None");
 	const [hashRate, setHashRate] = useState("");
 	const [receivedHashRate, setReceivedHashRate] = useState("0000.00");
@@ -375,7 +376,7 @@ function Mine() {
 								</span>
 								<input
 									type="number"
-									defaultValue="1"
+									defaultValue="0"
 									min="1"
 									max="4"
 									style={{
@@ -428,7 +429,7 @@ function Mine() {
 								</span>
 								<input
 									type="number"
-									defaultValue="1"
+									defaultValue="0"
 									min="1"
 									max="4"
 									style={{
@@ -483,7 +484,7 @@ function Mine() {
 								</span>
 								<input
 									type="number"
-									defaultValue="1"
+									defaultValue="0"
 									min="1"
 									max="4"
 									style={{
@@ -532,7 +533,7 @@ function Mine() {
 								</span>
 								<input
 									type="number"
-									defaultValue="1"
+									defaultValue="0"
 									min="1"
 									max="4"
 									style={{
@@ -581,7 +582,7 @@ function Mine() {
 								</span>
 								<input
 									type="number"
-									defaultValue="1"
+									defaultValue="0"
 									min="1"
 									max="4"
 									style={{
