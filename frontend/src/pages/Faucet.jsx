@@ -17,7 +17,6 @@ function Faucet() {
 	const [value, setValue] = useState("");
 	const [balance, setBalance] = useState("");
 	const [walletBalance, setWalletBalance] = useState("");
-	const [canTransact, setCanTransact] = useState(true);
 	const [timeoutSeconds, setTimeoutSeconds] = useState(transactionTimeout);
 	const [donationValue, setDonationValue] = useState("");
 	const [signedTx, setSignedTx] = useState("");
@@ -27,18 +26,6 @@ function Faucet() {
 	const [isLoggedIn, setIsLoggedIn] = useState(
 		secureLocalStorage.getItem("loggedIn")
 	);
-
-	// useEffect(() => {
-	// 	let interval;
-	// 	if (!canTransact) {
-	// 		interval = setInterval(() => {
-	// 			setTimeoutSeconds((prevSeconds) => prevSeconds - 1);
-	// 		}, 1000);
-	// 	}
-	// 	return () => {
-	// 		clearInterval(interval);
-	// 	};
-	// }, [canTransact]);
 
 	useEffect(() => {
 		(async function loadData() {
@@ -54,10 +41,6 @@ function Faucet() {
 			setWalletBalance(walletBalance.data);
 		})();
 	}, []);
-	//Enable transactions after the timeout duration
-	// setTimeout(() => {
-	// 	setCanTransact(true);
-	// }, transactionTimeout * 1000);
 
 	function signData(data, privKey) {
 		const secp256k1 = new elliptic("secp256k1");
@@ -115,14 +98,6 @@ function Faucet() {
 			return;
 		}
 
-		if (!canTransact) {
-			toast.error("Must wait 90 seconds between faucet withdraws!", {
-				position: "top-right",
-				theme: "light",
-			});
-			return;
-		}
-
 		let faucetFrom = "732ad3cf41bd1d99a346af99501015b5fa2c256d";
 		let faucetPubKey =
 			"f35c1ba73028d161274b0988bb1b855866b051f8456819cbf1cc9a3bae6923ef0";
@@ -160,10 +135,6 @@ function Faucet() {
 		});
 		let tranSend = signedTransaction;
 		sendTransaction(tranSend);
-		setCanTransact(false);
-		setTimeout(() => {
-			setCanTransact(true);
-		}, transactionTimeout * 1000);
 	};
 	const sendTransaction = async signedTx => {
 		try {
@@ -295,14 +266,6 @@ function Faucet() {
 		}
 	};
 
-	/* Disable transactions for the timeout duration
-  setCanTransact(false);
-  setTimeoutSeconds(transactionTimeout);
-  // Enable transactions after the timeout duration
-  setTimeout(() => {
-    setCanTransact(true);
-  }, transactionTimeout * 1000);
-  */
 	return (
 		<div>
 			<ToastContainer

@@ -7,6 +7,7 @@ const Blockchain = require("./blockchain");
 const Config = require("./utils/config");
 const http = require("http");
 const { WebSocket, WebSocketServer } = require("ws");
+const { Worker } = require("worker_threads");
 const uuidv4 = require("uuid").v4;
 
 // const nodeId =
@@ -117,15 +118,6 @@ app.get("/block/:blockHash", (req, res) => {
 	else
 		res.status(StatusCodes.NOT_FOUND).json({ errorMsg: "Invalid block hash" });
 });
-
-// Get Block by Index
-// app.get("/block/:index", (req, res) => {
-// 	let index = req.params.index;
-// 	let block = blockchain.blocks[index];
-// 	if (block) res.json(block);
-// 	else
-// 		res.status(StatusCodes.NOT_FOUND).json({ errorMsg: "Invalid block index" });
-// });
 
 // Create a New Transaction
 app.post("/transaction", function (req, res) {
@@ -248,36 +240,6 @@ app.get("/address/:address/balance", (req, res) => {
 });
 
 // Mine the Pending Transactions
-/*app.post("/mine", function (req, res) {
-	const { minerAddress, difficulty } = req.body;
-	const newBlock = blockchain.mineNextBlock(minerAddress, difficulty, wsServer);
-	console.log("newBlock: ", newBlock);
-
-	// broadcast the new block to other nodes
-	const axiosPromises = [];
-	blockchain.peersMap.forEach((url, nodeId) => {
-		const requestOptions = {
-			url: `${url}/blockchain/add-block`,
-			method: "POST",
-			data: { newBlock },
-			headers: { "Content-Type": "application/json" },
-		};
-		axiosPromises.push(axios(requestOptions));
-	});
-	console.log("axiosPromises: ", axiosPromises);
-
-	Promise.all(axiosPromises)
-		.then(() => {
-			res.json({
-				message: "New block mined and broadcasted successfully",
-				block: newBlock,
-			});
-		})
-		.catch(err => res.status(400).json({ error: err.message }));
-});*/
-
-// Mine the Pending Transactions
-// Only Successful Node will Add Pending TXs to Blockchain + Receive Reward + TX Fee
 app.post("/mine", function (req, res) {
 	const { minerAddress, difficulty } = req.body;
 
