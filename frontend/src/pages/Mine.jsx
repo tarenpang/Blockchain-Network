@@ -1,18 +1,13 @@
 import "../../custom.css";
 import React from "react";
 import { useState, useEffect, useContext, useRef } from "react";
-import WebSocket, { w3cwebsocket as W3CWebSocket } from "websocket";
-// import useWebSocket, { ReadyState } from "react-use-websocket";
-// import WebSocketService from "../WebSocketService";
+import { w3cwebsocket as W3CWebSocket } from "websocket";
 import axios from "axios";
 import { NetworkContext } from "../context/NetworkContext";
 import { Button } from "react-bootstrap";
 import "react-toastify/dist/ReactToastify.min.css";
 import { ToastContainer, toast } from "react-toastify";
 import secureLocalStorage from "react-secure-storage";
-// import NonceDisplay from "../websocket/NonceDisplay";
-
-const WS_URL = "ws://localhost:5555";
 
 function Mine() {
 	const [node1Running, setNode1Running] = useState(false);
@@ -20,35 +15,44 @@ function Mine() {
 	const [node3Running, setNode3Running] = useState(false);
 	const [node4Running, setNode4Running] = useState(false);
 	const [node5Running, setNode5Running] = useState(false);
+
+	const [node1Workers, setNode1Workers] = useState(0);
+	const [node2Workers, setNode2Workers] = useState(0);
+	const [node3Workers, setNode3Workers] = useState(0);
+	const [node4Workers, setNode4Workers] = useState(0);
+	const [node5Workers, setNode5Workers] = useState(0);
+
 	const [pendingTransactions, setPendingTransactions] = useState([]);
-	// const [messages, setMessages] = useState([]);
 	const [currentDifficulty, setCurrentDifficulty] = useState(3);
 	const [activeMinerPorts, setActiveMinerPorts] = useState(new Map());
-	const [node1Workers, setNode1Workers] = useState(1);
-	const [node2Workers, setNode2Workers] = useState(1);
-	const [node3Workers, setNode3Workers] = useState(1);
-	const [node4Workers, setNode4Workers] = useState(1);
-	const [node5Workers, setNode5Workers] = useState(1);
-
 	const [numberOfThreads, setNumberOfThreads] = useState(0);
 	const [nonce, setNonce] = useState("None");
-	const [hashRate, setHashRate] = useState("");
-	const [receivedHashRate, setReceivedHashRate] = useState("0000.00");
-	// const [intervalId, setIntervalId] = useState(null);
+
+	const [hashRate, setHashRate] = useState("0000.00");
+	// const [receivedHashRate, setReceivedHashRate] = useState("0000.00");
+	const [receivedHashRates, setReceivedHashRates] = useState(new Map());
+	const [receivedHashRatesInterval, setReceivedHashRatesInterval] =
+		useState(null);
 
 	const { activePorts, setActivePorts } = useContext(NetworkContext);
 
-	const wsRef = useRef();
+	// const wsRef = useRef();
+	const urls = [];
+	const websockets = urls.map(url => new W3CWebSocket(url));
 
 	useEffect(() => {
 		const intervalId = setInterval(() => {
-			setHashRate(receivedHashRate);
+			for (let i = 0; i < websockets.length; i++) {
+				const websocket = websockets[i];
+				const port = Array.from(activeMinerPorts.keys())[i];
+				websocket.send(JSON.stringify({ command: "getHashRate" }));
+			}
 		}, 3000);
 
 		return () => {
 			clearInterval(intervalId);
 		};
-	}, []);
+	}, [activeMinerPorts]);
 
 	useEffect(() => {
 		(async function loadData() {
@@ -59,45 +63,6 @@ function Mine() {
 			setPendingTransactions(pendingTransactions.data.reverse().slice(0, 10));
 		})();
 	}, []);
-
-	const nodeToMine = `http://localhost:5555`;
-
-	const connectWebSocket = () => {
-		if (wsRef.current) return; // Prevent connecting multiple times
-
-		wsRef.current = new W3CWebSocket(WS_URL);
-
-		wsRef.current.onerror = () => {
-			console.log("Connection Error");
-		};
-
-		wsRef.current.onopen = () => {
-			console.log("WebSocket connection established.");
-		};
-
-		wsRef.current.onclose = () => {
-			console.log("WebSocket connection closed.");
-			wsRef.current = null;
-			clearInterval(intervalId);
-			setIntervalId(null);
-		};
-
-		wsRef.current.onmessage = event => {
-			const data = JSON.parse(event.data);
-			// const receivedNonce = data.nonce;
-			const receivedDateEnded = data.dateEnded;
-			const receivedHashRate = data.hashRate;
-
-			// setNonce(receivedNonce);
-			setReceivedHashRate(receivedHashRate);
-		};
-	};
-
-	const disconnectWebSocket = () => {
-		if (wsRef.current) {
-			wsRef.current.close();
-		}
-	};
 
 	const handleMineClick = async nodeToMine => {
 		// Check if pending transactions exist
@@ -118,48 +83,136 @@ function Mine() {
 				},
 			};
 
-			const body = {
-				minerAddress: secureLocalStorage.getItem("address"),
-				difficulty: currentDifficulty,
-			};
+			let promises = [];
+			let isResolved = false;
+			const cancelTokenSource = axios.CancelToken.source();
 
-			// Start Mining
-			const miningResult = await axios.post(
-				`http://localhost:5555/mine`,
-				body,
-				config
-			);
-
-			setPendingTransactions([]);
-			const result = miningResult.data.message;
-
-			if (miningResult) {
-				toast.success(result, {
-					position: "top-right",
-					theme: "light",
+			for (const [key, value] of activeMinerPorts.entries()) {
+				const body = {
+					minerAddress: value,
+					difficulty: currentDifficulty,
+				};
+				let miningResult = axios.post(`http://localhost:${key}/mine`, body, {
+					config,
+					cancelToken: cancelTokenSource.token,
 				});
+
+				const promise = new Promise((resolve, reject) => {
+					miningResult.then(resolve).catch(reject);
+				});
+
+				setPendingTransactions([]);
+				// const result = miningResult.data.message;
+
+				if (miningResult) {
+					toast.success(key, {
+						position: "top-right",
+						theme: "light",
+					});
+				}
+				promises.push(promise);
 			}
+			// Promise.race(promises).then(function(values) {
+			// 	console.log("values" + values);
+			//   });
+			Promise.race(promises)
+				.then(function (response) {
+					console.log("Fastest response:", response);
+				})
+				.catch(function (error) {
+					if (axios.isCancel(error)) {
+						console.log("Request cancelled:", error.message);
+					} else {
+						console.error("Error:", error);
+					}
+				});
 		}
 	};
 
-	const handleNode1 = () => {
+	const connectWebSocket = () => {
+		// Connect to WebSocket
+		const urls = [];
+		activeMinerPorts.forEach((address, port) => {
+			urls.push(`ws://localhost:${port}`);
+		});
+
+		const receivedHashRatesMap = new Map();
+		const promises = [];
+		const websockets = urls.map(url => new WebSocket(url));
+
+		// Clear the previous interval (if any)
+		const previousInterval = receivedHashRatesInterval;
+		if (previousInterval !== null) {
+			clearInterval(previousInterval);
+		}
+
+		// Reset the receivedHashRates map
+		setReceivedHashRates(new Map());
+
+		for (let i = 0; i < websockets.length; i++) {
+			const websocket = websockets[i];
+			const port = Array.from(activeMinerPorts.keys())[i];
+
+			const promise = new Promise((resolve, reject) => {
+				websocket.onerror = () => {
+					reject(new Error("Connection Error"));
+				};
+
+				websocket.onopen = () => {
+					console.log(`WebSocket connection established for port ${port}`);
+				};
+
+				websocket.onclose = () => {
+					console.log(`WebSocket connection closed for port ${port}`);
+					resolve();
+				};
+
+				websocket.onmessage = event => {
+					const data = JSON.parse(event.data);
+					const receivedHashRate = data.hashRate;
+					setReceivedHashRates(prevHashRates => {
+						const updatedHashRates = new Map(prevHashRates);
+						updatedHashRates.set(port, receivedHashRate);
+						return updatedHashRates;
+					});
+					setHashRate(receivedHashRate);
+				};
+			});
+
+			promises.push(promise);
+		}
+
+		return () => {
+			// Clean up WebSocket connections and interval when component unmounts
+			websockets.forEach(websocket => websocket.close());
+			clearInterval(intervalId);
+		};
+	};
+
+	const handleNode1 = async () => {
 		if (activePorts.includes(5555)) {
 			if (!node1Running) {
 				setNode1Running(true);
 				console.log("workers: ", node1Workers);
 				setActiveMinerPorts(prevMap =>
-					new Map(prevMap).set(5555, node1Workers)
+					new Map(prevMap).set(5555, "538fc05fd0e0c92a03189844f1f4938605154988")
 				);
-				// console.log([...activeMinerPorts.entries()]);
+				try {
+					await axios.post("http://localhost:5555/spawn-worker-threads", {
+						numberOfThreads,
+					});
+					console.log("Worker threads spawned successfully.");
+				} catch (error) {
+					console.error("Error while spawning worker threads:", error);
+				}
 			} else {
 				setNode1Running(false);
 				setActiveMinerPorts(prevMap => {
 					const newMap = new Map(prevMap);
 					newMap.delete(5555);
-					console.log("delete");
+					console.log("Node 1 has been disabled.");
 					return newMap;
 				});
-				// console.log([...activeMinerPorts.entries()]);
 			}
 		} else {
 			toast.error("Node 1 is not an Active Port!", {
@@ -169,19 +222,28 @@ function Mine() {
 		}
 	};
 
-	const handleNode2 = () => {
+	const handleNode2 = async () => {
 		if (activePorts.includes(5556)) {
 			if (!node2Running) {
 				setNode2Running(true);
+				console.log("workers: ", node2Workers);
 				setActiveMinerPorts(prevMap =>
-					new Map(prevMap).set(5556, node2Workers)
+					new Map(prevMap).set(5556, "2fddcc7a8d6b888497ea60aa0079d3ba0da170dd")
 				);
+				try {
+					await axios.post("http://localhost:5556/spawn-worker-threads", {
+						numberOfThreads,
+					});
+					console.log("Worker threads spawned successfully.");
+				} catch (error) {
+					console.error("Error while spawning worker threads:", error);
+				}
 			} else {
 				setNode2Running(false);
 				setActiveMinerPorts(prevMap => {
 					const newMap = new Map(prevMap);
 					newMap.delete(5556);
-					console.log("delete");
+					console.log("Node 2 has been disabled.");
 					return newMap;
 				});
 				// console.log([...activeMinerPorts.entries()]);
@@ -194,13 +256,22 @@ function Mine() {
 		}
 	};
 
-	const handleNode3 = () => {
+	const handleNode3 = async () => {
 		if (activePorts.includes(5557)) {
 			if (!node3Running) {
 				setNode3Running(true);
+				console.log("workers: ", node3Workers);
 				setActiveMinerPorts(prevMap =>
-					new Map(prevMap).set(5557, node3Workers)
+					new Map(prevMap).set(5557, "2b798f6d6e8dce62f73a85f9447f4626af969cdd")
 				);
+				try {
+					await axios.post("http://localhost:5557/spawn-worker-threads", {
+						numberOfThreads,
+					});
+					console.log("Worker threads spawned successfully.");
+				} catch (error) {
+					console.error("Error while spawning worker threads:", error);
+				}
 				console.log("Test:" + activeMinerPorts);
 				console.log([...activeMinerPorts.entries()]);
 			} else {
@@ -208,7 +279,7 @@ function Mine() {
 				setActiveMinerPorts(prevMap => {
 					const newMap = new Map(prevMap);
 					newMap.delete(5557);
-					console.log("delete");
+					console.log("Node 3 has been disabled.");
 					return newMap;
 				});
 				// console.log([...activeMinerPorts.entries()]);
@@ -221,19 +292,28 @@ function Mine() {
 		}
 	};
 
-	const handleNode4 = () => {
+	const handleNode4 = async () => {
 		if (activePorts.includes(5558)) {
 			if (!node4Running) {
 				setNode4Running(true);
+				console.log("workers: ", node4Workers);
 				setActiveMinerPorts(prevMap =>
-					new Map(prevMap).set(5558, node4Workers)
+					new Map(prevMap).set(5558, "e38b9313293c7e3772900a38a4b1a39900d11db7")
 				);
+				try {
+					await axios.post("http://localhost:5558/spawn-worker-threads", {
+						numberOfThreads,
+					});
+					console.log("Worker threads spawned successfully.");
+				} catch (error) {
+					console.error("Error while spawning worker threads:", error);
+				}
 			} else {
 				setNode4Running(false);
 				setActiveMinerPorts(prevMap => {
 					const newMap = new Map(prevMap);
 					newMap.delete(5558);
-					console.log("delete");
+					console.log("Node 4 has been disabled.");
 					return newMap;
 				});
 				// console.log([...activeMinerPorts.entries()]);
@@ -246,19 +326,28 @@ function Mine() {
 		}
 	};
 
-	const handleNode5 = () => {
+	const handleNode5 = async () => {
 		if (activePorts.includes(5559)) {
 			if (!node5Running) {
 				setNode5Running(true);
+				console.log("workers: ", node5Workers);
 				setActiveMinerPorts(prevMap =>
-					new Map(prevMap).set(5559, node5Workers)
+					new Map(prevMap).set(5559, "e38b9313293c7e3772900a38a4b1a39900d11db7")
 				);
+				try {
+					await axios.post("http://localhost:5559/spawn-worker-threads", {
+						numberOfThreads,
+					});
+					console.log("Worker threads spawned successfully.");
+				} catch (error) {
+					console.error("Error while spawning worker threads:", error);
+				}
 			} else {
 				setNode5Running(false);
 				setActiveMinerPorts(prevMap => {
 					const newMap = new Map(prevMap);
 					newMap.delete(5559);
-					console.log("delete");
+					console.log("Node 5 has been disabled.");
 					return newMap;
 				});
 				// console.log([...activeMinerPorts.entries()]);
@@ -377,8 +466,8 @@ function Mine() {
 								<input
 									type="number"
 									defaultValue="0"
-									min="1"
-									max="4"
+									min="0"
+									max="8"
 									style={{
 										width: 40,
 										backdropFilter: blur(5),
@@ -391,9 +480,17 @@ function Mine() {
 								<span>
 									&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 								</span>
-								{/* <span>{node1Running ? "268.75 H/s" : "000.00 H/s"}</span> */}
-								<span className="text-hash">{receivedHashRate}</span>
+
+								{receivedHashRates.has(5555) ? (
+									<span className="text-hash">
+										{receivedHashRates.get(5555)}
+									</span>
+								) : (
+									<span className="text-hash">0000.00</span>
+								)}
+
 								<span className="text-hs">&nbsp;&nbsp;H/s</span>
+
 								<span>
 									&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 								</span>
@@ -430,8 +527,8 @@ function Mine() {
 								<input
 									type="number"
 									defaultValue="0"
-									min="1"
-									max="4"
+									min="0"
+									max="8"
 									style={{
 										width: 40,
 										backdropFilter: blur(5),
@@ -445,10 +542,14 @@ function Mine() {
 									&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 								</span>
 
-								<span className="text-hash">
-									{node2Running ? { receivedHashRate } : "0000.00"}
-								</span>
-								{/* <span className="text-hash">{receivedHashRate}</span> */}
+								{receivedHashRates.has(5556) ? (
+									<span className="text-hash">
+										{receivedHashRates.get(5556)}
+									</span>
+								) : (
+									<span className="text-hash">0000.00</span>
+								)}
+
 								<span className="text-hs">&nbsp;&nbsp;H/s</span>
 
 								<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
@@ -485,8 +586,8 @@ function Mine() {
 								<input
 									type="number"
 									defaultValue="0"
-									min="1"
-									max="4"
+									min="0"
+									max="8"
 									style={{
 										width: 40,
 										backdropFilter: blur(5),
@@ -499,7 +600,17 @@ function Mine() {
 								<span>
 									&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 								</span>
-								<span>{node3Running ? "268.77 H/s" : "000.00 H/s"}</span>
+
+								{receivedHashRates.has(5557) ? (
+									<span className="text-hash">
+										{receivedHashRates.get(5557)}
+									</span>
+								) : (
+									<span className="text-hash">0000.00</span>
+								)}
+
+								<span className="text-hs">&nbsp;&nbsp;H/s</span>
+
 								<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
 								<div className="btn-justify-end">
 									<Button
@@ -534,8 +645,8 @@ function Mine() {
 								<input
 									type="number"
 									defaultValue="0"
-									min="1"
-									max="4"
+									min="0"
+									max="8"
 									style={{
 										width: 40,
 										backdropFilter: blur(5),
@@ -548,7 +659,17 @@ function Mine() {
 								<span>
 									&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 								</span>
-								<span>{node4Running ? "268.78 H/s" : "000.00 H/s"}</span>
+
+								{receivedHashRates.has(5558) ? (
+									<span className="text-hash">
+										{receivedHashRates.get(5558)}
+									</span>
+								) : (
+									<span className="text-hash">0000.00</span>
+								)}
+
+								<span className="text-hs">&nbsp;&nbsp;H/s</span>
+
 								<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
 								<div className="btn-justify-end">
 									<Button
@@ -583,8 +704,8 @@ function Mine() {
 								<input
 									type="number"
 									defaultValue="0"
-									min="1"
-									max="4"
+									min="0"
+									max="8"
 									style={{
 										width: 40,
 										backdropFilter: blur(5),
@@ -597,7 +718,17 @@ function Mine() {
 								<span>
 									&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 								</span>
-								<span>{node5Running ? "268.79 H/s" : "000.00 H/s"}</span>
+
+								{receivedHashRates.has(5559) ? (
+									<span className="text-hash">
+										{receivedHashRates.get(5559)}
+									</span>
+								) : (
+									<span className="text-hash">0000.00</span>
+								)}
+
+								<span className="text-hs">&nbsp;&nbsp;H/s</span>
+
 								<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
 								<div className="btn-justify-end">
 									<Button

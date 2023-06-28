@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import Card from "react-bootstrap/Card";
 import { Button, Form, InputGroup } from "react-bootstrap";
 import axios from "axios";
@@ -7,6 +7,7 @@ import CryptoJS from "crypto-js";
 import secureLocalStorage from "react-secure-storage";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { NetworkContext } from "../context/NetworkContext";
 
 var elliptic = EC.ec;
 var secp256k1 = new elliptic("secp256k1");
@@ -26,6 +27,7 @@ function Faucet() {
 	const [isLoggedIn, setIsLoggedIn] = useState(
 		secureLocalStorage.getItem("loggedIn")
 	);
+	const { activePorts, setActivePorts } = useContext(NetworkContext);
 
 	useEffect(() => {
 		(async function loadData() {
@@ -143,11 +145,25 @@ function Faucet() {
 					"Content-Type": "application/json",
 				},
 			};
-			let result = await axios.post(
-				`http://localhost:5555/transaction`,
-				signedTx,
-				config
-			);
+
+			let promises = [];
+			activePorts.forEach(async port => {
+				let result = await axios.post(
+					`http://localhost:${port}/transaction`,
+					signedTx,
+					config
+				);
+				promises.push(result);
+			});
+			Promise.all(promises).then(function (values) {
+				console.log("values" + values);
+			});
+
+			// let result = await axios.post(
+			// 	`http://localhost:5555/transaction`,
+			// 	signedTx,
+			// 	config
+			// );
 			const error = result.data.error;
 			if (error) {
 				console.log("error" + error);
@@ -242,11 +258,25 @@ function Faucet() {
 					"Content-Type": "application/json",
 				},
 			};
-			let result = await axios.post(
-				`http://localhost:5555/transaction`,
-				signedDonoTran,
-				config
-			);
+
+			let promises = [];
+			activePorts.forEach(async port => {
+				let result = await axios.post(
+					`http://localhost:${port}/transaction`,
+					signedDonoTran,
+					config
+				);
+				promises.push(result);
+			});
+			Promise.all(promises).then(function (values) {
+				console.log("values" + values);
+			});
+
+			// let result = await axios.post(
+			// 	`http://localhost:5555/transaction`,
+			// 	signedDonoTran,
+			// 	config
+			// );
 			const error = result.data.error;
 			if (error) {
 				console.log("error" + error);
@@ -298,9 +328,6 @@ function Faucet() {
 								&#8226;&nbsp;IndiGOLD Faucet is a Free Service for Crypto
 								Tokens.
 							</p>
-							{/* <p className="ln-ht">
-								&#8226;&nbsp;User must wait 90 seconds between withdrawals.
-							</p> */}
 							<p className="ln-ht">
 								&#8226;&nbsp;Withdrawal must be between 100-1000 coins.
 							</p>

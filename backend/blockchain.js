@@ -485,6 +485,7 @@ Blockchain.prototype.mineNextBlock = function (
 		let currentTime = Date.now();
 		let elapsedTime = (currentTime - startTime) / 1000; // Elapsed time in seconds
 		hashRate = nextBlock.nonce / elapsedTime;
+		console.log("hashRate: ", hashRate);
 
 		// Send hash rate over WebSocket server
 		wsServer.clients.forEach(client => {
@@ -748,14 +749,6 @@ Blockchain.prototype.broadcastNewBlockToPeers = function () {
 Blockchain.prototype.syncBlockchainFromPeerChain = async function (
 	peerChainInfo
 ) {
-	// console.log("peerChainInfo Sync Chain", peerChainInfo);
-	// console.log("Cumulative Difficulty", peerChainInfo.cumulativeDifficulty);
-
-	// Check Peer's Cumulative Difficulty in GET /info
-	// if (peerChainInfo.cumulativeDifficulty === undefined) {
-	//   return { errorMsg: "Peer's cumulative difficulty is undefined" };
-	// }
-
 	// Calc and compare cumulative difficulties
 	let currentChainCumulativeDifficulty = this.calcCumulativeDifficulty();
 	let peerChainCumulativeDifficulty = peerChainInfo.cumulativeDifficulty;
