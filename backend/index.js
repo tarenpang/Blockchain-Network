@@ -10,8 +10,9 @@ const { WebSocket, WebSocketServer } = require("ws");
 const { Worker } = require("worker_threads");
 const uuidv4 = require("uuid").v4;
 
-// const nodeId =
-// 	new Date().getTime().toString(16) + Math.random().toString(16).substring(2);
+const OS = require("os");
+process.env.UV_THREADPOOL_SIZE = OS.cpus().length;
+
 const host = "http://localhost";
 const port = process.argv[2];
 const rootNodeUrl = `${host}:5555`;
@@ -239,12 +240,33 @@ app.get("/address/:address/balance", (req, res) => {
 	res.json(balance);
 });
 
+// Spin Up Desired Number of Worker Threads
+app.post("/spawn-worker-threads", (req, res) => {
+	const numberOfThreads = req.query.numberOfThreads;
+
+	// Loop to spawn the desired number of worker threads
+	for (let i = 0; i < numberOfThreads; i++) {
+		const worker = new Worker("./worker.js"); // Path to the worker script file
+		// Handle messages received from the worker threads (optional)
+		worker.on("message", message => {
+			console.log("Received message from worker:", message);
+		});
+		// Handle errors from the worker threads (optional)
+		worker.on("error", error => {
+			console.error("Error in worker thread:", error);
+		});
+		// Handle termination of the worker threads (optional)
+		worker.on("exit", exitCode => {
+			console.log("Worker thread exited with code:", exitCode);
+		});
+	}
+
+	res.send("Worker threads spawned successfully.");
+});
+
 // Mine the Pending Transactions
 app.post("/mine", function (req, res) {
 	const { minerAddress, difficulty } = req.body;
-
-	// Flag to track successful mining
-	let mined = false;
 
 	const newBlock = blockchain.mineNextBlock(minerAddress, difficulty, wsServer);
 	console.log("newBlock: ", newBlock);
@@ -258,14 +280,7 @@ app.post("/mine", function (req, res) {
 			data: { newBlock },
 			headers: { "Content-Type": "application/json" },
 		};
-
-		// Check if already mined, skip broadcasting to other nodes
-		if (!mined && nodeId === Object.keys(blockchain.peersMap)[0]) {
-			axiosPromises.push(axios(requestOptions));
-			mined = true; // Set the mined flag to true
-		} else {
-			axiosPromises.push(Promise.resolve()); // Push an empty resolved promise
-		}
+		axiosPromises.push(axios(requestOptions));
 	});
 	console.log("axiosPromises: ", axiosPromises);
 
