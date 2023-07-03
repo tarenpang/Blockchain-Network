@@ -26,7 +26,7 @@ IndiGOLD Blockchain is an implementation of a fully functional blockchain networ
         <li><a href="#technical-requirements">Technical & Workflow Requirements</a>
       </ul>
       <ul>
-        <li><a href="#team-response-to-technical-requirements">Team Response to Technical & Workflow Requirements</a></li>
+        <li><a href="#team-response-to-requirements">Team Response to Technical & Workflow Requirements</a></li>
       </ul>
       <ul>
         <li><a href="#built-with">Built With</a></li>
@@ -49,7 +49,7 @@ IndiGOLD Blockchain is an implementation of a fully functional blockchain networ
 The IndiGOLD Blockchain application is a class project for the <a href="https://kingslanduniversity.com/zero-to-blockchain-developer-program/">Kingsland University 'Zero to Blockchain' Program.</a> Our application leverages the React frontend library to illustrate the functionality of a complete proof-of-work blockchain network.
 <br>
 
-### Technical & Workflow Requirements
+### Technical Requirements
 
 Build a proof-of-work blockchain system that includes:
 
@@ -71,7 +71,7 @@ Workflow: Use GitHub for version control. Each team member shall make a minimum 
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-### Team Response to Technical & Workflow Requirements
+### Team Response to Requirements
 
 <ol>
     <li>Backend: Node.js and JavaScript</li>
@@ -130,8 +130,8 @@ GitHub Link: [https://https://github.com/tarenpang/blockchain](https://https://g
 The following are known, open issues:
 
 <ol>
-  <li><b> Competitive Mining Not Fully Implemented</b> Competitive mining among miner nodes is stretch goal that has not been fully implemented. The framework has been established to set the number of child processes independently for each node to simulate varying miner processing capacities, the way the local hosting computer allocates resources to running processes may be skewing the mining results. In other words, nodes that have more concurrent child processes are not always the fastest to reach the required difficulty. We are in the process of investigating methods for correcting these biased results.</li><br>
-  <li><b>Application is not optimized for mobile-first, responsiveness.</b>The frontend can be improved to provide a better user experience. In particular, rendered elements can be made to be more responsive on mobile devices. Our team will be looking at ways to implement this on the next iteration of the application.</li><br>
+  <li><b> Competitive mining is not fully implemented</b> Competitive mining among miner nodes is stretch goal that has not been fully implemented. The framework has been established to set the number of child processes independently for each node to simulate varying miner processing capacities. However, the way the local hosting computer allocates resources to running processes may be skewing the mining results. In other words, nodes that have more concurrent child processes are not always the fastest to reach the required difficulty. We are in the process of investigating methods for correcting these skewed results.</li><br>
+  <li><b>Application is not optimized for mobile-first, responsive design.</b>The frontend can be improved to provide a better user experience. In particular, rendered elements can be made to be more responsive on mobile devices. Our team will be looking at ways to implement this on the next iteration of the application.</li><br>
 </ol>
 
 <p align="right">(<a href="#top">back to top</a>)</p>
@@ -148,7 +148,11 @@ Distributed under the MIT License.
 
 ## Contact
 
-E-Mail: razorsedgedataviz@gmail.com
+https://www.linkedin.com/in/marcellusbrady/
+
+https://www.linkedin.com/in/joshua-baum-627a0a217/
+
+https://www.linkedin.com/in/taren-pang-5430ab14/
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
