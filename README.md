@@ -112,14 +112,14 @@ Visitors are encouraged to go to our GitHub repository to examine the code behin
 GitHub Link: [https://https://github.com/tarenpang/blockchain](https://https://github.com/tarenpang/blockchain)
 
 <ol>
-    <li>`npm install` in each of the following directories:</li>
+    <li><b>npm install</b> in each of the following directories:</li>
     <ol>
       <li>blockchain</li>
       <li>backend</li>
       <li>frontend</li>
 </ol>
 
-<li>Start the app in the blockchain directory: `npm run start`</li>
+<li>Start the app in the blockchain directory: <b>npm run start</b></li>
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
