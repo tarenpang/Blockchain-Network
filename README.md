@@ -73,6 +73,7 @@ Workflow: Use GitHub for version control. Each team member shall make a minimum 
 
 ### Team Response to Requirements
 
+<li>Technical requirements:</li>
 <ol>
     <li>Backend: Node.js and JavaScript</li>
     <li>Frontend: React and Vite</li>
@@ -81,6 +82,7 @@ Workflow: Use GitHub for version control. Each team member shall make a minimum 
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
+<li>Workflow requirements:</li>
 <ol>
     <li>A GitHub repository was created.</li>
     <li>Team members were added as collaborators.</li>
