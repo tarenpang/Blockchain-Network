@@ -2,7 +2,7 @@
 <div id="top"></div>
 <br />
 <div align="center">
-    <img src="./frontend/src/assets/IndiGOLD_Landing.png" alt="Logo" width="300" height="200">
+    <img src="./frontend/src/assets/IndiGOLD_Landing.png" alt="Logo" width="400" height="300">
 
   <h3 align="center">IndiGOLD Blockchain - The README.md File</h3>
   
