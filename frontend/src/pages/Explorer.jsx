@@ -75,7 +75,7 @@ function Explorer() {
 
 	return (
 		<div>
-			<h1>IndiGold Explorer</h1>
+			<h1>IndiGOLD Explorer</h1>
 			<br></br>
 			<SearchBar></SearchBar>
 			<br></br>

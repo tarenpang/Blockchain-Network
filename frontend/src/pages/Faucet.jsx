@@ -8,6 +8,7 @@ import secureLocalStorage from "react-secure-storage";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { NetworkContext } from "../context/NetworkContext";
+import CaptchaTest from "../components/CaptchaTest";
 
 var elliptic = EC.ec;
 var secp256k1 = new elliptic("secp256k1");
@@ -131,7 +132,7 @@ function Faucet() {
 		setSignedTx(signedTransaction);
 		console.log(signedTransaction);
 		setIsSigned(true);
-		toast.success("Transaction signed", {
+		toast.success("Pending withdrawal submitted", {
 			position: "top-right",
 			theme: "light",
 		});
@@ -159,11 +160,6 @@ function Faucet() {
 				console.log("values" + values);
 			});
 
-			// let result = await axios.post(
-			// 	`http://localhost:5555/transaction`,
-			// 	signedTx,
-			// 	config
-			// );
 			const error = result.data.error;
 			if (error) {
 				console.log("error" + error);
@@ -242,7 +238,7 @@ function Faucet() {
 		setSignedDonationTx(signedTransaction);
 		console.log(signedTransaction);
 		setIsSignedDonation(true);
-		toast.success("Transaction signed", {
+		toast.success("Pending donation submitted", {
 			position: "top-right",
 			theme: "light",
 		});
@@ -258,7 +254,6 @@ function Faucet() {
 					"Content-Type": "application/json",
 				},
 			};
-
 			let promises = [];
 			activePorts.forEach(async port => {
 				let result = await axios.post(
@@ -271,7 +266,6 @@ function Faucet() {
 			Promise.all(promises).then(function (values) {
 				console.log("values" + values);
 			});
-
 			// let result = await axios.post(
 			// 	`http://localhost:5555/transaction`,
 			// 	signedDonoTran,
@@ -305,7 +299,6 @@ function Faucet() {
 				pauseOnHover
 				theme="light"
 			/>
-			<br />
 			<h1>IndiGOLD Faucet</h1>
 			<div className="center-img-3">
 				<img
@@ -367,6 +360,14 @@ function Faucet() {
 							/>
 						</InputGroup>
 						<br />
+
+						{/* <div class="card">
+							<div className="card-body-md-1">
+								<h3 className="center-text">Please verify to continue:</h3>
+								<CaptchaTest />
+							</div>
+						</div> */}
+
 						<Button variant="primary" onClick={signTransaction}>
 							Withdraw IndiGold
 						</Button>

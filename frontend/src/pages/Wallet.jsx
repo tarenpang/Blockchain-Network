@@ -218,12 +218,6 @@ function Wallet() {
 				},
 			};
 
-			// let result = await axios.post(
-			// 	`http://localhost:5555/transaction`,
-			// 	signedTx,
-			// 	config
-			// );
-
 			activePorts.forEach(port => {
 				axios.post(`http://localhost:${port}/transaction`, signedTx, config);
 			});

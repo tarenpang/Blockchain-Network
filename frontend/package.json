@@ -29,6 +29,7 @@
 		"react-dom": "^18.2.0",
 		"react-router-dom": "^6.10.0",
 		"react-secure-storage": "^1.2.2",
+		"react-simple-captcha": "^9.0.17",
 		"react-toastify": "^9.1.2",
 		"react-tooltip": "^5.11.2",
 		"react-use-websocket": "^4.3.1",

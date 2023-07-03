@@ -1,6 +1,6 @@
 import "../../custom.css";
 import React from "react";
-import { useState, useEffect, useContext, useRef } from "react";
+import { useState, useEffect, useContext } from "react";
 import { w3cwebsocket as W3CWebSocket } from "websocket";
 import axios from "axios";
 import { NetworkContext } from "../context/NetworkContext";
@@ -25,7 +25,7 @@ function Mine() {
 	const [pendingTransactions, setPendingTransactions] = useState([]);
 	const [currentDifficulty, setCurrentDifficulty] = useState(3);
 	const [activeMinerPorts, setActiveMinerPorts] = useState(new Map());
-	const [numberOfThreads, setNumberOfThreads] = useState(0);
+	const [numberOfProcesses, setNumberOfProcesses] = useState(0);
 	const [nonce, setNonce] = useState("None");
 
 	const [hashRate, setHashRate] = useState("0000.00");
@@ -33,12 +33,14 @@ function Mine() {
 	const [receivedHashRates, setReceivedHashRates] = useState(new Map());
 	const [receivedHashRatesInterval, setReceivedHashRatesInterval] =
 		useState(null);
+	// const [blockTime, setBlockTime] = useState("TBD");
 
 	const { activePorts, setActivePorts } = useContext(NetworkContext);
 
 	// const wsRef = useRef();
 	const urls = [];
 	const websockets = urls.map(url => new W3CWebSocket(url));
+	let receivedWinner = null;
 
 	useEffect(() => {
 		const intervalId = setInterval(() => {
@@ -47,7 +49,7 @@ function Mine() {
 				const port = Array.from(activeMinerPorts.keys())[i];
 				websocket.send(JSON.stringify({ command: "getHashRate" }));
 			}
-		}, 3000);
+		}, 5000);
 
 		return () => {
 			clearInterval(intervalId);
@@ -101,31 +103,20 @@ function Mine() {
 					miningResult.then(resolve).catch(reject);
 				});
 
-				setPendingTransactions([]);
-				// const result = miningResult.data.message;
-
-				if (miningResult) {
-					toast.success(key, {
-						position: "top-right",
-						theme: "light",
-					});
-				}
 				promises.push(promise);
 			}
-			// Promise.race(promises).then(function(values) {
-			// 	console.log("values" + values);
-			//   });
-			Promise.race(promises)
-				.then(function (response) {
-					console.log("Fastest response:", response);
-				})
-				.catch(function (error) {
-					if (axios.isCancel(error)) {
-						console.log("Request cancelled:", error.message);
-					} else {
-						console.error("Error:", error);
-					}
-				});
+
+			Promise.race(promises).then(() => {
+				isResolved = true;
+			});
+
+			// Update the state when the mining results are received
+			useEffect(() => {
+				if (isResolved) {
+					setPendingTransactions([]);
+					setHashRate(receivedHashRates.get(nodeToMine));
+				}
+			}, [receivedHashRates, nodeToMine, isResolved]);
 		}
 	};
 
@@ -170,12 +161,18 @@ function Mine() {
 				websocket.onmessage = event => {
 					const data = JSON.parse(event.data);
 					const receivedHashRate = data.hashRate;
+					const receivedDateCreated = data.dateCreated;
+					const receivedDateEnded = data.dateEnded;
+					const receivedBlockTime = data.blockTime;
+					// set hash rate to the received hash rate
 					setReceivedHashRates(prevHashRates => {
 						const updatedHashRates = new Map(prevHashRates);
 						updatedHashRates.set(port, receivedHashRate);
 						return updatedHashRates;
 					});
 					setHashRate(receivedHashRate);
+					// set blockTime to received blockTime
+					// setBlockTime(receivedBlockTime);
 				};
 			});
 
@@ -198,8 +195,8 @@ function Mine() {
 					new Map(prevMap).set(5555, "538fc05fd0e0c92a03189844f1f4938605154988")
 				);
 				try {
-					await axios.post("http://localhost:5555/spawn-worker-threads", {
-						numberOfThreads,
+					await axios.post("http://localhost:5555/spawn-child-processes", {
+						numberOfProcesses,
 					});
 					console.log("Worker threads spawned successfully.");
 				} catch (error) {
@@ -231,8 +228,8 @@ function Mine() {
 					new Map(prevMap).set(5556, "2fddcc7a8d6b888497ea60aa0079d3ba0da170dd")
 				);
 				try {
-					await axios.post("http://localhost:5556/spawn-worker-threads", {
-						numberOfThreads,
+					await axios.post("http://localhost:5556/spawn-child-processes", {
+						numberOfProcesses,
 					});
 					console.log("Worker threads spawned successfully.");
 				} catch (error) {
@@ -265,8 +262,8 @@ function Mine() {
 					new Map(prevMap).set(5557, "2b798f6d6e8dce62f73a85f9447f4626af969cdd")
 				);
 				try {
-					await axios.post("http://localhost:5557/spawn-worker-threads", {
-						numberOfThreads,
+					await axios.post("http://localhost:5557/spawn-child-processes", {
+						numberOfProcesses,
 					});
 					console.log("Worker threads spawned successfully.");
 				} catch (error) {
@@ -298,11 +295,11 @@ function Mine() {
 				setNode4Running(true);
 				console.log("workers: ", node4Workers);
 				setActiveMinerPorts(prevMap =>
-					new Map(prevMap).set(5558, "e38b9313293c7e3772900a38a4b1a39900d11db7")
+					new Map(prevMap).set(5558, "4d2845293163c8411ac459cecfdc076e897be0a6")
 				);
 				try {
-					await axios.post("http://localhost:5558/spawn-worker-threads", {
-						numberOfThreads,
+					await axios.post("http://localhost:5558/spawn-child-processes", {
+						numberOfProcesses,
 					});
 					console.log("Worker threads spawned successfully.");
 				} catch (error) {
@@ -335,8 +332,8 @@ function Mine() {
 					new Map(prevMap).set(5559, "e38b9313293c7e3772900a38a4b1a39900d11db7")
 				);
 				try {
-					await axios.post("http://localhost:5559/spawn-worker-threads", {
-						numberOfThreads,
+					await axios.post("http://localhost:5559/spawn-child-processes", {
+						numberOfProcesses,
 					});
 					console.log("Worker threads spawned successfully.");
 				} catch (error) {
@@ -407,10 +404,11 @@ function Mine() {
 						onChange={e => setCurrentDifficulty(e.target.value)}
 					/>
 				</h5>
-
+				{/* 
 				<h5 className="center-text">
-					Successful Miner: <span style={{ fontSize: 16 }}>{null}</span>
-				</h5>
+					Block Time:{" "}
+					<span style={{ fontSize: 16 }}>{blockTime ? blockTime : "TBD"}</span>
+				</h5> */}
 			</div>
 			<br />
 
@@ -426,9 +424,9 @@ function Mine() {
 							</span>
 							<span>Status</span>
 							<span>
-								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 							</span>
-							<span>Workers</span>
+							<span>Child_P</span>
 							<span>
 								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 							</span>
@@ -506,7 +504,6 @@ function Mine() {
 										size="md"
 										type="button"
 										value="Submit"
-										// onClick={() => handleSyncClick(5555)} // Pass the port associated with Node 1
 										onClick={handleNode1}
 									>
 										{node1Running ? "Disable" : "Enable"}
@@ -565,7 +562,6 @@ function Mine() {
 										size="md"
 										type="button"
 										value="Submit"
-										// onClick={() => handleSyncClick(5556)} // Pass the port associated with Node 2
 										onClick={handleNode2}
 									>
 										{node2Running ? "Disable" : "Enable"}
@@ -624,7 +620,6 @@ function Mine() {
 										size="md"
 										type="button"
 										value="Submit"
-										// onClick={() => handleSyncClick(5557)} // Pass the port associated with Node 3
 										onClick={handleNode3}
 									>
 										{node3Running ? "Disable" : "Enable"}
@@ -683,7 +678,6 @@ function Mine() {
 										size="md"
 										type="button"
 										value="Submit"
-										// onClick={() => handleSyncClick(5558)} // Pass the port associated with Node 4
 										onClick={handleNode4}
 									>
 										{node4Running ? "Disable" : "Enable"}
@@ -742,7 +736,6 @@ function Mine() {
 										size="md"
 										type="button"
 										value="Submit"
-										// onClick={() => handleSyncClick(5559)} // Pass the port associated with Node 5
 										onClick={handleNode5}
 									>
 										{node5Running ? "Disable" : "Enable"}
@@ -766,7 +759,6 @@ function Mine() {
 					}}
 					key="uniqueKey2"
 					onClick={handleMineClick}
-					// onClick={() => console.log(activeMinerPorts)}
 					type="submit"
 					variant="primary"
 					size="lg"

@@ -1,9 +1,14 @@
 const axios = require("axios");
+const fs = require("fs");
+const lockfile = require("proper-lockfile");
+const Memcached = require("memcached-promisify");
 const Config = require("./utils/config");
 const Block = require("./block");
 const Transaction = require("./transaction");
 const CryptoUtils = require("./utils/cryptoUtils");
 const ValidationUtils = require("./utils/validationUtils");
+
+const memcached = new Memcached("localhost:11211");
 
 function Blockchain() {
 	this.blocks = Block.genesisBlock();
@@ -172,7 +177,7 @@ Blockchain.prototype.addNewTransactionToPendingTransactions = function (
 ) {
 	this.pendingTransactions.push(transactionObject); // Add to pending transactions pool
 
-	return this.getLastBlockOnChain().index + 1; // Return index of the next block on blockchain
+	return this.getLastBlock().index + 1; // Return index of the next block on blockchain
 };
 
 // Get All Pending Transactions

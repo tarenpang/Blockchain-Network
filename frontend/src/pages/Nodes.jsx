@@ -54,7 +54,15 @@ export function SyncAdjacentPeers() {
 	const [adjNode4To5BoxClass, setAdjNode4To5BoxClass] =
 		useState("node-box-dull");
 
-	const { activePorts, setActivePorts } = useContext(NetworkContext);
+	const { activePorts, setActivePorts, chosenPorts, setChosenPorts } =
+		useContext(NetworkContext);
+
+	useEffect(() => {
+		chosenPorts.forEach(port => {
+			setClasses(port);
+		});
+		// console.log("chosen:" + chosenPorts);
+	}, []);
 
 	const handleSyncClick = async port => {
 		const config = {
@@ -200,6 +208,8 @@ export function SyncAdjacentPeers() {
 		console.log("activePorts", activePorts);
 		activePorts.sort();
 		setActivePorts(activePorts);
+		chosenPorts.push(port);
+		setChosenPorts(chosenPorts);
 	};
 
 	const setClasses = port => {
