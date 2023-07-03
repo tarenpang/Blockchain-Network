@@ -103,7 +103,7 @@ Workflow: Use GitHub for version control. Each team member shall make a minimum 
 - [Vite](https://vitejs.dev)
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-<!-- USAGE EXAMPLES -->
+<!-- USAGE  -->
 
 ## GitHub Repo and Usage
 
