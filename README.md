@@ -90,7 +90,6 @@ Workflow: Use GitHub for version control. Each team member shall make a minimum 
     <li>Collaborators on GitHub:</li>
     <ul>
       <li>used Pull Requests, making sure to tag a reviewer for approval.</li>
-      <li>did not commit anything directly to the Main branch.</li>
       <li>worked on branches of Main and merged our work through Pull Requests.</li>
       <li>had other teammates be Reviewers for their Pull Requests.</li>
     <ul>  
