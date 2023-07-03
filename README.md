@@ -32,7 +32,7 @@ IndiGOLD Blockchain is an implementation of a fully functional blockchain networ
         <li><a href="#built-with">Built With</a></li>
       </ul>
     </li>
-    <li><a href="#usage">Usage</a></li>
+    <li><a href="#github-repo-and-usage">GitHub Repo and Usage</a></li>
     <li><a href="#known-issues">Known Issues</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
