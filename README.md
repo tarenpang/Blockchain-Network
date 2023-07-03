@@ -11,7 +11,7 @@
 
 # IndiGOLD Blockchain
 
-IndiGOLD Blockchain is an implementation of a fully functional blockchain network consisting of nodes, miners, wallet app, faucet app and blockchain explorer.
+IndiGOLD Blockchain is an implementation of a fully functional blockchain network consisting of nodes, miners, wallet and faucet apps, and a blockchain explorer.
 
 <!-- TABLE OF CONTENTS -->
 <details>
@@ -23,10 +23,10 @@ IndiGOLD Blockchain is an implementation of a fully functional blockchain networ
         <li><a href="#project-overview">Project Overview</a></li>
       </ul>
       <ul>
-        <li><a href="#technical-requirements">Technical Requirements</a>
+        <li><a href="#technical-requirements">Technical & Workflow Requirements</a>
       </ul>
       <ul>
-        <li><a href="#team-response-to-technical-requirements">Team Response to Technical Requirements</a></li>
+        <li><a href="#team-response-to-technical-requirements">Team Response to Technical & Workflow Requirements</a></li>
       </ul>
       <ul>
         <li><a href="#built-with">Built With</a></li>
@@ -34,7 +34,6 @@ IndiGOLD Blockchain is an implementation of a fully functional blockchain networ
     </li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#known-issues">Known Issues</a></li>
-    <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
     <li><a href="#acknowledgments">Acknowledgments</a></li>
@@ -47,7 +46,7 @@ IndiGOLD Blockchain is an implementation of a fully functional blockchain networ
 
 ### Project Overview
 
-The IndiGOLD Blockchain application is a class project for the <a href="https://kingslanduniversity.com/zero-to-blockchain-developer-program/">Kingsland University 'Zero to Blockchain' Program.\*</a> Our application leverages the React frontend library to illustrate the functionality of a complete proof-of-work blockchain network.
+The IndiGOLD Blockchain application is a class project for the <a href="https://kingslanduniversity.com/zero-to-blockchain-developer-program/">Kingsland University 'Zero to Blockchain' Program.</a> Our application leverages the React frontend library to illustrate the functionality of a complete proof-of-work blockchain network.
 <br>
 
 ### Technical & Workflow Requirements
