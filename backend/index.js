@@ -7,7 +7,8 @@ const Blockchain = require("./blockchain");
 const Config = require("./utils/config");
 const http = require("http");
 const { WebSocket, WebSocketServer } = require("ws");
-const { Worker } = require("worker_threads");
+// const { Worker } = require("worker_threads");
+const { spawn } = require("child_process");
 const uuidv4 = require("uuid").v4;
 
 const OS = require("os");
@@ -15,7 +16,7 @@ process.env.UV_THREADPOOL_SIZE = OS.cpus().length;
 
 const host = "http://localhost";
 const port = process.argv[2];
-const rootNodeUrl = `${host}:5555`;
+// const rootNodeUrl = `${host}:5555`;
 const currentNodeURL = `${host}:${port}`;
 // const blockchainId = Config.blockchainId;
 
@@ -241,27 +242,81 @@ app.get("/address/:address/balance", (req, res) => {
 });
 
 // Spin Up Desired Number of Worker Threads
-app.post("/spawn-worker-threads", (req, res) => {
-	const numberOfThreads = req.query.numberOfThreads;
+app.post("/spawn-child-processes", (req, res) => {
+	// const numberOfThreads = req.query.numberOfThreads;
+	const numProcesses = req.query.numberOfProcesses;
 
-	// Loop to spawn the desired number of worker threads
-	for (let i = 0; i < numberOfThreads; i++) {
-		const worker = new Worker("./worker.js"); // Path to the worker script file
-		// Handle messages received from the worker threads (optional)
-		worker.on("message", message => {
-			console.log("Received message from worker:", message);
-		});
-		// Handle errors from the worker threads (optional)
-		worker.on("error", error => {
-			console.error("Error in worker thread:", error);
-		});
-		// Handle termination of the worker threads (optional)
-		worker.on("exit", exitCode => {
-			console.log("Worker thread exited with code:", exitCode);
-		});
+	//Loop to spawn the desired number of worker threads
+	// 	for (let i = 0; i < numberOfThreads; i++) {
+	// 		const worker = new Worker("./worker.js"); // Path to the worker script file
+	// 		// Handle messages received from the worker threads (optional)
+	// 		worker.on("message", message => {
+	// 			console.log("Received message from worker:", message);
+	// 		});
+	// 		// Handle errors from the worker threads (optional)
+	// 		worker.on("error", error => {
+	// 			console.error("Error in worker thread:", error);
+	// 		});
+	// 		// Handle termination of the worker threads (optional)
+	// 		worker.on("exit", exitCode => {
+	// 			console.log("Worker thread exited with code:", exitCode);
+	// 		});
+	// 	}
+
+	// 	res.send("Worker threads spawned successfully.");
+	// });
+
+	// 	async function startWorkerThreads(numberOfThreads) {
+	// 		const promises = [];
+
+	// 		for (let i = 0; i < numberOfThreads; i++) {
+	// 			promises.push(
+	// 				startWorker(/* pass the required input to the worker thread */)
+	// 			);
+	// 		}
+
+	// 		try {
+	// 			await Promise.all(promises);
+	// 			console.log("All worker threads completed successfully.");
+	// 		} catch (error) {
+	// 			console.error("Error in worker threads:", error);
+	// 		}
+	// 	}
+
+	// 	startWorkerThreads(numberOfThreads)
+	// 		.then(() => {
+	// 			res.sendStatus(200);
+	// 		})
+	// 		.catch(error => {
+	// 			console.error("Error starting worker threads:", error);
+	// 			res.sendStatus(500);
+	// 		});
+
+	// Function to start child processes
+	function startChildProcesses(numProcesses) {
+		for (let i = 0; i < numProcesses; i++) {
+			// const childProcess = spawn("node", [
+			// 	"-e",
+			// 	`(${performTask.toString()})()`,
+			// ]);
+			const childProcess = spawn("node", ["blockchain.js"]);
+
+			// Handle events from child processes
+			childProcess.stdout.on("data", data => {
+				console.log(`Child process ${i + 1} output: ${data}`);
+			});
+
+			childProcess.stderr.on("data", data => {
+				console.error(`Child process ${i + 1} error: ${data}`);
+			});
+
+			childProcess.on("close", code => {
+				console.log(`Child process ${i + 1} exited with code ${code}`);
+			});
+		}
 	}
-
-	res.send("Worker threads spawned successfully.");
+	// Start the child processes
+	startChildProcesses(numProcesses);
 });
 
 // Mine the Pending Transactions

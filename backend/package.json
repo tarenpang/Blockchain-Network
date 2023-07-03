@@ -30,9 +30,13 @@
 		"elliptic": "^6.4.1",
 		"express": "^4.16.3",
 		"express-list-endpoints": "^6.0.0",
+		"fs": "^0.0.1-security",
 		"hex-to-binary": "^1.0.1",
 		"history": "^4.7.2",
 		"http-status-codes": "^2.2.0",
+		"memcached": "^2.2.2",
+		"memcached-promisify": "^2.0.0",
+		"proper-lockfile": "^4.1.2",
 		"redis": "^2.8.0",
 		"uuid": "^3.4.0",
 		"ws": "^8.13.0"

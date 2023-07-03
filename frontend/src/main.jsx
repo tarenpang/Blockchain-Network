@@ -25,9 +25,12 @@ disableReactDevTools();
 
 const Layout = () => {
 	const [activePorts, setActivePorts] = useState([]);
+	const [chosenPorts, setChosenPorts] = useState([]);
 
 	return (
-		<NetworkContext.Provider value={{ activePorts, setActivePorts }}>
+		<NetworkContext.Provider
+			value={{ activePorts, setActivePorts, chosenPorts, setChosenPorts }}
+		>
 			<div>
 				<Navbar />
 				<Outlet />
