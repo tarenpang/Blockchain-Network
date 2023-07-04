@@ -68,15 +68,11 @@ function BlockDetails() {
 																<b>Date:</b> {`${d.dateCreated}`}
 															</p>
 															<p>
-																<b>Transaction Data Hash:</b>{" "}
+																<b>Transaction Hash:</b>{" "}
 																{`${d.transactionDataHash}`}
 															</p>
 															<p>
 																<b>Sender Signature:</b> {`${d.senderPubKey}`}
-															</p>
-															<p>
-																<b>Transaction Hash:</b>{" "}
-																{`${d.transactionHash}`}
 															</p>
 															<br />
 															<span className="line"></span>

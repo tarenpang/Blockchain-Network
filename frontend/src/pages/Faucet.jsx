@@ -8,7 +8,7 @@ import secureLocalStorage from "react-secure-storage";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { NetworkContext } from "../context/NetworkContext";
-import CaptchaTest from "../components/CaptchaTest";
+// import CaptchaTest from "../components/CaptchaTest";
 
 var elliptic = EC.ec;
 var secp256k1 = new elliptic("secp256k1");
@@ -369,14 +369,14 @@ function Faucet() {
 						</div> */}
 
 						<Button variant="primary" onClick={signTransaction}>
-							Withdraw IndiGold
+							Withdraw IndiGOLD
 						</Button>
 					</div>
 				</div>
 				<div className="card-md-4">
 					<div className="card-body-md-1a">
 						<p className="ln-ht">
-							&#8226;&nbsp;Please return any unused IndiGold you no longer need
+							&#8226;&nbsp;Please return any unused IndiGOLD you no longer need
 						</p>
 						<p className="ln-ht">
 							&#8226;&nbsp;Wallet must be active to donate funds
@@ -405,7 +405,7 @@ function Faucet() {
 							disabled={!isLoggedIn ? "disabled" : ""}
 							className="custom-btn"
 						>
-							Donate IndiGold
+							Donate IndiGOLD
 						</Button>
 					</div>
 				</div>

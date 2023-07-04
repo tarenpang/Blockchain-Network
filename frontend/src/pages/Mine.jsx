@@ -108,6 +108,10 @@ function Mine() {
 
 			Promise.race(promises).then(() => {
 				isResolved = true;
+				toast.success("Block is successfully mined!", {
+					position: "top-right",
+					theme: "light",
+				});
 			});
 
 			// Update the state when the mining results are received
