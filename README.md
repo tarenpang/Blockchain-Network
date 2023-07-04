@@ -133,7 +133,7 @@ GitHub Link: [https://https://github.com/tarenpang/blockchain](https://https://g
 The following are known, open issues:
 
 <ol>
-  <li><b> Competitive mining is not fully implemented.</b> Competitive mining among miner nodes is a stretch goal that has not been fully implemented. The framework has been established to set the number of child processes independently for each node to simulate varying miner processing capacities. However, the way the local hosting computer allocates resources to running processes may be skewing the mining results. In other words, nodes that have more parallel child processes are not always the fastest to reach the required difficulty. We are in the process of investigating methods for correcting these skewed results.</li><br>
+  <li><b> Competitive mining is not fully implemented.</b> Competitive mining among miner nodes is a stretch goal that has not been fully implemented. The framework has been established to set the number of child processes independently for each node to simulate varying miner processing capacities. However, the way the local host computer allocates resources to running processes may be skewing the mining results. In other words, nodes that have more parallel child processes are not always the fastest to reach the required difficulty. We are in the process of investigating methods for correcting these skewed results.</li><br>
   <li><b>Application is not optimized for mobile-first, responsive design.</b>The frontend can be improved to provide a better user experience. In particular, rendered elements can be made to be more responsive on mobile devices. Our team will be looking at ways to implement this on the next iteration of the application.</li><br>
 </ol>
 
@@ -166,7 +166,7 @@ https://www.linkedin.com/in/taren-pang-5430ab14/
 This project would not have been possible without the support and encouragement of the following individuals:
 
 <ol>
-  <li>Our instructors: <b>Simeon Mandazhiev</b> and <b>Patrick Galloway</b> <a href="https://kingslanduniversity.com/">Kingsland University</a> for expertly guiding us through the course.</li><br>
+  <li>Our instructors: <b>Simeon Mandazhiev</b> and <b>Patrick Galloway</b> at <a href="https://kingslanduniversity.com/">Kingsland University</a> for expertly guiding us through the course.</li><br>
   <li>Administrators: <b>Ma Deezan Gavilla</b> and <b>Rhochelle Kadusale</b> for keeping us on track on the administrative side of things.</li><br>
 </ol>
 
