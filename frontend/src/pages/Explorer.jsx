@@ -5,8 +5,6 @@ import { useState, useEffect } from "react";
 import { Button, Row } from "react-bootstrap";
 import SearchBar from "../navigation/SearchBar";
 import { redirect } from "react-router-dom";
-// import ReactTooltip from "react-tooltip";
-// import { 'document-duplicate' } from "@heroicons/react";
 
 function Explorer() {
 	const [allConfirmedTransactions, setAllConfirmedTransactions] = useState([]);

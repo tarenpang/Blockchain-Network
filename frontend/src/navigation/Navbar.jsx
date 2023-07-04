@@ -28,11 +28,18 @@ const Navbar = () => {
 								<li class="nav-item">{<Link to="/explorer">Explorer</Link>}</li>
 
 								<li class="nav-item">
+									<Link to="/nodes">Nodes</Link>
+								</li>
+
+								<li class="nav-item">
 									<Link to="/wallet">Wallet</Link>
 								</li>
 
 								<li class="nav-item">
-									<Link to="/nodes">Nodes</Link>
+									{/* <a class="nav-link" href="#">
+										Faucet
+									</a> */}
+									<Link to="/faucet">Faucet</Link>
 								</li>
 
 								<li class="nav-item">
@@ -73,13 +80,6 @@ const Navbar = () => {
 									</ul>
 
 								</li> */}
-
-								<li class="nav-item">
-									{/* <a class="nav-link" href="#">
-										Faucet
-									</a> */}
-									<Link to="/faucet">Faucet</Link>
-								</li>
 							</ul>
 							{/* <form class="d-flex" role="search">
                 <input

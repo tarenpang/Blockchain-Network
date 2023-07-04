@@ -1,14 +1,13 @@
 const axios = require("axios");
-const fs = require("fs");
 const lockfile = require("proper-lockfile");
-const Memcached = require("memcached-promisify");
+// const Memcached = require("memcached-promisify");
 const Config = require("./utils/config");
 const Block = require("./block");
 const Transaction = require("./transaction");
 const CryptoUtils = require("./utils/cryptoUtils");
 const ValidationUtils = require("./utils/validationUtils");
 
-const memcached = new Memcached("localhost:11211");
+// const memcached = new Memcached("localhost:11211");
 
 function Blockchain() {
 	this.blocks = Block.genesisBlock();
