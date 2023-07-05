@@ -143,7 +143,7 @@ The following are known, open issues:
 
 ## License
 
-Distributed under the MIT License.
+Distributed under the GNU GPLv3 License.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
