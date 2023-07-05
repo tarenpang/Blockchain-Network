@@ -4,6 +4,7 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import Row from "react-bootstrap/Row";
 import { useParams } from "react-router-dom";
+
 function TransactionDetails() {
 	const [currentTransaction, setCurrentTransaction] = useState([]);
 	const { txHash } = useParams();
