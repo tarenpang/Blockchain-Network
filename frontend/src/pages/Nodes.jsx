@@ -281,7 +281,7 @@ export function SyncAdjacentPeers() {
 				<img
 					style={{ width: 225, height: 200 }}
 					src="../src/assets/nodes-85.png"
-					alt="Pickaxe Image"
+					alt="Nodes Image"
 				></img>
 			</div>
 			<br />
