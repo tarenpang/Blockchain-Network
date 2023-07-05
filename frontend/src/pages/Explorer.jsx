@@ -78,7 +78,7 @@ function Explorer() {
 				<img
 					style={{ width: 225, height: 200 }}
 					src="../src/assets/binoculars-88.png"
-					alt="Pickaxe Image"
+					alt="Binoculars Image"
 				></img>
 			</div>
 			<br />
