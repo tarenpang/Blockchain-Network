@@ -7,7 +7,7 @@ import { Row } from "react-bootstrap";
 import { Button } from "react-bootstrap";
 import "react-toastify/dist/ReactToastify.min.css";
 import { ToastContainer, toast } from "react-toastify";
-import secureLocalStorage from "react-secure-storage";
+// import secureLocalStorage from "react-secure-storage";
 
 export function SyncAdjacentPeers() {
 	// const [peerMap, setPeerMap] = useState({});
@@ -56,13 +56,6 @@ export function SyncAdjacentPeers() {
 
 	const { activePorts, setActivePorts, chosenPorts, setChosenPorts } =
 		useContext(NetworkContext);
-
-	useEffect(() => {
-		chosenPorts.forEach(port => {
-			setClasses(port);
-		});
-		// console.log("chosen:" + chosenPorts);
-	}, []);
 
 	const handleSyncClick = async port => {
 		const config = {
@@ -196,20 +189,37 @@ export function SyncAdjacentPeers() {
 		setClasses(port);
 
 		// Update activePorts Array
-		if (!activePorts.includes(port)) {
-			activePorts.push(port);
+		// if (!activePorts.includes(port)) {
+		// 	activePorts.push(port);
+		// }
+		// if (!activePorts.includes(nextPort)) {
+		// 	activePorts.push(nextPort);
+		// }
+		// if (!activePorts.includes(prevPort)) {
+		// 	activePorts.push(prevPort);
+		// }
+		// console.log("activePorts", activePorts);
+		// activePorts.sort();
+		// setActivePorts(activePorts);
+		// chosenPorts.push(port);
+		// setChosenPorts(chosenPorts);
+		const updatedActivePorts = [...activePorts]; // Create a copy of the array
+		if (!updatedActivePorts.includes(port)) {
+			updatedActivePorts.push(port);
 		}
-		if (!activePorts.includes(nextPort)) {
-			activePorts.push(nextPort);
+		if (!updatedActivePorts.includes(nextPort)) {
+			updatedActivePorts.push(nextPort);
 		}
-		if (!activePorts.includes(prevPort)) {
-			activePorts.push(prevPort);
+		if (!updatedActivePorts.includes(prevPort)) {
+			updatedActivePorts.push(prevPort);
 		}
-		console.log("activePorts", activePorts);
-		activePorts.sort();
-		setActivePorts(activePorts);
-		chosenPorts.push(port);
-		setChosenPorts(chosenPorts);
+		console.log("activePorts", updatedActivePorts);
+		updatedActivePorts.sort();
+		setActivePorts(updatedActivePorts);
+
+		const updatedChosenPorts = [...chosenPorts]; // Create a copy of the array
+		updatedChosenPorts.push(port);
+		setChosenPorts(updatedChosenPorts);
 	};
 
 	const setClasses = port => {
@@ -244,6 +254,12 @@ export function SyncAdjacentPeers() {
 			setArrow5To1Class("arrow-bright");
 			setArrow5To4Class("arrow-bright");
 		}
+	};
+
+	// reset activePorts array to empty
+	const handleResetClick = () => {
+		setActivePorts([]);
+		setChosenPorts([]);
 	};
 
 	return (
@@ -423,6 +439,23 @@ export function SyncAdjacentPeers() {
 				</div>
 			</div>
 			<br />
+			<div className="center-btn">
+				<Button
+					style={{
+						height: 36,
+						paddingTop: 5,
+						textAlign: "center",
+						marginLeft: 20,
+					}}
+					key="uniqueKey2"
+					onClick={handleResetClick}
+					type="submit"
+					variant="primary"
+					size="lg"
+				>
+					Reset
+				</Button>
+			</div>
 		</div>
 	);
 }

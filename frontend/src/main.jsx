@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom/client";
 import { disableReactDevTools } from "@fvilers/disable-react-devtools";
 import {
@@ -8,6 +8,7 @@ import {
 	Outlet,
 	createRoutesFromElements,
 } from "react-router-dom";
+import secureLocalStorage from "react-secure-storage";
 import { NetworkContext } from "./context/NetworkContext";
 import "../custom.css";
 import Faucet from "./pages/Faucet";
@@ -23,13 +24,55 @@ import AddressDetails from "./pages/AddressDetails";
 
 disableReactDevTools();
 
-const Layout = () => {
+const useActivePorts = () => {
 	const [activePorts, setActivePorts] = useState([]);
 	const [chosenPorts, setChosenPorts] = useState([]);
 
+	useEffect(() => {
+		const isRestarted = localStorage.getItem("isRestarted");
+
+		if (!isRestarted) {
+			setActivePorts([]);
+			localStorage.setItem("isRestarted", "true");
+		} else {
+			const savedState = localStorage.getItem("activePorts");
+			if (savedState) {
+				setActivePorts(JSON.parse(savedState));
+			}
+		}
+	}, []);
+
+	useEffect(() => {
+		const isRestarted = localStorage.getItem("isRestarted");
+
+		if (isRestarted) {
+			localStorage.setItem("activePorts", JSON.stringify(activePorts));
+		}
+	}, [activePorts]);
+
+	const setAndSaveActivePorts = ports => {
+		setActivePorts(ports);
+	};
+
+	return [activePorts, setAndSaveActivePorts];
+};
+
+const Layout = () => {
+	const [activePorts, setActivePorts] = useActivePorts();
+	const [chosenPorts, setChosenPorts] = useActivePorts();
+
+	useEffect(() => {
+		sessionStorage.removeItem("isRestarted");
+	}, []);
+
 	return (
 		<NetworkContext.Provider
-			value={{ activePorts, setActivePorts, chosenPorts, setChosenPorts }}
+			value={{
+				activePorts,
+				setActivePorts,
+				chosenPorts,
+				setChosenPorts,
+			}}
 		>
 			<div>
 				<Navbar />

@@ -278,7 +278,7 @@ function Wallet() {
 					<div className="container-fluid">
 						<div className="card">
 							<div className="card-body-1">
-								<h4 className="card-title">Looking to create a new wallet?</h4>
+								<h4 className="card-title">&nbsp;&nbsp;Create a New Wallet</h4>
 								<p />
 								<p className="ln-ht">
 									&#8226;&nbsp;Click the button below to create a new wallet.
@@ -307,7 +307,9 @@ function Wallet() {
 
 						<div className="card">
 							<div className="card-body-1">
-								<h4 className="card-title">Already have an existing wallet?</h4>
+								<h4 className="card-title">
+									&nbsp;&nbsp;Open an Existing Wallet
+								</h4>
 								<p />
 								<p className="ln-ht-1">
 									Input the private key that was generated with the creation of
