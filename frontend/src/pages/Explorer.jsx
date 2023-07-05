@@ -74,7 +74,14 @@ function Explorer() {
 	return (
 		<div>
 			<h1>IndiGOLD Explorer</h1>
-			<br></br>
+			<div className="center-img">
+				<img
+					style={{ width: 225, height: 200 }}
+					src="../src/assets/binoculars-88.png"
+					alt="Pickaxe Image"
+				></img>
+			</div>
+			<br />
 			<SearchBar></SearchBar>
 			<br></br>
 			<div className="container-fluid">
