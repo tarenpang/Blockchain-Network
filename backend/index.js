@@ -241,7 +241,7 @@ app.get("/address/:address/balance", (req, res) => {
 	res.json(balance);
 });
 
-// Spin Up Desired Number of Worker Threads
+// Spin Up Desired Number of Child Processes
 app.post("/spawn-child-processes", (req, res) => {
 	// const numberOfThreads = req.query.numberOfThreads;
 	const numProcesses = req.query.numberOfProcesses;
