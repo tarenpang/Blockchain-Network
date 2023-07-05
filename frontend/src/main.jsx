@@ -26,7 +26,7 @@ disableReactDevTools();
 
 const useActivePorts = () => {
 	const [activePorts, setActivePorts] = useState([]);
-	const [chosenPorts, setChosenPorts] = useState([]);
+	// const [chosenPorts, setChosenPorts] = useState([]);
 
 	useEffect(() => {
 		const isRestarted = localStorage.getItem("isRestarted");
@@ -59,7 +59,7 @@ const useActivePorts = () => {
 
 const Layout = () => {
 	const [activePorts, setActivePorts] = useActivePorts();
-	const [chosenPorts, setChosenPorts] = useActivePorts();
+	// const [chosenPorts, setChosenPorts] = useActivePorts();
 
 	useEffect(() => {
 		sessionStorage.removeItem("isRestarted");
@@ -70,8 +70,8 @@ const Layout = () => {
 			value={{
 				activePorts,
 				setActivePorts,
-				chosenPorts,
-				setChosenPorts,
+				// chosenPorts,
+				// setChosenPorts,
 			}}
 		>
 			<div>
