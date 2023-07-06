@@ -11,6 +11,7 @@ function AddressDetails() {
 	const [addressBalance, setAddressBalance] = useState([]);
 	const [addressTransactions, setAddressTransactions] = useState([]);
 	const { address } = useParams();
+
 	useEffect(() => {
 		(async function loadData() {
 			const balance = await axios.get(

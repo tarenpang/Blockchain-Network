@@ -5,8 +5,6 @@ import { useState, useEffect } from "react";
 import { Button, Row } from "react-bootstrap";
 import SearchBar from "../navigation/SearchBar";
 import { redirect } from "react-router-dom";
-// import ReactTooltip from "react-tooltip";
-// import { 'document-duplicate' } from "@heroicons/react";
 
 function Explorer() {
 	const [allConfirmedTransactions, setAllConfirmedTransactions] = useState([]);
@@ -76,7 +74,14 @@ function Explorer() {
 	return (
 		<div>
 			<h1>IndiGOLD Explorer</h1>
-			<br></br>
+			<div className="center-img">
+				<img
+					style={{ width: 225, height: 200 }}
+					src="../src/assets/binoculars-88.png"
+					alt="Binoculars Image"
+				></img>
+			</div>
+			<br />
 			<SearchBar></SearchBar>
 			<br></br>
 			<div className="container-fluid">
