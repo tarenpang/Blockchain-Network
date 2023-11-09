@@ -78,6 +78,7 @@ Workflow: Use GitHub for version control. Each team member shall make a minimum 
 <ol>
     <li>Backend: Node.js and JavaScript</li>
     <li>Frontend: React and Vite</li>
+    <li>RESTful APIs are used to enable the frontend to access the data and business logic on the backend.</li>
     <li>Websockets are used to stream data from the backend and display real-time hash rate values on the frontend.</li>
 </ol>
 
